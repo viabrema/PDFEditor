@@ -13,6 +13,7 @@ import { createEditor, createEditorCommands } from "./editor/editor.js";
 import { createToolbar } from "./ui/toolbar.js";
 import { normalizeGridSize } from "./utils/grid.js";
 import { createIcons, icons } from "lucide";
+import { loadDocumentFromFile, saveDocumentToFile } from "./services/tauriStorage.js";
 
 const app = document.querySelector("#app");
 app.innerHTML = `
@@ -23,7 +24,27 @@ app.innerHTML = `
           <h1 class="text-2xl font-semibold">PDF Editor</h1>
           <p class="text-sm text-slate-600">Editor em modo rascunho</p>
         </div>
-        <div class="text-xs text-slate-500">Documento local</div>
+        <div class="flex items-center gap-2">
+          <button
+            id="open-doc"
+            type="button"
+            class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"
+            title="Abrir documento"
+            aria-label="Abrir documento"
+          >
+            <i data-lucide="folder-open"></i>
+          </button>
+          <button
+            id="save-doc"
+            type="button"
+            class="icon-button rounded-md bg-slate-900 text-white"
+            title="Salvar documento"
+            aria-label="Salvar documento"
+          >
+            <i data-lucide="save"></i>
+          </button>
+          <div id="doc-status" class="text-xs text-slate-500">Documento local</div>
+        </div>
       </div>
       <div class="mx-auto max-w-5xl px-6 pb-4" id="toolbar"></div>
     </header>
@@ -179,6 +200,9 @@ const addTextButton = document.querySelector("#add-text-block");
 const addTableButton = document.querySelector("#add-table-block");
 const addImageButton = document.querySelector("#add-image-block");
 const imageInput = document.querySelector("#image-input");
+const openDocButton = document.querySelector("#open-doc");
+const saveDocButton = document.querySelector("#save-doc");
+const docStatus = document.querySelector("#doc-status");
 const formatSelect = document.querySelector("#page-format");
 const orientationSelect = document.querySelector("#page-orientation");
 const gridSizeInput = document.querySelector("#grid-size");
@@ -189,12 +213,71 @@ const PAGE_SIZES = {
   Letter: { width: 816, height: 1056 },
 };
 
+const stateFile = {
+  path: null,
+};
+
 function getPageSize(format, orientation) {
   const base = PAGE_SIZES[format] || PAGE_SIZES.A4;
   if (orientation === "landscape") {
     return { width: base.height, height: base.width };
   }
   return base;
+}
+
+function buildDocumentSnapshot() {
+  const pages = documentData.pages.map((page) => {
+    const pageBlocks = blocks.filter((block) => block.pageId === page.id);
+    return {
+      ...page,
+      blocks: pageBlocks,
+    };
+  });
+
+  return {
+    ...documentData,
+    pages,
+    metadata: {
+      ...documentData.metadata,
+      updatedAt: new Date().toISOString(),
+    },
+  };
+}
+
+function applyDocumentSnapshot(snapshot) {
+  if (!snapshot) {
+    return;
+  }
+
+  Object.assign(documentData, snapshot);
+  blocks.length = 0;
+
+  snapshot.pages?.forEach((page) => {
+    if (!Array.isArray(page.blocks)) {
+      return;
+    }
+    page.blocks.forEach((block) => {
+      blocks.push({
+        ...block,
+        pageId: block.pageId || page.id,
+        languageId: block.languageId || snapshot.activeLanguageId,
+      });
+    });
+  });
+
+  state.activePageId = documentData.pages[0]?.id || null;
+  state.activeLanguageId = documentData.activeLanguageId || documentData.languages[0]?.id || null;
+  state.selectedBlockId = null;
+  state.editingBlockId = null;
+  render();
+}
+
+async function getTauriApi() {
+  const tauri = globalThis.__TAURI__;
+  if (!tauri?.fs || !tauri?.dialog) {
+    return null;
+  }
+  return { fs: tauri.fs, dialog: tauri.dialog };
 }
 
 function getNextBlockPosition({ blocksForPage, blockSize, pageSize }) {
@@ -636,6 +719,44 @@ document.addEventListener("paste", async (event) => {
 
   blocks.push(block);
   renderCanvas();
+});
+
+openDocButton.addEventListener("click", async () => {
+  const tauri = await getTauriApi();
+  if (!tauri) {
+    docStatus.textContent = "Tauri indisponivel";
+    return;
+  }
+
+  const result = await loadDocumentFromFile({ tauri });
+  if (!result) {
+    return;
+  }
+
+  stateFile.path = result.path;
+  docStatus.textContent = result.path.split(/[\\/]/).pop();
+  applyDocumentSnapshot(result.document);
+});
+
+saveDocButton.addEventListener("click", async () => {
+  const tauri = await getTauriApi();
+  if (!tauri) {
+    docStatus.textContent = "Tauri indisponivel";
+    return;
+  }
+
+  const snapshot = buildDocumentSnapshot();
+  const path = await saveDocumentToFile(snapshot, {
+    tauri,
+    filePath: stateFile.path,
+  });
+
+  if (!path) {
+    return;
+  }
+
+  stateFile.path = path;
+  docStatus.textContent = path.split(/[\\/]/).pop();
 });
 
 document.addEventListener("click", (event) => {

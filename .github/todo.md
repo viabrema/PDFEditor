@@ -30,8 +30,8 @@
 - [x] Toggle de snap por documento (UI)
 
 ## 5) Persistencia local
-- [ ] Salvar documento em JSON no filesystem via Tauri
-- [ ] Abrir documento salvo
+- [x] Salvar documento em JSON no filesystem via Tauri
+- [x] Abrir documento salvo
 - [ ] (Opcional) Cache via IndexedDB
 
 ## 6) Integracao com API de traducao
