@@ -87,6 +87,13 @@ app.innerHTML = `
         <div class="text-sm text-slate-500">Canvas</div>
         <div class="flex items-center gap-2">
           <button
+            id="add-text-block"
+            type="button"
+            class="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700"
+          >
+            Novo bloco de texto
+          </button>
+          <button
             id="add-image-block"
             type="button"
             class="rounded-md bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white"
@@ -151,6 +158,7 @@ const toolbarHost = document.querySelector("#toolbar");
 const pageTabsHost = document.querySelector("#page-tabs");
 const languageTabsHost = document.querySelector("#language-tabs");
 const pageMeta = document.querySelector("#page-meta");
+const addTextButton = document.querySelector("#add-text-block");
 const addImageButton = document.querySelector("#add-image-block");
 const imageInput = document.querySelector("#image-input");
 const formatSelect = document.querySelector("#page-format");
@@ -374,6 +382,34 @@ snapToggle.addEventListener("change", (event) => {
   documentData.grid.snap = event.target.checked;
   renderCanvas();
   renderMeta();
+});
+
+addTextButton.addEventListener("click", () => {
+  const blocksForPage = blocks.filter(
+    (block) =>
+      block.pageId === state.activePageId &&
+      block.languageId === state.activeLanguageId
+  );
+  const pageSize = getPageSize(
+    documentData.page.format,
+    documentData.page.orientation
+  );
+  const blockSize = { width: 520, height: 220 };
+  const position = getNextBlockPosition({
+    blocksForPage,
+    blockSize,
+    pageSize,
+  });
+
+  const nextBlock = createBlock({
+    position,
+    size: blockSize,
+    pageId: state.activePageId,
+    languageId: state.activeLanguageId,
+  });
+
+  blocks.push(nextBlock);
+  renderCanvas();
 });
 
 addImageButton.addEventListener("click", () => {
