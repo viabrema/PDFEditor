@@ -14,10 +14,10 @@
 - [x] Criar utilitarios de grid e snap
 
 ## 3) Editor de texto e blocos
-- [ ] Integrar ProseMirror ou Tiptap core em modo vanilla
-- [ ] Implementar schema inicial (texto, imagem, grafico)
-- [ ] Implementar toolbar (negrito, italico, listas)
-- [ ] Renderizacao de blocos no canvas/layout
+- [x] Integrar ProseMirror ou Tiptap core em modo vanilla
+- [x] Implementar schema inicial (texto, imagem, grafico)
+- [x] Implementar toolbar (negrito, italico, listas)
+- [x] Renderizacao de blocos no canvas/layout
 - [ ] Suporte a formato da pagina (A4, Letter, etc)
 - [ ] Suporte a layout da pagina (retrato/paisagem)
 - [ ] Suporte a multiplas paginas por documento

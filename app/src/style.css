@@ -7,3 +7,12 @@
 body {
   margin: 0;
 }
+
+.ProseMirror {
+  outline: none;
+  min-height: 120px;
+}
+
+.prose-editor .ProseMirror p {
+  margin: 0;
+}

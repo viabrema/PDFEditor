@@ -16,10 +16,21 @@
     "@tailwindcss/postcss": "^4.2.1",
     "@vitest/coverage-v8": "^4.0.18",
     "autoprefixer": "^10.4.27",
+    "happy-dom": "^20.7.0",
     "jsdom": "^28.1.0",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.1",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "prosemirror-commands": "^1.7.1",
+    "prosemirror-history": "^1.5.0",
+    "prosemirror-keymap": "^1.2.3",
+    "prosemirror-model": "^1.25.4",
+    "prosemirror-schema-basic": "^1.2.4",
+    "prosemirror-schema-list": "^1.5.1",
+    "prosemirror-state": "^1.4.4",
+    "prosemirror-view": "^1.41.6"
   }
 }
