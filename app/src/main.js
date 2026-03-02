@@ -3,6 +3,7 @@ import { createBlock } from "./blocks/blockModel.js";
 import { createBlockElement } from "./blocks/blockRenderer.js";
 import { setupDragResize } from "./blocks/dragResize.js";
 import { createImageBlockFromFile } from "./blocks/imageBlock.js";
+import { createTableBlockFromRows, createTableBlockFromText, parseTabularText } from "./blocks/tableBlock.js";
 import {
   createDocument,
   createLanguage,
@@ -94,6 +95,13 @@ app.innerHTML = `
             Novo bloco de texto
           </button>
           <button
+            id="add-table-block"
+            type="button"
+            class="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700"
+          >
+            Novo bloco de tabela
+          </button>
+          <button
             id="add-image-block"
             type="button"
             class="rounded-md bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white"
@@ -159,6 +167,7 @@ const pageTabsHost = document.querySelector("#page-tabs");
 const languageTabsHost = document.querySelector("#language-tabs");
 const pageMeta = document.querySelector("#page-meta");
 const addTextButton = document.querySelector("#add-text-block");
+const addTableButton = document.querySelector("#add-table-block");
 const addImageButton = document.querySelector("#add-image-block");
 const imageInput = document.querySelector("#image-input");
 const formatSelect = document.querySelector("#page-format");
@@ -412,6 +421,36 @@ addTextButton.addEventListener("click", () => {
   renderCanvas();
 });
 
+addTableButton.addEventListener("click", () => {
+  const blocksForPage = blocks.filter(
+    (block) =>
+      block.pageId === state.activePageId &&
+      block.languageId === state.activeLanguageId
+  );
+  const pageSize = getPageSize(
+    documentData.page.format,
+    documentData.page.orientation
+  );
+  const position = getNextBlockPosition({
+    blocksForPage,
+    blockSize: { width: 520, height: 220 },
+    pageSize,
+  });
+
+  const tableBlock = createTableBlockFromRows([
+    ["", ""],
+    ["", ""],
+  ], {
+    pageId: state.activePageId,
+    languageId: state.activeLanguageId,
+    position,
+    pageSize,
+  });
+
+  blocks.push(tableBlock);
+  renderCanvas();
+});
+
 addImageButton.addEventListener("click", () => {
   imageInput.click();
 });
@@ -453,6 +492,38 @@ document.addEventListener("paste", async (event) => {
   const items = Array.from(event.clipboardData?.items || []);
   const imageItem = items.find((item) => item.type.startsWith("image/"));
   if (!imageItem) {
+    const text = event.clipboardData?.getData("text/plain") || "";
+    const rows = parseTabularText(text);
+    if (rows.length === 0 || rows.every((row) => row.length <= 1)) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const blocksForPage = blocks.filter(
+      (block) =>
+        block.pageId === state.activePageId &&
+        block.languageId === state.activeLanguageId
+    );
+    const pageSize = getPageSize(
+      documentData.page.format,
+      documentData.page.orientation
+    );
+    const position = getNextBlockPosition({
+      blocksForPage,
+      blockSize: { width: 520, height: 220 },
+      pageSize,
+    });
+
+    const tableBlock = createTableBlockFromText(text, {
+      pageId: state.activePageId,
+      languageId: state.activeLanguageId,
+      position,
+      pageSize,
+    });
+
+    blocks.push(tableBlock);
+    renderCanvas();
     return;
   }
 

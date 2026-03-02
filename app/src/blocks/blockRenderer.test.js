@@ -62,4 +62,19 @@ describe("block renderer", () => {
 
     expect(img.getAttribute("src")).toBe("");
   });
+
+  it("creates table block", () => {
+    const block = {
+      id: "block-4",
+      type: "table",
+      content: { rows: [["A", "B"]] },
+      position: { x: 0, y: 0 },
+      size: { width: 200, height: 100 },
+    };
+
+    const { element, editorHost } = createBlockElement(block);
+
+    expect(editorHost).toBeNull();
+    expect(element.querySelector("table")).toBeTruthy();
+  });
 });

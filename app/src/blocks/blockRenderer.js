@@ -1,3 +1,5 @@
+import { createTableElement } from "./tableBlock.js";
+
 export function createBlockElement(block) {
   const element = document.createElement("div");
   element.className =
@@ -16,6 +18,9 @@ export function createBlockElement(block) {
     img.alt = "Imagem";
     img.src = block.content?.src || "";
     element.append(img);
+  } else if (block.type === "table") {
+    const table = createTableElement(block);
+    element.append(table);
   } else {
     editorHost = document.createElement("div");
     editorHost.className = "prose-editor h-full w-full p-3";
