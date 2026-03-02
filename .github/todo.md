@@ -35,10 +35,10 @@
 - [ ] (Opcional) Cache via IndexedDB
 
 ## 6) Exportacao PDF
-- [ ] Renderizar HTML paginado
-- [ ] Aplicar estilos de print
-- [ ] Gerar PDF com output deterministico
-- [ ] Garantir embed de imagens e fontes
+- [x] Renderizar HTML paginado
+- [x] Aplicar estilos de print
+- [x] Gerar PDF com output deterministico
+- [x] Garantir embed de imagens e fontes
 
 ## 7) Integracao com API de traducao
 - [ ] Implementar cliente em src/services/translation.js

@@ -14,6 +14,7 @@ import { createToolbar } from "./ui/toolbar.js";
 import { normalizeGridSize } from "./utils/grid.js";
 import { createIcons, icons } from "lucide";
 import { loadDocumentFromFile, saveDocumentToFile } from "./services/tauriStorage.js";
+import { renderDocumentToHtml } from "./services/export.js";
 
 const app = document.querySelector("#app");
 app.innerHTML = `
@@ -42,6 +43,15 @@ app.innerHTML = `
             aria-label="Salvar documento"
           >
             <i data-lucide="save"></i>
+          </button>
+          <button
+            id="export-pdf"
+            type="button"
+            class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"
+            title="Exportar PDF"
+            aria-label="Exportar PDF"
+          >
+            <i data-lucide="file-down"></i>
           </button>
           <div id="doc-status" class="text-xs text-slate-500">Documento local</div>
         </div>
@@ -200,6 +210,7 @@ const addImageButton = document.querySelector("#add-image-block");
 const imageInput = document.querySelector("#image-input");
 const openDocButton = document.querySelector("#open-doc");
 const saveDocButton = document.querySelector("#save-doc");
+const exportPdfButton = document.querySelector("#export-pdf");
 const docStatus = document.querySelector("#doc-status");
 const formatSelect = document.querySelector("#page-format");
 const orientationSelect = document.querySelector("#page-orientation");
@@ -753,6 +764,24 @@ saveDocButton.addEventListener("click", async () => {
 
   stateFile.path = path;
   docStatus.textContent = path.split(/[\\/]/).pop();
+});
+
+exportPdfButton.addEventListener("click", () => {
+  const snapshot = buildDocumentSnapshot();
+  const html = renderDocumentToHtml(snapshot);
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const preview = window.open(url, "_blank");
+  if (!preview) {
+    URL.revokeObjectURL(url);
+    return;
+  }
+
+  preview.addEventListener("load", () => {
+    preview.focus();
+    preview.print();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
 });
 
 document.addEventListener("click", (event) => {
