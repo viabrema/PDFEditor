@@ -16,3 +16,37 @@ body {
 .prose-editor .ProseMirror p {
   margin: 0;
 }
+
+.block-shell {
+  cursor: move;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #0f172a;
+  background: #fff;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.resize-handle[data-corner="nw"] {
+  top: -6px;
+  left: -6px;
+}
+
+.resize-handle[data-corner="ne"] {
+  top: -6px;
+  right: -6px;
+}
+
+.resize-handle[data-corner="se"] {
+  bottom: -6px;
+  right: -6px;
+}
+
+.resize-handle[data-corner="sw"] {
+  bottom: -6px;
+  left: -6px;
+}

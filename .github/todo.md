@@ -24,10 +24,10 @@
 - [x] Suporte a abas de idiomas por documento
 
 ## 4) Drag e resize
-- [ ] Integrar Interact.js (ou equivalente)
-- [ ] Implementar drag e resize por bloco
-- [ ] Adicionar snap-to-grid configuravel
-- [ ] Toggle de snap por documento (UI)
+- [x] Integrar Interact.js (ou equivalente)
+- [x] Implementar drag e resize por bloco
+- [x] Adicionar snap-to-grid configuravel
+- [x] Toggle de snap por documento (UI)
 
 ## 5) Persistencia local
 - [ ] Salvar documento em JSON no filesystem via Tauri

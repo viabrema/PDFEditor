@@ -1,6 +1,7 @@
 import "./style.css";
 import { createBlock } from "./blocks/blockModel.js";
 import { createBlockElement } from "./blocks/blockRenderer.js";
+import { setupDragResize } from "./blocks/dragResize.js";
 import {
   createDocument,
   createLanguage,
@@ -8,6 +9,7 @@ import {
 } from "./editor/documentModel.js";
 import { createEditor, createEditorCommands } from "./editor/editor.js";
 import { createToolbar } from "./ui/toolbar.js";
+import { normalizeGridSize } from "./utils/grid.js";
 
 const app = document.querySelector("#app");
 app.innerHTML = `
@@ -49,6 +51,25 @@ app.innerHTML = `
           </select>
         </div>
         <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="grid-size">
+            Grid
+          </label>
+          <input
+            id="grid-size"
+            type="number"
+            min="4"
+            max="40"
+            step="1"
+            class="w-24 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+          />
+        </div>
+        <div class="flex items-center gap-2">
+          <input id="grid-snap" type="checkbox" class="h-4 w-4" />
+          <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="grid-snap">
+            Snap
+          </label>
+        </div>
+        <div class="flex flex-col gap-1">
           <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Pagina ativa</span>
           <span class="text-sm text-slate-700" id="page-meta"></span>
         </div>
@@ -87,6 +108,7 @@ const state = {
   activePageId: documentData.pages[0].id,
   activeLanguageId: documentData.activeLanguageId,
   views: [],
+  interactions: [],
 };
 
 const blocks = [
@@ -117,10 +139,17 @@ const languageTabsHost = document.querySelector("#language-tabs");
 const pageMeta = document.querySelector("#page-meta");
 const formatSelect = document.querySelector("#page-format");
 const orientationSelect = document.querySelector("#page-orientation");
+const gridSizeInput = document.querySelector("#grid-size");
+const snapToggle = document.querySelector("#grid-snap");
 
 function clearViews() {
   state.views.forEach((view) => view.destroy());
   state.views = [];
+}
+
+function clearInteractions() {
+  state.interactions.forEach((cleanup) => cleanup());
+  state.interactions = [];
 }
 
 function createTabButton({ label, isActive, onClick }) {
@@ -156,6 +185,7 @@ function renderToolbar(view) {
 function renderCanvas() {
   canvas.innerHTML = "";
   clearViews();
+  clearInteractions();
 
   const activeBlocks = blocks.filter(
     (block) =>
@@ -179,6 +209,14 @@ function renderCanvas() {
     const view = createEditor({ mount: editorHost });
     state.views.push(view);
 
+    const cleanup = setupDragResize({
+      element,
+      block,
+      gridSize: documentData.grid.size,
+      snapEnabled: documentData.grid.snap,
+    });
+    state.interactions.push(cleanup);
+
     if (index === 0) {
       renderToolbar(view);
     }
@@ -191,10 +229,16 @@ function renderMeta() {
   );
   pageMeta.textContent =
     `Pagina ${pageIndex + 1} de ${documentData.pages.length} ` +
-    `(${documentData.page.format}, ${documentData.page.orientation})`;
+    `(${documentData.page.format}, ${documentData.page.orientation}) ` +
+    `Grid ${documentData.grid.size}px ${documentData.grid.snap ? "On" : "Off"}`;
 }
 
 function render() {
+  formatSelect.value = documentData.page.format;
+  orientationSelect.value = documentData.page.orientation;
+  gridSizeInput.value = documentData.grid.size;
+  snapToggle.checked = documentData.grid.snap;
+
   renderTabs(
     pageTabsHost,
     documentData.pages.map((page) => ({ id: page.id, label: page.name })),
@@ -224,6 +268,8 @@ function render() {
 
 formatSelect.value = documentData.page.format;
 orientationSelect.value = documentData.page.orientation;
+gridSizeInput.value = documentData.grid.size;
+snapToggle.checked = documentData.grid.snap;
 
 formatSelect.addEventListener("change", (event) => {
   documentData.page.format = event.target.value;
@@ -232,6 +278,18 @@ formatSelect.addEventListener("change", (event) => {
 
 orientationSelect.addEventListener("change", (event) => {
   documentData.page.orientation = event.target.value;
+  renderMeta();
+});
+
+gridSizeInput.addEventListener("change", (event) => {
+  documentData.grid.size = normalizeGridSize(event.target.value, 8);
+  renderCanvas();
+  renderMeta();
+});
+
+snapToggle.addEventListener("change", (event) => {
+  documentData.grid.snap = event.target.checked;
+  renderCanvas();
   renderMeta();
 });
 

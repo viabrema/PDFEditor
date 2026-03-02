@@ -1,7 +1,7 @@
 export function createBlockElement(block) {
   const element = document.createElement("div");
   element.className =
-    "absolute rounded-md border border-slate-200 bg-white shadow-sm";
+    "block-shell absolute rounded-md border border-slate-200 bg-white shadow-sm";
   element.dataset.blockId = block.id;
   element.style.left = `${block.position.x}px`;
   element.style.top = `${block.position.y}px`;
@@ -11,6 +11,13 @@ export function createBlockElement(block) {
   const editorHost = document.createElement("div");
   editorHost.className = "prose-editor h-full w-full p-3";
   element.append(editorHost);
+
+  ["nw", "ne", "se", "sw"].forEach((corner) => {
+    const handle = document.createElement("span");
+    handle.className = "resize-handle";
+    handle.dataset.corner = corner;
+    element.append(handle);
+  });
 
   return { element, editorHost };
 }
