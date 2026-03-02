@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Window } from "happy-dom";
 import { createEditor, createEditorCommands, createEditorState } from "./editor.js";
 import { createEditorSchema } from "./schema.js";
@@ -23,7 +23,8 @@ describe("editor", () => {
 
   it("creates editor view and commands", () => {
     const mount = document.createElement("div");
-    const view = createEditor({ mount, editable: () => true });
+    const onChange = vi.fn();
+    const view = createEditor({ mount, editable: () => true, onChange });
     const commands = createEditorCommands(view);
 
     expect(view.dom).toBeInstanceOf(window.HTMLElement);
@@ -33,6 +34,8 @@ describe("editor", () => {
     commands.toggleItalic();
     commands.toggleBulletList();
     commands.toggleOrderedList();
+
+    expect(onChange).toHaveBeenCalled();
 
     view.destroy();
   });
@@ -61,6 +64,15 @@ describe("editor", () => {
     const view = createEditor({ mount, schema, editable: () => false });
 
     expect(view.props.editable()).toBe(false);
+
+    view.destroy();
+  });
+
+  it("works without onChange", () => {
+    const mount = document.createElement("div");
+    const view = createEditor({ mount, editable: () => true });
+
+    view.dispatch(view.state.tr.insertText("a"));
 
     view.destroy();
   });

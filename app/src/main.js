@@ -368,7 +368,11 @@ function renderCanvas() {
       if (editorHost) {
         const view = createEditor({
           mount: editorHost,
+          content: block.content || undefined,
           editable: () => block.id === state.editingBlockId,
+          onChange: (nextState) => {
+            block.content = nextState.doc.toJSON();
+          },
         });
         state.views.push(view);
 
