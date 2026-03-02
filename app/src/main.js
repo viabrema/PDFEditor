@@ -82,10 +82,20 @@ app.innerHTML = `
         <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Paginas</div>
         <div class="flex flex-wrap gap-2" id="page-tabs"></div>
       </div>
+      <div class="mb-4 flex items-center justify-between">
+        <div class="text-sm text-slate-500">Canvas</div>
+        <button
+          id="add-block"
+          type="button"
+          class="rounded-md bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white"
+        >
+          Novo bloco
+        </button>
+      </div>
       <div class="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-6">
         <div
           id="canvas"
-          class="relative h-[520px] w-full overflow-hidden rounded-xl bg-slate-50"
+          class="flex max-h-[720px] flex-col gap-6 overflow-y-auto rounded-xl bg-slate-50 p-6"
         ></div>
       </div>
     </section>
@@ -137,10 +147,24 @@ const toolbarHost = document.querySelector("#toolbar");
 const pageTabsHost = document.querySelector("#page-tabs");
 const languageTabsHost = document.querySelector("#language-tabs");
 const pageMeta = document.querySelector("#page-meta");
+const addBlockButton = document.querySelector("#add-block");
 const formatSelect = document.querySelector("#page-format");
 const orientationSelect = document.querySelector("#page-orientation");
 const gridSizeInput = document.querySelector("#grid-size");
 const snapToggle = document.querySelector("#grid-snap");
+
+const PAGE_SIZES = {
+  A4: { width: 794, height: 1123 },
+  Letter: { width: 816, height: 1056 },
+};
+
+function getPageSize(format, orientation) {
+  const base = PAGE_SIZES[format] || PAGE_SIZES.A4;
+  if (orientation === "landscape") {
+    return { width: base.height, height: base.width };
+  }
+  return base;
+}
 
 function clearViews() {
   state.views.forEach((view) => view.destroy());
@@ -187,40 +211,67 @@ function renderCanvas() {
   clearViews();
   clearInteractions();
 
+  let didMountToolbar = false;
   const activeBlocks = blocks.filter(
-    (block) =>
-      block.pageId === state.activePageId &&
-      block.languageId === state.activeLanguageId
+    (block) => block.languageId === state.activeLanguageId
   );
 
-  if (activeBlocks.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "flex h-full items-center justify-center text-sm text-slate-400";
-    empty.textContent = "Sem blocos nesta pagina";
-    canvas.append(empty);
-    toolbarHost.innerHTML = "";
-    return;
-  }
+  documentData.pages.forEach((page) => {
+    const pageWrapper = document.createElement("div");
+    pageWrapper.className = "page-shell";
 
-  activeBlocks.forEach((block, index) => {
-    const { element, editorHost } = createBlockElement(block);
-    canvas.append(element);
+    const { width, height } = getPageSize(
+      documentData.page.format,
+      documentData.page.orientation
+    );
 
-    const view = createEditor({ mount: editorHost });
-    state.views.push(view);
+    const pageHeader = document.createElement("div");
+    pageHeader.className = "mb-2 flex items-center justify-between text-xs text-slate-500";
+    pageHeader.textContent = page.name;
+    pageWrapper.append(pageHeader);
 
-    const cleanup = setupDragResize({
-      element,
-      block,
-      gridSize: documentData.grid.size,
-      snapEnabled: documentData.grid.snap,
-    });
-    state.interactions.push(cleanup);
+    const pageSurface = document.createElement("div");
+    pageSurface.className = "page-surface";
+    pageSurface.style.width = `${width}px`;
+    pageSurface.style.height = `${height}px`;
+    pageWrapper.append(pageSurface);
 
-    if (index === 0) {
-      renderToolbar(view);
+    const pageBlocks = activeBlocks.filter((block) => block.pageId === page.id);
+
+    if (pageBlocks.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "absolute inset-0 flex items-center justify-center text-sm text-slate-300";
+      empty.textContent = "Sem blocos";
+      pageSurface.append(empty);
     }
+
+    pageBlocks.forEach((block) => {
+      const { element, editorHost } = createBlockElement(block);
+      pageSurface.append(element);
+
+      const view = createEditor({ mount: editorHost });
+      state.views.push(view);
+
+      const cleanup = setupDragResize({
+        element,
+        block,
+        gridSize: documentData.grid.size,
+        snapEnabled: documentData.grid.snap,
+      });
+      state.interactions.push(cleanup);
+
+      if (!didMountToolbar && page.id === state.activePageId) {
+        renderToolbar(view);
+        didMountToolbar = true;
+      }
+    });
+
+    canvas.append(pageWrapper);
   });
+
+  if (!didMountToolbar) {
+    toolbarHost.innerHTML = "";
+  }
 }
 
 function renderMeta() {
@@ -291,6 +342,24 @@ snapToggle.addEventListener("change", (event) => {
   documentData.grid.snap = event.target.checked;
   renderCanvas();
   renderMeta();
+});
+
+addBlockButton.addEventListener("click", () => {
+  const existingCount = blocks.filter(
+    (block) =>
+      block.pageId === state.activePageId &&
+      block.languageId === state.activeLanguageId
+  ).length;
+
+  const nextBlock = createBlock({
+    position: { x: 32, y: 32 + existingCount * 24 },
+    size: { width: 520, height: 220 },
+    pageId: state.activePageId,
+    languageId: state.activeLanguageId,
+  });
+
+  blocks.push(nextBlock);
+  renderCanvas();
 });
 
 render();
