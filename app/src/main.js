@@ -166,6 +166,28 @@ function getPageSize(format, orientation) {
   return base;
 }
 
+function getNextBlockPosition({ blocksForPage, blockSize, pageSize }) {
+  const padding = 32;
+  const offset = 24;
+
+  if (blocksForPage.length === 0) {
+    return { x: padding, y: padding };
+  }
+
+  const maxBottom = Math.max(
+    ...blocksForPage.map((block) => block.position.y + block.size.height)
+  );
+  let nextX = padding;
+  let nextY = maxBottom + offset;
+
+  if (nextY + blockSize.height > pageSize.height - padding) {
+    nextY = padding;
+    nextX = padding + offset;
+  }
+
+  return { x: nextX, y: nextY };
+}
+
 function clearViews() {
   state.views.forEach((view) => view.destroy());
   state.views = [];
@@ -231,9 +253,12 @@ function renderCanvas() {
     pageWrapper.append(pageHeader);
 
     const pageSurface = document.createElement("div");
-    pageSurface.className = "page-surface";
+    pageSurface.className = documentData.grid.snap
+      ? "page-surface grid-on"
+      : "page-surface";
     pageSurface.style.width = `${width}px`;
     pageSurface.style.height = `${height}px`;
+    pageSurface.style.setProperty("--grid-size", `${documentData.grid.size}px`);
     pageWrapper.append(pageSurface);
 
     const pageBlocks = activeBlocks.filter((block) => block.pageId === page.id);
@@ -345,15 +370,26 @@ snapToggle.addEventListener("change", (event) => {
 });
 
 addBlockButton.addEventListener("click", () => {
-  const existingCount = blocks.filter(
+  const blocksForPage = blocks.filter(
     (block) =>
       block.pageId === state.activePageId &&
       block.languageId === state.activeLanguageId
-  ).length;
+  );
+
+  const pageSize = getPageSize(
+    documentData.page.format,
+    documentData.page.orientation
+  );
+  const blockSize = { width: 520, height: 220 };
+  const position = getNextBlockPosition({
+    blocksForPage,
+    blockSize,
+    pageSize,
+  });
 
   const nextBlock = createBlock({
-    position: { x: 32, y: 32 + existingCount * 24 },
-    size: { width: 520, height: 220 },
+    position,
+    size: blockSize,
     pageId: state.activePageId,
     languageId: state.activeLanguageId,
   });
