@@ -18,10 +18,10 @@
 - [x] Implementar schema inicial (texto, imagem, grafico)
 - [x] Implementar toolbar (negrito, italico, listas)
 - [x] Renderizacao de blocos no canvas/layout
-- [ ] Suporte a formato da pagina (A4, Letter, etc)
-- [ ] Suporte a layout da pagina (retrato/paisagem)
-- [ ] Suporte a multiplas paginas por documento
-- [ ] Suporte a abas de idiomas por documento
+- [x] Suporte a formato da pagina (A4, Letter, etc)
+- [x] Suporte a layout da pagina (retrato/paisagem)
+- [x] Suporte a multiplas paginas por documento
+- [x] Suporte a abas de idiomas por documento
 
 ## 4) Drag e resize
 - [ ] Integrar Interact.js (ou equivalente)
