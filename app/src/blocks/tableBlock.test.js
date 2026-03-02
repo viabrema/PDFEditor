@@ -89,6 +89,17 @@ describe("table block", () => {
     expect(table.querySelectorAll("td")).toHaveLength(2);
   });
 
+  it("updates existing tbody", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const table = window.document.createElement("table");
+    table.appendChild(window.document.createElement("tbody"));
+    updateTableBody(table, [["1"]]);
+
+    expect(table.querySelectorAll("tbody tr")).toHaveLength(1);
+  });
+
   it("handles paste with tabular data", () => {
     const window = new Window();
     globalThis.document = window.document;
@@ -196,5 +207,59 @@ describe("table block", () => {
     table.dispatchEvent(event);
 
     expect(preventDefault).not.toHaveBeenCalled();
+  });
+
+  it("handles paste with newline data", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = { content: { rows: [["x"]] } };
+    const table = createTableElement(block);
+    const preventDefault = vi.fn();
+
+    const event = new window.Event("paste");
+    event.clipboardData = {
+      getData: () => "a\n1",
+    };
+    event.preventDefault = preventDefault;
+
+    table.dispatchEvent(event);
+
+    expect(preventDefault).toHaveBeenCalledTimes(1);
+  });
+
+  it("ignores paste without clipboard data", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = { content: { rows: [["x"]] } };
+    const table = createTableElement(block);
+
+    const event = new window.Event("paste");
+    table.dispatchEvent(event);
+
+    expect(readTableRows(table)).toEqual([["x"]]);
+  });
+
+  it("creates table element with fallback rows", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = {};
+    const table = createTableElement(block);
+
+    expect(table.querySelectorAll("td").length).toBeGreaterThan(0);
+  });
+
+  it("updates rows when block content is missing", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = {};
+    const table = createTableElement(block);
+
+    table.dispatchEvent(new window.Event("input"));
+
+    expect(block.content.rows.length).toBeGreaterThan(0);
   });
 });
