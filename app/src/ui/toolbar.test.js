@@ -45,4 +45,14 @@ describe("toolbar", () => {
 
     expect(clicked).toBe(4);
   });
+
+  it("renders disabled toolbar", () => {
+    const toolbar = createToolbar(null, { disabled: true });
+    const buttons = toolbar.querySelectorAll("button");
+
+    expect(buttons).toHaveLength(4);
+    buttons.forEach((button) => {
+      expect(button.disabled).toBe(true);
+    });
+  });
 });

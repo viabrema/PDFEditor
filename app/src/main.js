@@ -46,7 +46,6 @@ app.innerHTML = `
           <div id="doc-status" class="text-xs text-slate-500">Documento local</div>
         </div>
       </div>
-      <div class="mx-auto max-w-5xl px-6 pb-4" id="toolbar"></div>
     </header>
     <section class="mx-auto max-w-5xl px-6 py-6">
       <div class="mb-4 flex flex-wrap items-end gap-4">
@@ -192,7 +191,6 @@ const blocks = [
 ];
 
 const canvas = document.querySelector("#canvas");
-const toolbarHost = document.querySelector("#toolbar");
 const pageTabsHost = document.querySelector("#page-tabs");
 const languageTabsHost = document.querySelector("#language-tabs");
 const pageMeta = document.querySelector("#page-meta");
@@ -336,12 +334,6 @@ function renderTabs(container, items, activeId, onSelect) {
   });
 }
 
-function renderToolbar(view) {
-  toolbarHost.innerHTML = "";
-  const toolbar = createToolbar(createEditorCommands(view));
-  toolbarHost.append(toolbar);
-}
-
 function focusEditingBlock() {
   if (!state.editingBlockId) {
     return;
@@ -371,7 +363,6 @@ function renderCanvas() {
   clearViews();
   clearInteractions();
 
-  let didMountToolbar = false;
   const activeBlocks = blocks.filter(
     (block) => block.languageId === state.activeLanguageId
   );
@@ -417,6 +408,12 @@ function renderCanvas() {
       });
       pageSurface.append(element);
 
+      if (isEditing && block.type === "table") {
+        const toolbar = createToolbar(null, { disabled: true });
+        toolbar.classList.add("block-toolbar");
+        element.append(toolbar);
+      }
+
       element.addEventListener("click", (event) => {
         event.stopPropagation();
         const nextSelected = block.id;
@@ -459,9 +456,10 @@ function renderCanvas() {
         });
         state.views.push(view);
 
-        if (!didMountToolbar && page.id === state.activePageId) {
-          renderToolbar(view);
-          didMountToolbar = true;
+        if (isEditing) {
+          const toolbar = createToolbar(createEditorCommands(view));
+          toolbar.classList.add("block-toolbar");
+          element.append(toolbar);
         }
       }
 
@@ -478,9 +476,6 @@ function renderCanvas() {
     canvas.append(pageWrapper);
   });
 
-  if (!didMountToolbar) {
-    toolbarHost.innerHTML = "";
-  }
 }
 
 function renderMeta() {
@@ -525,6 +520,7 @@ function render() {
   renderCanvas();
   renderMeta();
   focusEditingBlock();
+  createIcons({ icons });
 }
 
 formatSelect.value = documentData.page.format;
@@ -772,5 +768,3 @@ document.addEventListener("click", (event) => {
 });
 
 render();
-
-createIcons({ icons });

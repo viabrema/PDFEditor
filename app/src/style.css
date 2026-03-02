@@ -29,6 +29,34 @@ body {
 .block-shell.is-editing {
   border-color: #0f172a;
   box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.4);
+  z-index: 3;
+}
+
+.block-toolbar {
+  position: absolute;
+  top: -44px;
+  left: 12px;
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 12px 24px -18px rgba(15, 23, 42, 0.6);
+  z-index: 4;
+}
+
+.toolbar-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+}
+
+.toolbar-icon-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 .resize-handle {
@@ -114,10 +142,9 @@ body {
 .page-surface {
   position: relative;
   background: #ffffff;
-  border-radius: 18px;
   box-shadow: 0 20px 40px -30px rgba(15, 23, 42, 0.6);
   border: 1px solid #e2e8f0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .page-surface.grid-on {

@@ -34,18 +34,18 @@
 - [x] Abrir documento salvo
 - [ ] (Opcional) Cache via IndexedDB
 
-## 6) Integracao com API de traducao
+## 6) Exportacao PDF
+- [ ] Renderizar HTML paginado
+- [ ] Aplicar estilos de print
+- [ ] Gerar PDF com output deterministico
+- [ ] Garantir embed de imagens e fontes
+
+## 7) Integracao com API de traducao
 - [ ] Implementar cliente em src/services/translation.js
 - [ ] Traduzir selecao
 - [ ] Traduzir bloco
 - [ ] Traduzir documento
 - [ ] UI de loading e erro
-
-## 7) Exportacao PDF
-- [ ] Renderizar HTML paginado
-- [ ] Aplicar estilos de print
-- [ ] Gerar PDF com output deterministico
-- [ ] Garantir embed de imagens e fontes
 
 ## 8) Testes
 - [ ] Testar serializacao do schema
