@@ -96,6 +96,8 @@ describe("dragResize", () => {
     });
 
     api.dragOptions.listeners.move({ dx: 5, dy: 5 });
+    expect(block.position).toEqual({ x: 5, y: 5 });
+    api.dragOptions.listeners.end();
     expect(block.position).toEqual({ x: 10, y: 10 });
 
     api.resizeOptions.listeners.move({
@@ -141,6 +143,7 @@ describe("dragResize", () => {
     });
 
     api.dragOptions.listeners.move({ dx: 2, dy: 3 });
+    api.dragOptions.listeners.end();
     api.resizeOptions.listeners.move({
       rect: { width: 120, height: 80 },
       deltaRect: { left: 0, top: 0 },
@@ -176,6 +179,79 @@ describe("dragResize", () => {
       snapEnabled: true,
       interactFactory,
     });
+
+    cleanup();
+  });
+
+  it("nao aplica snap quando desativado", () => {
+    const window = new Window();
+    const element = window.document.createElement("div");
+    const block = {
+      position: { x: 0, y: 0 },
+      size: { width: 100, height: 100 },
+    };
+
+    const api = {
+      draggable: vi.fn(function (options) {
+        api.dragOptions = options;
+        return api;
+      }),
+      resizable: vi.fn(function () {
+        return api;
+      }),
+      unset: vi.fn(),
+    };
+    const interactFactory = vi.fn(() => api);
+
+    const cleanup = setupDragResize({
+      element,
+      block,
+      gridSize: 10,
+      snapEnabled: false,
+      interactFactory,
+    });
+
+    api.dragOptions.listeners.move({ dx: 6, dy: 7 });
+    api.dragOptions.listeners.end();
+
+    expect(block.position).toEqual({ x: 6, y: 7 });
+
+    cleanup();
+  });
+
+  it("notifica onUpdate no fim do drag com snap ativo", () => {
+    const window = new Window();
+    const element = window.document.createElement("div");
+    const block = {
+      position: { x: 2, y: 2 },
+      size: { width: 100, height: 100 },
+    };
+    const onUpdate = vi.fn();
+
+    const api = {
+      draggable: vi.fn(function (options) {
+        api.dragOptions = options;
+        return api;
+      }),
+      resizable: vi.fn(function () {
+        return api;
+      }),
+      unset: vi.fn(),
+    };
+    const interactFactory = vi.fn(() => api);
+
+    const cleanup = setupDragResize({
+      element,
+      block,
+      gridSize: 10,
+      snapEnabled: true,
+      onUpdate,
+      interactFactory,
+    });
+
+    api.dragOptions.listeners.end();
+
+    expect(onUpdate).toHaveBeenCalledTimes(1);
 
     cleanup();
   });

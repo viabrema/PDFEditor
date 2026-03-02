@@ -50,12 +50,26 @@ export function setupDragResize({
             position: block.position,
             delta: { x: event.dx, y: event.dy },
             gridSize,
-            snapEnabled,
+            snapEnabled: false,
           });
 
           block.position = nextPosition;
           element.style.left = `${nextPosition.x}px`;
           element.style.top = `${nextPosition.y}px`;
+
+          if (onUpdate) {
+            onUpdate(block);
+          }
+        },
+        end() {
+          if (!snapEnabled) {
+            return;
+          }
+
+          const snapped = snapPoint(block.position, gridSize, true);
+          block.position = snapped;
+          element.style.left = `${snapped.x}px`;
+          element.style.top = `${snapped.y}px`;
 
           if (onUpdate) {
             onUpdate(block);
