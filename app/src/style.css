@@ -38,7 +38,7 @@ body {
   border: 2px solid #0f172a;
   background: #fff;
   border-radius: 999px;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .resize-handle[data-corner="nw"] {

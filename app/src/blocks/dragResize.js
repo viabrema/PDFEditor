@@ -79,6 +79,7 @@ export function setupDragResize({
     })
     .resizable({
       edges: { left: true, right: true, top: true, bottom: true },
+      allowFrom: ".resize-handle",
       listeners: {
         move(event) {
           const rect = {
