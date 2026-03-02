@@ -12,6 +12,7 @@ import {
 import { createEditor, createEditorCommands } from "./editor/editor.js";
 import { createToolbar } from "./ui/toolbar.js";
 import { normalizeGridSize } from "./utils/grid.js";
+import { createIcons, icons } from "lucide";
 
 const app = document.querySelector("#app");
 app.innerHTML = `
@@ -90,23 +91,29 @@ app.innerHTML = `
           <button
             id="add-text-block"
             type="button"
-            class="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700"
+            class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
+            title="Novo bloco de texto"
+            aria-label="Novo bloco de texto"
           >
-            Novo bloco de texto
+            <i data-lucide="type"></i>
           </button>
           <button
             id="add-table-block"
             type="button"
-            class="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700"
+            class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
+            title="Novo bloco de tabela"
+            aria-label="Novo bloco de tabela"
           >
-            Novo bloco de tabela
+            <i data-lucide="table"></i>
           </button>
           <button
             id="add-image-block"
             type="button"
-            class="rounded-md bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white"
+            class="icon-button rounded-md bg-slate-900 px-3 py-2 text-white"
+            title="Novo bloco de imagem"
+            aria-label="Novo bloco de imagem"
           >
-            Novo bloco de imagem
+            <i data-lucide="image"></i>
           </button>
           <input id="image-input" type="file" accept="image/*" class="hidden" />
         </div>
@@ -561,3 +568,5 @@ document.addEventListener("paste", async (event) => {
 });
 
 render();
+
+createIcons({ icons });
