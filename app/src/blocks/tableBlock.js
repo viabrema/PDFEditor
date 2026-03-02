@@ -9,8 +9,12 @@ export function parseTabularText(text) {
     return [];
   }
 
-  return text
-    .trim()
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  return trimmed
     .split(/\r?\n/)
     .map((line) => line.split("\t"));
 }

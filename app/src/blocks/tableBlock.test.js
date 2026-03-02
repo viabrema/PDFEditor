@@ -23,6 +23,10 @@ describe("table block", () => {
     expect(parseTabularText("")).toEqual([]);
   });
 
+  it("returns empty rows for whitespace", () => {
+    expect(parseTabularText("   \n ")).toEqual([]);
+  });
+
   it("normalizes row lengths", () => {
     const rows = normalizeRows([["a"], ["1", "2"]]);
     expect(rows).toEqual([["a", ""], ["1", "2"]]);
@@ -226,6 +230,26 @@ describe("table block", () => {
     table.dispatchEvent(event);
 
     expect(preventDefault).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses empty table when paste is only whitespace", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = { content: { rows: [["x"]] } };
+    const table = createTableElement(block);
+    const preventDefault = vi.fn();
+
+    const event = new window.Event("paste");
+    event.clipboardData = {
+      getData: () => " \n ",
+    };
+    event.preventDefault = preventDefault;
+
+    table.dispatchEvent(event);
+
+    expect(preventDefault).toHaveBeenCalledTimes(1);
+    expect(readTableRows(table).length).toBeGreaterThan(0);
   });
 
   it("ignores paste without clipboard data", () => {
