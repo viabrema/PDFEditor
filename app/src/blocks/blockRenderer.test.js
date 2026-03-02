@@ -33,4 +33,33 @@ describe("block renderer", () => {
     expect(editorHost).toBeInstanceOf(window.HTMLElement);
     expect(editorHost.className).toContain("prose-editor");
   });
+
+  it("creates image block", () => {
+    const block = {
+      id: "block-2",
+      type: "image",
+      content: { src: "data:image/png;base64,abc" },
+      position: { x: 0, y: 0 },
+      size: { width: 200, height: 100 },
+    };
+
+    const { element, editorHost } = createBlockElement(block);
+
+    expect(editorHost).toBeNull();
+    expect(element.querySelector("img").src).toContain("data:image/png");
+  });
+
+  it("creates image block without src", () => {
+    const block = {
+      id: "block-3",
+      type: "image",
+      position: { x: 0, y: 0 },
+      size: { width: 200, height: 100 },
+    };
+
+    const { element } = createBlockElement(block);
+    const img = element.querySelector("img");
+
+    expect(img.getAttribute("src")).toBe("");
+  });
 });

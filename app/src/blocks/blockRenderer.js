@@ -8,9 +8,19 @@ export function createBlockElement(block) {
   element.style.width = `${block.size.width}px`;
   element.style.height = `${block.size.height}px`;
 
-  const editorHost = document.createElement("div");
-  editorHost.className = "prose-editor h-full w-full p-3";
-  element.append(editorHost);
+  let editorHost = null;
+
+  if (block.type === "image") {
+    const img = document.createElement("img");
+    img.className = "image-block";
+    img.alt = "Imagem";
+    img.src = block.content?.src || "";
+    element.append(img);
+  } else {
+    editorHost = document.createElement("div");
+    editorHost.className = "prose-editor h-full w-full p-3";
+    element.append(editorHost);
+  }
 
   ["nw", "ne", "se", "sw"].forEach((corner) => {
     const handle = document.createElement("span");

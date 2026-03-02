@@ -2,6 +2,7 @@ import "./style.css";
 import { createBlock } from "./blocks/blockModel.js";
 import { createBlockElement } from "./blocks/blockRenderer.js";
 import { setupDragResize } from "./blocks/dragResize.js";
+import { createImageBlockFromFile } from "./blocks/imageBlock.js";
 import {
   createDocument,
   createLanguage,
@@ -84,13 +85,16 @@ app.innerHTML = `
       </div>
       <div class="mb-4 flex items-center justify-between">
         <div class="text-sm text-slate-500">Canvas</div>
-        <button
-          id="add-block"
-          type="button"
-          class="rounded-md bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white"
-        >
-          Novo bloco
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            id="add-image-block"
+            type="button"
+            class="rounded-md bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white"
+          >
+            Novo bloco de imagem
+          </button>
+          <input id="image-input" type="file" accept="image/*" class="hidden" />
+        </div>
       </div>
       <div class="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-6">
         <div
@@ -147,7 +151,8 @@ const toolbarHost = document.querySelector("#toolbar");
 const pageTabsHost = document.querySelector("#page-tabs");
 const languageTabsHost = document.querySelector("#language-tabs");
 const pageMeta = document.querySelector("#page-meta");
-const addBlockButton = document.querySelector("#add-block");
+const addImageButton = document.querySelector("#add-image-block");
+const imageInput = document.querySelector("#image-input");
 const formatSelect = document.querySelector("#page-format");
 const orientationSelect = document.querySelector("#page-orientation");
 const gridSizeInput = document.querySelector("#grid-size");
@@ -274,8 +279,15 @@ function renderCanvas() {
       const { element, editorHost } = createBlockElement(block);
       pageSurface.append(element);
 
-      const view = createEditor({ mount: editorHost });
-      state.views.push(view);
+      if (editorHost) {
+        const view = createEditor({ mount: editorHost });
+        state.views.push(view);
+
+        if (!didMountToolbar && page.id === state.activePageId) {
+          renderToolbar(view);
+          didMountToolbar = true;
+        }
+      }
 
       const cleanup = setupDragResize({
         element,
@@ -284,11 +296,6 @@ function renderCanvas() {
         snapEnabled: documentData.grid.snap,
       });
       state.interactions.push(cleanup);
-
-      if (!didMountToolbar && page.id === state.activePageId) {
-        renderToolbar(view);
-        didMountToolbar = true;
-      }
     });
 
     canvas.append(pageWrapper);
@@ -369,32 +376,80 @@ snapToggle.addEventListener("change", (event) => {
   renderMeta();
 });
 
-addBlockButton.addEventListener("click", () => {
+addImageButton.addEventListener("click", () => {
+  imageInput.click();
+});
+
+imageInput.addEventListener("change", async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) {
+    return;
+  }
+
   const blocksForPage = blocks.filter(
     (block) =>
       block.pageId === state.activePageId &&
       block.languageId === state.activeLanguageId
   );
-
   const pageSize = getPageSize(
     documentData.page.format,
     documentData.page.orientation
   );
-  const blockSize = { width: 520, height: 220 };
   const position = getNextBlockPosition({
     blocksForPage,
-    blockSize,
+    blockSize: { width: 520, height: 360 },
     pageSize,
   });
 
-  const nextBlock = createBlock({
-    position,
-    size: blockSize,
+  const block = await createImageBlockFromFile(file, {
     pageId: state.activePageId,
     languageId: state.activeLanguageId,
+    position,
+    pageSize,
   });
 
-  blocks.push(nextBlock);
+  blocks.push(block);
+  renderCanvas();
+  imageInput.value = "";
+});
+
+document.addEventListener("paste", async (event) => {
+  const items = Array.from(event.clipboardData?.items || []);
+  const imageItem = items.find((item) => item.type.startsWith("image/"));
+  if (!imageItem) {
+    return;
+  }
+
+  const file = imageItem.getAsFile();
+  if (!file) {
+    return;
+  }
+
+  event.preventDefault();
+
+  const blocksForPage = blocks.filter(
+    (block) =>
+      block.pageId === state.activePageId &&
+      block.languageId === state.activeLanguageId
+  );
+  const pageSize = getPageSize(
+    documentData.page.format,
+    documentData.page.orientation
+  );
+  const position = getNextBlockPosition({
+    blocksForPage,
+    blockSize: { width: 520, height: 360 },
+    pageSize,
+  });
+
+  const block = await createImageBlockFromFile(file, {
+    pageId: state.activePageId,
+    languageId: state.activeLanguageId,
+    position,
+    pageSize,
+  });
+
+  blocks.push(block);
   renderCanvas();
 });
 
