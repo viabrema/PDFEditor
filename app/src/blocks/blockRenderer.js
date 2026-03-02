@@ -1,9 +1,15 @@
-import { createTableElement } from "./tableBlock.js";
+import { createTableElement, setTableEditable } from "./tableBlock.js";
 
-export function createBlockElement(block) {
+export function createBlockElement(block, { selected = false, editing = false } = {}) {
   const element = document.createElement("div");
   element.className =
     "block-shell absolute rounded-md border border-slate-200 bg-white shadow-sm";
+  if (selected) {
+    element.classList.add("is-selected");
+  }
+  if (editing) {
+    element.classList.add("is-editing");
+  }
   element.dataset.blockId = block.id;
   element.style.left = `${block.position.x}px`;
   element.style.top = `${block.position.y}px`;
@@ -20,6 +26,7 @@ export function createBlockElement(block) {
     element.append(img);
   } else if (block.type === "table") {
     const table = createTableElement(block);
+    setTableEditable(table, editing);
     element.append(table);
   } else {
     editorHost = document.createElement("div");

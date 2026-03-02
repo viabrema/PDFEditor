@@ -87,7 +87,7 @@ describe("dragResize", () => {
     };
     const interactFactory = vi.fn(() => api);
 
-    const cleanup = setupDragResize({
+    const interaction = setupDragResize({
       element,
       block,
       gridSize: 10,
@@ -107,7 +107,15 @@ describe("dragResize", () => {
 
     expect(block.size).toEqual({ width: 120, height: 90 });
 
-    cleanup();
+    interaction.setEnabled(false);
+    expect(api.draggable).toHaveBeenCalledWith({ enabled: false });
+    expect(api.resizable).toHaveBeenCalledWith({ enabled: false });
+
+    interaction.setEnabled(true);
+    expect(api.draggable).toHaveBeenCalledWith({ enabled: true });
+    expect(api.resizable).toHaveBeenCalledWith({ enabled: true });
+
+    interaction.destroy();
     expect(api.unset).toHaveBeenCalledTimes(1);
   });
 
@@ -133,7 +141,7 @@ describe("dragResize", () => {
     };
     const interactFactory = vi.fn(() => api);
 
-    const cleanup = setupDragResize({
+    const interaction = setupDragResize({
       element,
       block,
       gridSize: 8,
@@ -151,7 +159,7 @@ describe("dragResize", () => {
 
     expect(onUpdate).toHaveBeenCalledTimes(2);
 
-    cleanup();
+    interaction.destroy();
   });
 
   it("ignora cleanup sem unset", () => {
@@ -172,7 +180,7 @@ describe("dragResize", () => {
     };
     const interactFactory = vi.fn(() => api);
 
-    const cleanup = setupDragResize({
+    const interaction = setupDragResize({
       element,
       block,
       gridSize: 10,
@@ -180,7 +188,7 @@ describe("dragResize", () => {
       interactFactory,
     });
 
-    cleanup();
+    interaction.destroy();
   });
 
   it("nao aplica snap quando desativado", () => {
@@ -203,7 +211,7 @@ describe("dragResize", () => {
     };
     const interactFactory = vi.fn(() => api);
 
-    const cleanup = setupDragResize({
+    const interaction = setupDragResize({
       element,
       block,
       gridSize: 10,
@@ -216,7 +224,7 @@ describe("dragResize", () => {
 
     expect(block.position).toEqual({ x: 6, y: 7 });
 
-    cleanup();
+    interaction.destroy();
   });
 
   it("notifica onUpdate no fim do drag com snap ativo", () => {
@@ -240,7 +248,7 @@ describe("dragResize", () => {
     };
     const interactFactory = vi.fn(() => api);
 
-    const cleanup = setupDragResize({
+    const interaction = setupDragResize({
       element,
       block,
       gridSize: 10,
@@ -253,7 +261,39 @@ describe("dragResize", () => {
 
     expect(onUpdate).toHaveBeenCalledTimes(1);
 
-    cleanup();
+    interaction.destroy();
+  });
+
+  it("setEnabled ignora instancia sem apis", () => {
+    const window = new Window();
+    const element = window.document.createElement("div");
+    const block = {
+      position: { x: 0, y: 0 },
+      size: { width: 100, height: 100 },
+    };
+
+    const api = {
+      draggable: vi.fn(function () {
+        return api;
+      }),
+      resizable: vi.fn(function () {
+        return api;
+      }),
+    };
+    const interactFactory = vi.fn(() => api);
+
+    const interaction = setupDragResize({
+      element,
+      block,
+      gridSize: 10,
+      snapEnabled: true,
+      interactFactory,
+    });
+
+    api.draggable = null;
+    api.resizable = null;
+    interaction.setEnabled(false);
+    interaction.destroy();
   });
 
   it("throws when missing element", () => {

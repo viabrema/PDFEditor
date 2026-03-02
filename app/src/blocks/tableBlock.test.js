@@ -10,6 +10,7 @@ import {
   normalizeRows,
   parseTabularText,
   readTableRows,
+  setTableEditable,
   updateTableBody,
 } from "./tableBlock.js";
 
@@ -81,6 +82,19 @@ describe("table block", () => {
     const rows = readTableRows(table);
 
     expect(rows).toEqual([["a", "b"]]);
+  });
+
+  it("toggles table edit mode", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = { content: { rows: [["a"]] } };
+    const table = createTableElement(block);
+
+    setTableEditable(table, false);
+    expect(table.classList.contains("is-readonly")).toBe(true);
+    setTableEditable(table, true);
+    expect(table.classList.contains("is-editing")).toBe(true);
   });
 
   it("updates table body", () => {

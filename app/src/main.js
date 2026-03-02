@@ -145,6 +145,8 @@ const state = {
   activeLanguageId: documentData.activeLanguageId,
   views: [],
   interactions: [],
+  selectedBlockId: null,
+  editingBlockId: null,
 };
 
 const blocks = [
@@ -223,7 +225,7 @@ function clearViews() {
 }
 
 function clearInteractions() {
-  state.interactions.forEach((cleanup) => cleanup());
+  state.interactions.forEach((interaction) => interaction.destroy());
   state.interactions = [];
 }
 
@@ -255,6 +257,30 @@ function renderToolbar(view) {
   toolbarHost.innerHTML = "";
   const toolbar = createToolbar(createEditorCommands(view));
   toolbarHost.append(toolbar);
+}
+
+function focusEditingBlock() {
+  if (!state.editingBlockId) {
+    return;
+  }
+
+  const element = document.querySelector(
+    `.block-shell[data-block-id="${state.editingBlockId}"]`
+  );
+  if (!element) {
+    return;
+  }
+
+  const prose = element.querySelector(".ProseMirror");
+  if (prose) {
+    prose.focus();
+    return;
+  }
+
+  const cell = element.querySelector("td");
+  if (cell) {
+    cell.focus();
+  }
 }
 
 function renderCanvas() {
@@ -300,11 +326,50 @@ function renderCanvas() {
     }
 
     pageBlocks.forEach((block) => {
-      const { element, editorHost } = createBlockElement(block);
+      const isSelected = block.id === state.selectedBlockId;
+      const isEditing = block.id === state.editingBlockId;
+      const { element, editorHost } = createBlockElement(block, {
+        selected: isSelected,
+        editing: isEditing,
+      });
       pageSurface.append(element);
 
+      element.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const nextSelected = block.id;
+        const nextEditing =
+          state.editingBlockId && state.editingBlockId !== block.id
+            ? null
+            : state.editingBlockId;
+        const shouldRender =
+          state.selectedBlockId !== nextSelected ||
+          state.editingBlockId !== nextEditing;
+        state.selectedBlockId = nextSelected;
+        state.editingBlockId = nextEditing;
+        if (shouldRender) {
+          render();
+        }
+      });
+
+      element.addEventListener("dblclick", (event) => {
+        event.stopPropagation();
+        if (block.type === "image") {
+          return;
+        }
+        const shouldRender =
+          state.editingBlockId !== block.id || state.selectedBlockId !== block.id;
+        state.selectedBlockId = block.id;
+        state.editingBlockId = block.id;
+        if (shouldRender) {
+          render();
+        }
+      });
+
       if (editorHost) {
-        const view = createEditor({ mount: editorHost });
+        const view = createEditor({
+          mount: editorHost,
+          editable: () => block.id === state.editingBlockId,
+        });
         state.views.push(view);
 
         if (!didMountToolbar && page.id === state.activePageId) {
@@ -313,13 +378,14 @@ function renderCanvas() {
         }
       }
 
-      const cleanup = setupDragResize({
+      const interaction = setupDragResize({
         element,
         block,
         gridSize: documentData.grid.size,
         snapEnabled: documentData.grid.snap,
       });
-      state.interactions.push(cleanup);
+      interaction.setEnabled(!isEditing);
+      state.interactions.push(interaction);
     });
 
     canvas.append(pageWrapper);
@@ -371,6 +437,7 @@ function render() {
 
   renderCanvas();
   renderMeta();
+  focusEditingBlock();
 }
 
 formatSelect.value = documentData.page.format;
@@ -565,6 +632,18 @@ document.addEventListener("paste", async (event) => {
 
   blocks.push(block);
   renderCanvas();
+});
+
+document.addEventListener("click", (event) => {
+  if (event.target.closest(".block-shell")) {
+    return;
+  }
+
+  if (state.editingBlockId || state.selectedBlockId) {
+    state.editingBlockId = null;
+    state.selectedBlockId = null;
+    render();
+  }
 });
 
 render();

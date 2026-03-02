@@ -23,7 +23,7 @@ describe("editor", () => {
 
   it("creates editor view and commands", () => {
     const mount = document.createElement("div");
-    const view = createEditor({ mount });
+    const view = createEditor({ mount, editable: () => true });
     const commands = createEditorCommands(view);
 
     expect(view.dom).toBeInstanceOf(window.HTMLElement);
@@ -51,6 +51,16 @@ describe("editor", () => {
     const view = createEditor({ mount, schema });
 
     expect(view.state.schema).toBe(schema);
+
+    view.destroy();
+  });
+
+  it("respects editable prop", () => {
+    const schema = createEditorSchema();
+    const mount = document.createElement("div");
+    const view = createEditor({ mount, schema, editable: () => false });
+
+    expect(view.props.editable()).toBe(false);
 
     view.destroy();
   });

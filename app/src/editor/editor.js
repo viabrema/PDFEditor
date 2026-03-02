@@ -23,10 +23,11 @@ export function createEditorState({ schema = createEditorSchema(), content } = {
   });
 }
 
-export function createEditorView({ mount, state }) {
+export function createEditorView({ mount, state, editable = () => true }) {
   let view;
   view = new EditorView(mount, {
     state,
+    editable,
     dispatchTransaction(transaction) {
       const nextState = view.state.apply(transaction);
       view.updateState(nextState);
@@ -49,8 +50,8 @@ export function createEditorCommands(view) {
   };
 }
 
-export function createEditor({ mount, schema, content } = {}) {
+export function createEditor({ mount, schema, content, editable } = {}) {
   const resolvedSchema = schema || createEditorSchema();
   const state = createEditorState({ schema: resolvedSchema, content });
-  return createEditorView({ mount, state });
+  return createEditorView({ mount, state, editable });
 }

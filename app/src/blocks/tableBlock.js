@@ -107,6 +107,15 @@ export function updateTableBody(table, rows) {
   });
 }
 
+export function setTableEditable(table, editable) {
+  const cells = table.querySelectorAll("td");
+  cells.forEach((cell) => {
+    cell.contentEditable = editable ? "true" : "false";
+  });
+  table.classList.toggle("is-readonly", !editable);
+  table.classList.toggle("is-editing", editable);
+}
+
 export function attachTableHandlers({ table, block }) {
   const handleInput = () => {
     block.content = block.content || {};
@@ -134,6 +143,7 @@ export function createTableElement(block) {
   table.className = "table-block";
   const rows = normalizeRows(block.content?.rows || createEmptyTable());
   updateTableBody(table, rows);
+  setTableEditable(table, true);
   attachTableHandlers({ table, block });
   return table;
 }

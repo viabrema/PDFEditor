@@ -104,9 +104,20 @@ export function setupDragResize({
       },
     });
 
-  return () => {
+  const setEnabled = (enabled) => {
+    if (instance?.draggable) {
+      instance.draggable({ enabled });
+    }
+    if (instance?.resizable) {
+      instance.resizable({ enabled });
+    }
+  };
+
+  const destroy = () => {
     if (instance?.unset) {
       instance.unset();
     }
   };
+
+  return { destroy, setEnabled };
 }

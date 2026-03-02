@@ -21,6 +21,16 @@ body {
   cursor: move;
 }
 
+.block-shell.is-selected {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.2);
+}
+
+.block-shell.is-editing {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.4);
+}
+
 .resize-handle {
   position: absolute;
   width: 10px;
@@ -75,6 +85,11 @@ body {
 .table-block td:focus {
   outline: 2px solid #0f172a;
   outline-offset: -2px;
+}
+
+.table-block.is-readonly td {
+  pointer-events: none;
+  user-select: none;
 }
 
 .icon-button {

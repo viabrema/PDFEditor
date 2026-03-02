@@ -27,11 +27,16 @@ describe("block renderer", () => {
       size: { width: 200, height: 100 },
     };
 
-    const { element, editorHost } = createBlockElement(block);
+    const { element, editorHost } = createBlockElement(block, {
+      selected: true,
+      editing: true,
+    });
 
     expect(element.dataset.blockId).toBe("block-1");
     expect(editorHost).toBeInstanceOf(window.HTMLElement);
     expect(editorHost.className).toContain("prose-editor");
+    expect(element.className).toContain("is-selected");
+    expect(element.className).toContain("is-editing");
   });
 
   it("creates image block", () => {
