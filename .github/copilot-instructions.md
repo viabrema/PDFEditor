@@ -64,6 +64,7 @@ Build a Notion-style PDF editor for Windows (desktop) using a web UI. Users crea
 - Avoid global state; pass dependencies where possible.
 - Keep functions short and focused.
 - Use ASCII in source files unless a feature requires Unicode.
+- Sempre que adicionar novas funcionalidades de formatacao (ex.: alinhamento, estilos de titulo/subtitulo, listas), atualizar a logica de prompts/AI para reconhecer e aplicar esses recursos.
 
 ## UX Guidelines
 - Toolbar: bold, italic, lists, image insert, translate.

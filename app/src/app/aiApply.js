@@ -8,6 +8,25 @@ export function sanitizeAiPayload(text) {
     .trim();
 }
 
+function parseAiJson(text) {
+  const cleaned = sanitizeAiPayload(text);
+  try {
+    return JSON.parse(cleaned);
+  } catch (error) {
+    const firstBrace = cleaned.indexOf("{");
+    const lastBrace = cleaned.lastIndexOf("}");
+    if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+      return null;
+    }
+    const slice = cleaned.slice(firstBrace, lastBrace + 1);
+    try {
+      return JSON.parse(slice);
+    } catch (nestedError) {
+      return null;
+    }
+  }
+}
+
 export function applyTextStyleToDoc(content, style) {
   if (!content || typeof content !== "object") {
     return content;
@@ -49,39 +68,83 @@ export function applyTextStyleToDoc(content, style) {
   return applyMarks(content);
 }
 
-export function applyAiResultToBlock({ block, resultText }) {
-  const cleaned = sanitizeAiPayload(resultText);
+export function applyBlockFormatToDoc(content, format) {
+  if (!content || typeof content !== "object") {
+    return content;
+  }
+  if (content.type !== "doc" || !Array.isArray(content.content)) {
+    return content;
+  }
+  if (!format || typeof format !== "object") {
+    return content;
+  }
 
-  if (block.type === "text") {
-    try {
-      const parsed = JSON.parse(cleaned);
-      if (parsed && typeof parsed === "object" && (parsed.contentText || parsed.textStyle)) {
-        if (typeof parsed.contentText === "string") {
-          block.content = buildTextDocFromString(parsed.contentText);
-        }
-        if (parsed.textStyle && typeof parsed.textStyle === "object") {
-          block.content = applyTextStyleToDoc(block.content, parsed.textStyle);
-        }
-        return true;
+  const nextType = format.type === "heading" ? "heading" : "paragraph";
+  const nextLevel = format.level === 2 ? 2 : 1;
+  const hasAlign = typeof format.textAlign === "string";
+
+  function applyFormat(node) {
+    if (!node || typeof node !== "object") {
+      return node;
+    }
+    if (node.type === "paragraph" || node.type === "heading") {
+      const nextAttrs = { ...(node.attrs || {}) };
+      if (nextType === "heading") {
+        nextAttrs.level = nextLevel;
+      } else if (nextAttrs.level) {
+        delete nextAttrs.level;
       }
-    } catch (error) {
-      // fallthrough
+      if (hasAlign) {
+        nextAttrs.textAlign = format.textAlign;
+      }
+      return { ...node, type: nextType, attrs: nextAttrs };
+    }
+    if (!Array.isArray(node.content)) {
+      return { ...node };
+    }
+    return {
+      ...node,
+      content: node.content.map(applyFormat),
+    };
+  }
+
+  return {
+    ...content,
+    content: content.content.map(applyFormat),
+  };
+}
+
+export function applyAiResultToBlock({ block, resultText }) {
+  if (block.type === "text") {
+    const parsed = parseAiJson(resultText);
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      (parsed.contentText || parsed.textStyle || parsed.blockFormat)
+    ) {
+      if (typeof parsed.contentText === "string") {
+        block.content = buildTextDocFromString(parsed.contentText);
+      }
+      if (parsed.textStyle && typeof parsed.textStyle === "object") {
+        block.content = applyTextStyleToDoc(block.content, parsed.textStyle);
+      }
+      if (parsed.blockFormat && typeof parsed.blockFormat === "object") {
+        block.content = applyBlockFormatToDoc(block.content, parsed.blockFormat);
+      }
+      return true;
     }
   }
 
   if (block.type === "table") {
-    try {
-      const parsed = JSON.parse(cleaned);
-      if (Array.isArray(parsed)) {
-        block.content = { rows: parsed };
-        return true;
-      }
-    } catch (error) {
-      return false;
+    const parsed = parseAiJson(resultText);
+    if (Array.isArray(parsed)) {
+      block.content = { rows: parsed };
+      return true;
     }
     return false;
   }
 
+  const cleaned = sanitizeAiPayload(resultText);
   block.content = buildTextDocFromString(cleaned);
   return true;
 }
@@ -105,9 +168,8 @@ export function normalizeTableRows(tableRows) {
 }
 
 export function applyAiResultToPage({ resultText, blocks, state }) {
-  const cleaned = sanitizeAiPayload(resultText);
+  const parsed = parseAiJson(resultText);
   try {
-    const parsed = JSON.parse(cleaned);
     const actions = Array.isArray(parsed?.actions) ? parsed.actions : [];
     if (actions.length === 0) {
       return false;

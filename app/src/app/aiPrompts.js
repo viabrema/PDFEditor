@@ -7,7 +7,7 @@ export function isAnalysisInstruction(instruction) {
 }
 
 export function isFormattingInstruction(instruction) {
-  return /(formatacao|formatação|fonte|tamanho|negrito|italico|it[aá]lico|sublinhado)/i.test(
+  return /(formatacao|formatação|fonte|tamanho|negrito|italico|it[aá]lico|sublinhado|alinhamento|alinhar|centralizar|titulo|subtitulo|paragrafo)/i.test(
     instruction
   );
 }
@@ -50,7 +50,7 @@ export function buildAiPrompt({ block, instruction, mode }) {
     return [
       "Voce e um assistente que ajusta formatacao de texto.",
       "Retorne apenas JSON com a resposta.",
-      "Formato: {\"contentText\":string?,\"textStyle\":{\"fontSize\":string?,\"fontFamily\":string?,\"bold\":boolean?,\"italic\":boolean?}}",
+      "Formato: {\"contentText\":string?,\"textStyle\":{\"fontSize\":string?,\"fontFamily\":string?,\"bold\":boolean?,\"italic\":boolean?},\"blockFormat\":{\"type\":\"paragraph\"|\"heading\",\"level\"?:1|2,\"textAlign\"?:\"left\"|\"center\"|\"right\"}}",
       "Se nao precisar mudar texto, omita contentText.",
       "Texto atual:",
       currentText,
