@@ -1,0 +1,171 @@
+export function renderAppTemplate(root) {
+  root.innerHTML = `
+    <main class="min-h-screen bg-slate-50 text-slate-900">
+      <header class="border-b border-slate-200 bg-white">
+        <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+          <div>
+            <h1 class="text-2xl font-semibold">PDF Editor</h1>
+            <p class="text-sm text-slate-600">Editor em modo rascunho</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              id="open-doc"
+              type="button"
+              class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"
+              title="Abrir documento"
+              aria-label="Abrir documento"
+            >
+              <i data-lucide="folder-open"></i>
+            </button>
+            <button
+              id="save-doc"
+              type="button"
+              class="icon-button rounded-md bg-slate-900 text-white"
+              title="Salvar documento"
+              aria-label="Salvar documento"
+            >
+              <i data-lucide="save"></i>
+            </button>
+            <button
+              id="export-pdf"
+              type="button"
+              class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"
+              title="Exportar PDF"
+              aria-label="Exportar PDF"
+            >
+              <i data-lucide="file-down"></i>
+            </button>
+            <button
+              id="ai-panel-toggle"
+              type="button"
+              class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"
+              title="Abrir AI"
+              aria-label="Abrir AI"
+            >
+              <i data-lucide="sparkles"></i>
+            </button>
+            <div id="doc-status" class="text-xs text-slate-500">Documento local</div>
+          </div>
+        </div>
+      </header>
+      <section class="mx-auto max-w-5xl px-6 py-6">
+        <div class="mb-4 flex flex-wrap items-end gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="page-format">
+              Formato
+            </label>
+            <select
+              id="page-format"
+              class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            >
+              <option value="A4">A4</option>
+              <option value="Letter">Letter</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="page-orientation">
+              Orientacao
+            </label>
+            <select
+              id="page-orientation"
+              class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            >
+              <option value="portrait">Retrato</option>
+              <option value="landscape">Paisagem</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="grid-size">
+              Grid
+            </label>
+            <input
+              id="grid-size"
+              type="number"
+              min="4"
+              max="40"
+              step="1"
+              class="w-24 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            />
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="grid-snap" type="checkbox" class="h-4 w-4" />
+            <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="grid-snap">
+              Snap
+            </label>
+          </div>
+          <div class="flex flex-col gap-1">
+            <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Pagina ativa</span>
+            <span class="text-sm text-slate-700" id="page-meta"></span>
+          </div>
+        </div>
+        <div class="mb-3 flex flex-wrap items-center gap-3">
+          <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Idiomas</div>
+          <div class="flex flex-wrap gap-2" id="language-tabs"></div>
+          <div class="flex items-center gap-2" id="language-actions"></div>
+          <div id="translation-status" class="text-xs text-slate-500"></div>
+        </div>
+        <div class="mb-4 flex flex-wrap items-center gap-3">
+          <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Paginas</div>
+          <div class="flex flex-wrap gap-2" id="page-tabs"></div>
+        </div>
+        <div class="mb-4 flex items-center justify-between">
+          <div class="text-sm text-slate-500">Canvas</div>
+          <div class="flex items-center gap-2">
+            <button
+              id="add-text-block"
+              type="button"
+              class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
+              title="Novo bloco de texto"
+              aria-label="Novo bloco de texto"
+            >
+              <i data-lucide="type"></i>
+            </button>
+            <button
+              id="add-table-block"
+              type="button"
+              class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
+              title="Novo bloco de tabela"
+              aria-label="Novo bloco de tabela"
+            >
+              <i data-lucide="table"></i>
+            </button>
+            <button
+              id="add-image-block"
+              type="button"
+              class="icon-button rounded-md bg-slate-900 px-3 py-2 text-white"
+              title="Novo bloco de imagem"
+              aria-label="Novo bloco de imagem"
+            >
+              <i data-lucide="image"></i>
+            </button>
+            <input id="image-input" type="file" accept="image/*" class="hidden" />
+          </div>
+        </div>
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-6">
+          <div
+            id="canvas"
+            class="flex max-h-[720px] flex-col gap-6 overflow-y-auto rounded-xl bg-slate-50 p-6"
+          ></div>
+        </div>
+      </section>
+      <aside id="ai-panel" class="ai-panel" aria-hidden="true">
+        <div class="ai-panel-header">
+          <div class="text-sm font-semibold text-slate-900">AI Assistente</div>
+          <button id="ai-panel-close" type="button" class="ai-panel-close">Fechar</button>
+        </div>
+        <div class="ai-panel-body">
+          <div id="ai-target" class="text-xs text-slate-500">Selecione um bloco</div>
+          <textarea
+            id="ai-input"
+            class="ai-panel-input"
+            rows="6"
+            placeholder="Descreva o que deseja mudar..."
+          ></textarea>
+          <button id="ai-send" type="button" class="ai-panel-send">Enviar</button>
+          <div id="ai-status" class="text-xs text-slate-500"></div>
+          <pre id="ai-response" class="ai-panel-response"></pre>
+        </div>
+      </aside>
+    </main>
+  `;
+}

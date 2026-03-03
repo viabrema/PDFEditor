@@ -78,4 +78,5 @@ Build a Notion-style PDF editor for Windows (desktop) using a web UI. Users crea
 - sempre vá marcando os checks do todo.md conforme for implementando as features
 - sempre rode os testes com coverage e garanta que estão passando antes de marcar um item como concluído
 - mantenha a cobertura de testes em 100%
+- sempre rode o lint e corrija os avisos antes de marcar um item como concluído
 - sempre responda em portugues

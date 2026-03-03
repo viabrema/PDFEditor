@@ -9,13 +9,15 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint \"src/**/*.js\""
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.1",
     "@tailwindcss/postcss": "^4.2.1",
     "@vitest/coverage-v8": "^4.0.18",
     "autoprefixer": "^10.4.27",
+    "eslint": "^9.0.0",
     "happy-dom": "^20.7.0",
     "jsdom": "^28.1.0",
     "postcss": "^8.5.8",
