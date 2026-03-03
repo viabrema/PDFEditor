@@ -178,7 +178,7 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  overflow: hidden;
+  overflow: visible;
   border-color: rgba(148, 163, 184, 0.35);
   border-style: dashed;
   border-width: 0;
