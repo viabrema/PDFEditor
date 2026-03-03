@@ -147,6 +147,11 @@ body {
   overflow: visible;
 }
 
+.page-surface.is-active {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.2), 0 20px 40px -30px rgba(15, 23, 42, 0.6);
+}
+
 .page-surface.grid-on {
   background-image: linear-gradient(
       to right,

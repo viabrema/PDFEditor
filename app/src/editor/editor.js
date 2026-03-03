@@ -48,6 +48,29 @@ function runCommand(command, view) {
   return command(view.state, view.dispatch, view);
 }
 
+function applyTextStyle(view, attrs) {
+  const { state, dispatch } = view;
+  const markType = state.schema.marks.textStyle;
+  if (!markType) {
+    return false;
+  }
+
+  const currentMarks = state.storedMarks || state.selection.$from.marks();
+  const existing = markType.isInSet(currentMarks);
+  const nextAttrs = { ...(existing?.attrs || {}), ...attrs };
+  const mark = markType.create(nextAttrs);
+
+  const tr = state.tr;
+  if (state.selection.empty) {
+    tr.setStoredMarks(mark.addToSet(currentMarks));
+  } else {
+    tr.addMark(state.selection.from, state.selection.to, mark);
+  }
+
+  dispatch(tr.scrollIntoView());
+  return true;
+}
+
 export function createEditorCommands(view) {
   const { schema } = view.state;
   return {
@@ -55,6 +78,8 @@ export function createEditorCommands(view) {
     toggleItalic: () => runCommand(toggleMark(schema.marks.em), view),
     toggleBulletList: () => runCommand(wrapInList(schema.nodes.bullet_list), view),
     toggleOrderedList: () => runCommand(wrapInList(schema.nodes.ordered_list), view),
+    setFontSize: (value) => applyTextStyle(view, { fontSize: value }),
+    setFontFamily: (value) => applyTextStyle(view, { fontFamily: value }),
   };
 }
 

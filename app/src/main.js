@@ -393,13 +393,24 @@ function renderCanvas() {
     pageWrapper.append(pageHeader);
 
     const pageSurface = document.createElement("div");
+    const isActivePage = page.id === state.activePageId;
     pageSurface.className = documentData.grid.snap
       ? "page-surface grid-on"
       : "page-surface";
+    if (isActivePage) {
+      pageSurface.classList.add("is-active");
+    }
     pageSurface.style.width = `${width}px`;
     pageSurface.style.height = `${height}px`;
     pageSurface.style.setProperty("--grid-size", `${documentData.grid.size}px`);
     pageWrapper.append(pageSurface);
+
+    pageSurface.addEventListener("click", () => {
+      if (state.activePageId !== page.id) {
+        state.activePageId = page.id;
+        render();
+      }
+    });
 
     const pageBlocks = activeBlocks.filter((block) => block.pageId === page.id);
 

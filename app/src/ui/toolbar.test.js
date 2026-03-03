@@ -35,24 +35,40 @@ describe("toolbar", () => {
       toggleOrderedList: () => {
         clicked += 1;
       },
+      setFontFamily: () => {
+        clicked += 1;
+      },
+      setFontSize: () => {
+        clicked += 1;
+      },
     });
 
     expect(toolbar.querySelectorAll("button")).toHaveLength(4);
+    expect(toolbar.querySelectorAll("select")).toHaveLength(2);
 
     toolbar.querySelectorAll("button").forEach((button) => {
       button.click();
     });
 
-    expect(clicked).toBe(4);
+    toolbar.querySelectorAll("select").forEach((select) => {
+      select.dispatchEvent(new window.Event("change"));
+    });
+
+    expect(clicked).toBe(6);
   });
 
   it("renders disabled toolbar", () => {
     const toolbar = createToolbar(null, { disabled: true });
     const buttons = toolbar.querySelectorAll("button");
+    const selects = toolbar.querySelectorAll("select");
 
     expect(buttons).toHaveLength(4);
+    expect(selects).toHaveLength(2);
     buttons.forEach((button) => {
       expect(button.disabled).toBe(true);
+    });
+    selects.forEach((select) => {
+      expect(select.disabled).toBe(true);
     });
   });
 });

@@ -30,8 +30,27 @@ function renderMarks(text, marks = []) {
     if (mark.type === "em") {
       return `<em>${current}</em>`;
     }
+      if (mark.type === "textStyle") {
+        const fontSize = sanitizeFontValue(mark.attrs?.fontSize);
+        const fontFamily = sanitizeFontValue(mark.attrs?.fontFamily);
+        const styles = [];
+        if (fontSize) {
+          styles.push(`font-size: ${fontSize}`);
+        }
+        if (fontFamily) {
+          styles.push(`font-family: ${fontFamily}`);
+        }
+        if (styles.length === 0) {
+          return current;
+        }
+        return `<span style="${styles.join("; ")}">${current}</span>`;
+      }
     return current;
   }, text);
+}
+
+function sanitizeFontValue(value) {
+  return value ? String(value).replace(/[";<>]/g, "").trim() : "";
 }
 
 function renderNode(node) {

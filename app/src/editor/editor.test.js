@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Window } from "happy-dom";
+import { Schema } from "prosemirror-model";
+import { schema as basicSchema } from "prosemirror-schema-basic";
+import { addListNodes } from "prosemirror-schema-list";
+import { TextSelection } from "prosemirror-state";
 import { createEditor, createEditorCommands, createEditorState } from "./editor.js";
 import { createEditorSchema } from "./schema.js";
 
@@ -34,8 +38,38 @@ describe("editor", () => {
     commands.toggleItalic();
     commands.toggleBulletList();
     commands.toggleOrderedList();
+    commands.setFontSize("18px");
+    commands.setFontFamily("Georgia");
 
     expect(onChange).toHaveBeenCalled();
+
+    view.destroy();
+  });
+
+  it("applies text style on range selection", () => {
+    const mount = document.createElement("div");
+    const onChange = vi.fn();
+    const view = createEditor({ mount, editable: () => true, onChange });
+    const commands = createEditorCommands(view);
+
+    view.dispatch(view.state.tr.insertText("abc"));
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1, 3)));
+    commands.setFontSize("20px");
+
+    expect(onChange).toHaveBeenCalled();
+
+    view.destroy();
+  });
+
+  it("ignores text style when mark is missing", () => {
+    const nodes = addListNodes(basicSchema.spec.nodes, "paragraph block*", "block");
+    const schema = new Schema({ nodes, marks: basicSchema.spec.marks });
+    const mount = document.createElement("div");
+    const view = createEditor({ mount, schema, editable: () => true });
+    const commands = createEditorCommands(view);
+
+    commands.setFontSize("18px");
+    commands.setFontFamily("Georgia");
 
     view.destroy();
   });
