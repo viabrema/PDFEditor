@@ -83,6 +83,9 @@ export function renderCanvasView({ documentData, state, blocks, refs, requestRen
     if (documentData.regions?.header?.enabled) {
       const headerRegion = document.createElement("div");
       headerRegion.className = "page-region is-header";
+      if (state.activeRegion === "header" && state.activePageId === page.id) {
+        headerRegion.classList.add("is-active");
+      }
       headerRegion.style.height = `${documentData.regions.header.height}px`;
       headerRegion.addEventListener("click", (event) => {
         event.stopPropagation();
@@ -131,6 +134,9 @@ export function renderCanvasView({ documentData, state, blocks, refs, requestRen
     if (documentData.regions?.footer?.enabled) {
       const footerRegion = document.createElement("div");
       footerRegion.className = "page-region is-footer";
+      if (state.activeRegion === "footer" && state.activePageId === page.id) {
+        footerRegion.classList.add("is-active");
+      }
       footerRegion.style.height = `${documentData.regions.footer.height}px`;
       footerRegion.addEventListener("click", (event) => {
         event.stopPropagation();

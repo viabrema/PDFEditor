@@ -34,12 +34,14 @@ export function createBlockElement(block, { selected = false, editing = false } 
     element.append(editorHost);
   }
 
-  ["nw", "ne", "se", "sw"].forEach((corner) => {
-    const handle = document.createElement("span");
-    handle.className = "resize-handle";
-    handle.dataset.corner = corner;
-    element.append(handle);
-  });
+  if (selected) {
+    ["nw", "ne", "se", "sw"].forEach((corner) => {
+      const handle = document.createElement("span");
+      handle.className = "resize-handle";
+      handle.dataset.corner = corner;
+      element.append(handle);
+    });
+  }
 
   return { element, editorHost };
 }
