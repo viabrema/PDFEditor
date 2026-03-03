@@ -51,6 +51,7 @@ export function buildAiPrompt({ block, instruction, mode }) {
       "Voce e um assistente que ajusta formatacao de texto.",
       "Retorne apenas JSON com a resposta.",
       "Formato: {\"contentText\":string?,\"textStyle\":{\"fontSize\":string?,\"fontFamily\":string?,\"bold\":boolean?,\"italic\":boolean?},\"blockFormat\":{\"type\":\"paragraph\"|\"heading\",\"level\"?:1|2,\"textAlign\"?:\"left\"|\"center\"|\"right\"}}",
+      "Se precisar de listas, use markdown simples em contentText (ex.: - item, 1. item).",
       "Se nao precisar mudar texto, omita contentText.",
       "Texto atual:",
       currentText,
