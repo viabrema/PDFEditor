@@ -43,8 +43,6 @@
 ## 7) Integracao com API de traducao
 - [x] Implementar cliente em src/services/translation.js (endpoint + chave + payload)
 - [x] Suporte a PT (padrao), EN e ES
-- [ ] Traduzir selecao
-- [ ] Traduzir bloco
 - [x] Traduzir documento
 - [x] UI de loading e erro
 - [x] Botao "Atualizar" nas abas EN/ES para resetar traducao

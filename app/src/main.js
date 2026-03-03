@@ -399,9 +399,25 @@ function sanitizeAiPayload(text) {
     .trim();
 }
 
-function buildAiPrompt({ block, instruction }) {
+function isAnalysisInstruction(instruction) {
+  return /(analise|analisar|resuma|resumir|interprete|interpretar|inspecione|inspecionar)/i.test(
+    instruction
+  );
+}
+
+function buildAiPrompt({ block, instruction, mode }) {
   if (block.type === "table") {
     const rows = Array.isArray(block.content?.rows) ? block.content.rows : [];
+    if (mode === "analysis") {
+      return [
+        "Voce e um assistente que analisa tabelas.",
+        "Retorne apenas o texto da analise, sem blocos de codigo.",
+        "Tabela (JSON):",
+        JSON.stringify(rows),
+        "Instrucao:",
+        instruction,
+      ].join("\n");
+    }
     return [
       "Voce e um assistente que edita tabelas.",
       "Retorne apenas um JSON array de arrays com o mesmo formato.",
@@ -413,6 +429,16 @@ function buildAiPrompt({ block, instruction }) {
   }
 
   const currentText = extractTextFromNode(block.content).trim();
+  if (mode === "analysis") {
+    return [
+      "Voce e um assistente que analisa texto.",
+      "Retorne apenas o texto da analise, sem blocos de codigo.",
+      "Texto atual:",
+      currentText,
+      "Instrucao:",
+      instruction,
+    ].join("\n");
+  }
   return [
     "Voce e um assistente que edita texto.",
     "Retorne apenas o texto atualizado, sem aspas.",
@@ -1298,7 +1324,8 @@ aiSend.addEventListener("click", async () => {
   renderAiPanel();
 
   try {
-    const prompt = buildAiPrompt({ block: selectedBlock, instruction });
+    const mode = isAnalysisInstruction(instruction) ? "analysis" : "edit";
+    const prompt = buildAiPrompt({ block: selectedBlock, instruction, mode });
     const chatId = state.ai.chatByBlockId[selectedBlock.id];
     const result = await aiService.sendPrompt({ prompt, chatId });
     if (!result.ok) {
@@ -1312,6 +1339,11 @@ aiSend.addEventListener("click", async () => {
       state.ai.chatByBlockId[selectedBlock.id] = result.chatId;
     }
     state.ai.response = result.text || "";
+
+    if (mode === "analysis") {
+      renderAiPanel();
+      return;
+    }
 
     const applied = applyAiResultToBlock({
       block: selectedBlock,
