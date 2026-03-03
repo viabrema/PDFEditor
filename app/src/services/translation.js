@@ -25,6 +25,7 @@ export function createTranslationService({ endpoint, apiKey, fetcher, provider, 
     }
     return (
       data.text ||
+      data.answer ||
       data.response ||
       data.output ||
       data.message ||
@@ -33,38 +34,45 @@ export function createTranslationService({ endpoint, apiKey, fetcher, provider, 
     );
   }
 
+  async function sendPrompt(prompt) {
+    const response = await request(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        prompt,
+        provider: resolvedProvider,
+        model: resolvedModel,
+      }),
+    });
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        error: {
+          message: "Translation failed",
+          status: response.status,
+        },
+      };
+    }
+
+    const data = await response.json();
+    return {
+      ok: true,
+      data,
+      text: resolveText(data),
+    };
+  }
+
   return {
     async translateText({ text, sourceLang, targetLang }) {
       const prompt = buildPrompt({ text, sourceLang, targetLang });
-      const response = await request(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-        },
-        body: JSON.stringify({
-          prompt,
-          provider: resolvedProvider,
-          model: resolvedModel,
-        }),
-      });
-
-      if (!response.ok) {
-        return {
-          ok: false,
-          error: {
-            message: "Translation failed",
-            status: response.status,
-          },
-        };
-      }
-
-      const data = await response.json();
-      return {
-        ok: true,
-        data,
-        text: resolveText(data),
-      };
+      return sendPrompt(prompt);
+    },
+    async translatePrompt({ prompt }) {
+      return sendPrompt(prompt);
     },
   };
 }

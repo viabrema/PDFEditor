@@ -355,6 +355,43 @@ async function translateTextValue({ text, sourceLanguageId, targetLanguageId }) 
   return result.text || text;
 }
 
+async function translateTextBatch({ texts, sourceLanguageId, targetLanguageId }) {
+  const normalized = texts.map((text) => String(text || ""));
+  if (normalized.every((text) => !text.trim())) {
+    return normalized;
+  }
+
+  const prompt = [
+    `Traduza do ${getLanguagePromptLabel(sourceLanguageId)} para ${getLanguagePromptLabel(
+      targetLanguageId
+    )}.`,
+    "Retorne apenas um JSON array de strings na mesma ordem.",
+    "Texto (JSON array):",
+    JSON.stringify(normalized),
+  ].join("\n");
+
+  const result = await translationService.translatePrompt({ prompt });
+  if (!result.ok || !result.text) {
+    return normalized;
+  }
+
+  try {
+    const cleaned = result.text
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```\s*$/i, "")
+      .trim();
+    const parsed = JSON.parse(cleaned);
+    if (Array.isArray(parsed) && parsed.length === normalized.length) {
+      return parsed.map((value) => String(value));
+    }
+  } catch (error) {
+    return normalized;
+  }
+
+  return normalized;
+}
+
 async function translateNodeTree(node, { sourceLanguageId, targetLanguageId }) {
   if (!node || typeof node !== "object") {
     return node;
@@ -389,6 +426,57 @@ async function translateNodeTree(node, { sourceLanguageId, targetLanguageId }) {
   };
 }
 
+async function translateTextDoc(content, { sourceLanguageId, targetLanguageId }) {
+  const texts = [];
+
+  function collectTextNodes(node) {
+    if (!node || typeof node !== "object") {
+      return;
+    }
+    if (node.type === "text") {
+      texts.push(node.text || "");
+      return;
+    }
+    if (!Array.isArray(node.content)) {
+      return;
+    }
+    node.content.forEach(collectTextNodes);
+  }
+
+  collectTextNodes(content);
+
+  if (texts.length === 0) {
+    return content;
+  }
+
+  const translatedTexts = await translateTextBatch({
+    texts,
+    sourceLanguageId,
+    targetLanguageId,
+  });
+
+  let index = 0;
+  function applyTexts(node) {
+    if (!node || typeof node !== "object") {
+      return node;
+    }
+    if (node.type === "text") {
+      const nextText = translatedTexts[index] ?? node.text;
+      index += 1;
+      return { ...node, text: nextText };
+    }
+    if (!Array.isArray(node.content)) {
+      return { ...node };
+    }
+    return {
+      ...node,
+      content: node.content.map(applyTexts),
+    };
+  }
+
+  return applyTexts(content);
+}
+
 async function translateBlockFromSource(block, { sourceLanguageId, targetLanguageId }) {
   const base = {
     type: block.type,
@@ -401,7 +489,7 @@ async function translateBlockFromSource(block, { sourceLanguageId, targetLanguag
 
   if (block.type === "text") {
     if (block.content && typeof block.content === "object") {
-      const translatedDoc = await translateNodeTree(block.content, {
+      const translatedDoc = await translateTextDoc(block.content, {
         sourceLanguageId,
         targetLanguageId,
       });
