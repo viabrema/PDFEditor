@@ -232,7 +232,10 @@ const PAGE_SIZES = {
   Letter: { width: 816, height: 1056 },
 };
 
-const TRANSLATION_ENDPOINT = "http://10.36.0.19:8080/api/ai/prompt";
+const TRANSLATION_ENDPOINT =
+  window.location.protocol.startsWith("http")
+    ? "/api/ai/prompt"
+    : "http://10.36.0.19:8080/api/ai/prompt";
 const TRANSLATION_KEY = "JygheDTXbNKNwA0DKL94riGK8AqxwtpyvCr2sfoQVfY";
 
 const translationService = createTranslationService({
