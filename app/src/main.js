@@ -25,7 +25,7 @@ const translationService = createTranslationService({
 });
 const aiService = createAiService({ endpoint, apiKey: TRANSLATION_KEY });
 
-const aiFlow = createAiFlow({ blocks, state });
+const aiFlow = createAiFlow({ blocks, state, documentData });
 
 let renderer;
 const translateHandler = (targetLanguageId) =>

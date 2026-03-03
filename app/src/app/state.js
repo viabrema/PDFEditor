@@ -4,6 +4,7 @@ import { createDocument, createLanguage, createPage } from "../editor/documentMo
 export function createInitialDocument() {
   return createDocument({
     title: "Documento local",
+    gridSize: 15,
     languages: [
       createLanguage({ id: "lang-pt", label: "PT", isDefault: true }),
       createLanguage({ id: "lang-en", label: "EN" }),
@@ -41,26 +42,7 @@ export function createInitialState(documentData) {
 }
 
 export function createInitialBlocks() {
-  return [
-    createBlock({
-      position: { x: 32, y: 32 },
-      size: { width: 520, height: 220 },
-      pageId: "page-1",
-      languageId: "lang-pt",
-    }),
-    createBlock({
-      position: { x: 32, y: 32 },
-      size: { width: 520, height: 220 },
-      pageId: "page-2",
-      languageId: "lang-pt",
-    }),
-    createBlock({
-      position: { x: 32, y: 32 },
-      size: { width: 520, height: 220 },
-      pageId: "page-1",
-      languageId: "lang-en",
-    }),
-  ];
+  return [];
 }
 
 export const stateFile = {

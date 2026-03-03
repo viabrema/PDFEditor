@@ -5,8 +5,9 @@ import {
   isFormattingInstruction,
 } from "./aiPrompts.js";
 import { applyAiResultToBlock, applyAiResultToPage } from "./aiApply.js";
+import { getPageSize } from "./textUtils.js";
 
-export function createAiFlow({ blocks, state }) {
+export function createAiFlow({ blocks, state, documentData }) {
   function getSelectedBlock() {
     return blocks.find((block) => block.id === state.selectedBlockId) || null;
   }
@@ -72,6 +73,11 @@ export function createAiFlow({ blocks, state }) {
         pageBlocks: getPageBlockSnapshot(),
         instruction,
         mode,
+        pageSize: getPageSize(
+          documentData?.page?.format,
+          documentData?.page?.orientation
+        ),
+        gridSize: documentData?.grid?.size,
       }),
     applyAiResultToBlock,
     applyAiResultToPage: ({ resultText }) =>

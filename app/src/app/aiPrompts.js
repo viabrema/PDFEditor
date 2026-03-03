@@ -69,7 +69,7 @@ export function buildAiPrompt({ block, instruction, mode }) {
   ].join("\n");
 }
 
-export function buildPageAiPrompt({ pageBlocks, instruction, mode }) {
+export function buildPageAiPrompt({ pageBlocks, instruction, mode, pageSize, gridSize }) {
   if (mode === "analysis") {
     return [
       "Voce e um assistente que analisa uma pagina com blocos.",
@@ -89,6 +89,10 @@ export function buildPageAiPrompt({ pageBlocks, instruction, mode }) {
     "update: {type:'update', id, contentText?, tableRows?, position?, size?}",
     "create: {type:'create', blockType:'text'|'table', contentText?, tableRows?, position?, size?}",
     "tableRows deve ser array de arrays (linhas com celulas).",
+    "position e size devem usar numeros em pixels. Nao use porcentagem ou 'auto'.",
+    "Use inteiros quando possivel.",
+    `Tamanho da pagina (px): ${pageSize?.width ?? "?"} x ${pageSize?.height ?? "?"}`,
+    `Grid (px): ${gridSize ?? "?"}`,
     "delete: {type:'delete', id}",
     "Pagina (JSON):",
     JSON.stringify(pageBlocks),
