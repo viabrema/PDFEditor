@@ -1341,4 +1341,31 @@ document.addEventListener("click", (event) => {
   }
 });
 
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Delete" && event.key !== "Backspace") {
+    return;
+  }
+
+  const isEditingText = Boolean(
+    event.target.closest?.("input, textarea, [contenteditable='true']")
+  );
+  if (isEditingText) {
+    return;
+  }
+
+  if (!state.selectedBlockId || state.editingBlockId) {
+    return;
+  }
+
+  const index = blocks.findIndex((block) => block.id === state.selectedBlockId);
+  if (index === -1) {
+    return;
+  }
+
+  blocks.splice(index, 1);
+  state.selectedBlockId = null;
+  state.editingBlockId = null;
+  render();
+});
+
 render();
