@@ -58,42 +58,44 @@ export function renderAppTemplate(root) {
         </div>
       </header>
       <section class="w-full px-6 py-6">
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Idiomas</div>
-            <div class="flex flex-wrap gap-2" id="language-tabs"></div>
-            <div class="flex items-center gap-2" id="language-actions"></div>
-            <div id="translation-status" class="text-xs text-slate-500"></div>
-          </div>
-          <div class="flex items-center gap-2">
-            <button
-              id="add-text-block"
-              type="button"
-              class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
-              title="Novo bloco de texto"
-              aria-label="Novo bloco de texto"
-            >
-              <i data-lucide="type"></i>
-            </button>
-            <button
-              id="add-table-block"
-              type="button"
-              class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
-              title="Novo bloco de tabela"
-              aria-label="Novo bloco de tabela"
-            >
-              <i data-lucide="table"></i>
-            </button>
-            <button
-              id="add-image-block"
-              type="button"
-              class="icon-button rounded-md bg-slate-900 px-3 py-2 text-white"
-              title="Novo bloco de imagem"
-              aria-label="Novo bloco de imagem"
-            >
-              <i data-lucide="image"></i>
-            </button>
-            <input id="image-input" type="file" accept="image/*" class="hidden" />
+        <div class="sticky top-0 z-30 -mx-6 mb-4 border-b border-slate-200 bg-slate-50/95 px-6 py-3 backdrop-blur">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Idiomas</div>
+              <div class="flex flex-wrap gap-2" id="language-tabs"></div>
+              <div class="flex items-center gap-2" id="language-actions"></div>
+              <div id="translation-status" class="text-xs text-slate-500"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                id="add-text-block"
+                type="button"
+                class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
+                title="Novo bloco de texto"
+                aria-label="Novo bloco de texto"
+              >
+                <i data-lucide="type"></i>
+              </button>
+              <button
+                id="add-table-block"
+                type="button"
+                class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
+                title="Novo bloco de tabela"
+                aria-label="Novo bloco de tabela"
+              >
+                <i data-lucide="table"></i>
+              </button>
+              <button
+                id="add-image-block"
+                type="button"
+                class="icon-button rounded-md bg-slate-900 px-3 py-2 text-white"
+                title="Novo bloco de imagem"
+                aria-label="Novo bloco de imagem"
+              >
+                <i data-lucide="image"></i>
+              </button>
+              <input id="image-input" type="file" accept="image/*" class="hidden" />
+            </div>
           </div>
         </div>
         <div class="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-6">
