@@ -1,21 +1,51 @@
-export function createTranslationService({ endpoint, fetcher } = {}) {
+export function createTranslationService({ endpoint, apiKey, fetcher, provider, model } = {}) {
   if (!endpoint) {
     throw new Error("Translation endpoint is required.");
   }
+  if (!apiKey) {
+    throw new Error("Translation api key is required.");
+  }
 
   const request = fetcher || fetch;
+  const resolvedProvider = provider || "gemini";
+  const resolvedModel = model || "gemini-2.5-flash-lite";
+
+  function buildPrompt({ text, sourceLang, targetLang }) {
+    return [
+      `Traduza do ${sourceLang} para ${targetLang}.`,
+      "Retorne apenas a traducao, sem aspas.",
+      "Texto:",
+      text,
+    ].join("\n");
+  }
+
+  function resolveText(data) {
+    if (!data || typeof data !== "object") {
+      return "";
+    }
+    return (
+      data.text ||
+      data.response ||
+      data.output ||
+      data.message ||
+      data.result ||
+      ""
+    );
+  }
 
   return {
     async translateText({ text, sourceLang, targetLang }) {
+      const prompt = buildPrompt({ text, sourceLang, targetLang });
       const response = await request(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-api-key": apiKey,
         },
         body: JSON.stringify({
-          text,
-          sourceLang,
-          targetLang,
+          prompt,
+          provider: resolvedProvider,
+          model: resolvedModel,
         }),
       });
 
@@ -33,6 +63,7 @@ export function createTranslationService({ endpoint, fetcher } = {}) {
       return {
         ok: true,
         data,
+        text: resolveText(data),
       };
     },
   };

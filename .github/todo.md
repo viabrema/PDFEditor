@@ -41,11 +41,14 @@
 - [x] Garantir embed de imagens e fontes
 
 ## 7) Integracao com API de traducao
-- [ ] Implementar cliente em src/services/translation.js
+- [x] Implementar cliente em src/services/translation.js (endpoint + chave + payload)
+- [x] Suporte a PT (padrao), EN e ES
 - [ ] Traduzir selecao
 - [ ] Traduzir bloco
-- [ ] Traduzir documento
-- [ ] UI de loading e erro
+- [x] Traduzir documento
+- [x] UI de loading e erro
+- [x] Botao "Atualizar" nas abas EN/ES para resetar traducao
+- [x] Atualizar clona PT, traduz e restaura conteudo/posicao/tamanho dos blocos
 
 ## 8) Testes
 - [ ] Testar serializacao do schema

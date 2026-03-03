@@ -15,6 +15,7 @@ import { normalizeGridSize } from "./utils/grid.js";
 import { createIcons, icons } from "lucide";
 import { loadDocumentFromFile, saveDocumentToFile } from "./services/tauriStorage.js";
 import { renderDocumentToHtml } from "./services/export.js";
+import { createTranslationService } from "./services/translation.js";
 
 const app = document.querySelector("#app");
 app.innerHTML = `
@@ -110,6 +111,8 @@ app.innerHTML = `
       <div class="mb-3 flex flex-wrap items-center gap-3">
         <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Idiomas</div>
         <div class="flex flex-wrap gap-2" id="language-tabs"></div>
+        <div class="flex items-center gap-2" id="language-actions"></div>
+        <div id="translation-status" class="text-xs text-slate-500"></div>
       </div>
       <div class="mb-4 flex flex-wrap items-center gap-3">
         <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Paginas</div>
@@ -163,6 +166,7 @@ const documentData = createDocument({
   languages: [
     createLanguage({ id: "lang-pt", label: "PT", isDefault: true }),
     createLanguage({ id: "lang-en", label: "EN" }),
+    createLanguage({ id: "lang-es", label: "ES" }),
   ],
   pages: [
     createPage({ id: "page-1", name: "Pagina 1" }),
@@ -177,6 +181,10 @@ const state = {
   interactions: [],
   selectedBlockId: null,
   editingBlockId: null,
+  translation: {
+    loading: false,
+    error: null,
+  },
 };
 
 const blocks = [
@@ -203,6 +211,8 @@ const blocks = [
 const canvas = document.querySelector("#canvas");
 const pageTabsHost = document.querySelector("#page-tabs");
 const languageTabsHost = document.querySelector("#language-tabs");
+const languageActionsHost = document.querySelector("#language-actions");
+const translationStatus = document.querySelector("#translation-status");
 const pageMeta = document.querySelector("#page-meta");
 const addTextButton = document.querySelector("#add-text-block");
 const addTableButton = document.querySelector("#add-table-block");
@@ -221,6 +231,14 @@ const PAGE_SIZES = {
   A4: { width: 794, height: 1123 },
   Letter: { width: 816, height: 1056 },
 };
+
+const TRANSLATION_ENDPOINT = "http://10.36.0.19:8080/api/ai/prompt";
+const TRANSLATION_KEY = "JygheDTXbNKNwA0DKL94riGK8AqxwtpyvCr2sfoQVfY";
+
+const translationService = createTranslationService({
+  endpoint: TRANSLATION_ENDPOINT,
+  apiKey: TRANSLATION_KEY,
+});
 
 const stateFile = {
   path: null,
@@ -251,6 +269,167 @@ function buildDocumentSnapshot() {
       updatedAt: new Date().toISOString(),
     },
   };
+}
+
+function getDefaultLanguageId() {
+  const defaultLanguage = documentData.languages.find((lang) => lang.isDefault);
+  return defaultLanguage?.id || documentData.languages[0]?.id || null;
+}
+
+function getLanguagePromptLabel(languageId) {
+  const language = documentData.languages.find((item) => item.id === languageId);
+  if (!language) {
+    return "ingles";
+  }
+  if (language.label === "PT") {
+    return "portugues";
+  }
+  if (language.label === "ES") {
+    return "espanhol";
+  }
+  return "ingles";
+}
+
+function extractTextFromNode(node) {
+  if (!node) {
+    return "";
+  }
+  if (typeof node === "string") {
+    return node;
+  }
+  if (node.type === "text") {
+    return node.text || "";
+  }
+  if (node.type === "hard_break") {
+    return "\n";
+  }
+  if (!Array.isArray(node.content)) {
+    return "";
+  }
+  const content = node.content.map(extractTextFromNode).join("");
+  if (node.type === "paragraph" || node.type === "list_item") {
+    return `${content}\n`;
+  }
+  return content;
+}
+
+function buildTextDocFromString(text) {
+  const trimmed = String(text || "").replace(/\r\n/g, "\n");
+  const blocks = trimmed.split(/\n{2,}/g);
+  const paragraphs = blocks.length ? blocks : [""];
+  return {
+    type: "doc",
+    content: paragraphs.map((paragraph) => ({
+      type: "paragraph",
+      content: paragraph
+        ? paragraph.split("\n").flatMap((segment, index, items) => {
+            const nodes = [];
+            if (segment) {
+              nodes.push({ type: "text", text: segment });
+            }
+            if (index < items.length - 1) {
+              nodes.push({ type: "hard_break" });
+            }
+            return nodes;
+          })
+        : [],
+    })),
+  };
+}
+
+async function translateTextValue({ text, sourceLanguageId, targetLanguageId }) {
+  if (!text || !text.trim()) {
+    return text;
+  }
+  const result = await translationService.translateText({
+    text,
+    sourceLang: getLanguagePromptLabel(sourceLanguageId),
+    targetLang: getLanguagePromptLabel(targetLanguageId),
+  });
+  if (!result.ok) {
+    throw new Error("translation_failed");
+  }
+  return result.text || text;
+}
+
+async function translateBlockFromSource(block, { sourceLanguageId, targetLanguageId }) {
+  const base = {
+    type: block.type,
+    position: { ...block.position },
+    size: { ...block.size },
+    pageId: block.pageId,
+    languageId: targetLanguageId,
+    metadata: { ...block.metadata },
+  };
+
+  if (block.type === "text") {
+    const rawText = extractTextFromNode(block.content).trim();
+    const translated = await translateTextValue({
+      text: rawText,
+      sourceLanguageId,
+      targetLanguageId,
+    });
+    return createBlock({
+      ...base,
+      content: buildTextDocFromString(translated),
+    });
+  }
+
+  if (block.type === "table") {
+    const rows = Array.isArray(block.content?.rows) ? block.content.rows : [];
+    const translatedRows = [];
+    for (const row of rows) {
+      const translatedRow = [];
+      for (const cell of row) {
+        const translated = await translateTextValue({
+          text: String(cell || ""),
+          sourceLanguageId,
+          targetLanguageId,
+        });
+        translatedRow.push(translated);
+      }
+      translatedRows.push(translatedRow);
+    }
+    return createBlock({
+      ...base,
+      content: { rows: translatedRows },
+    });
+  }
+
+  return createBlock({
+    ...base,
+    content: block.content ? JSON.parse(JSON.stringify(block.content)) : null,
+  });
+}
+
+async function translateFromDefaultLanguage(targetLanguageId) {
+  const sourceLanguageId = getDefaultLanguageId();
+  if (!sourceLanguageId || !targetLanguageId) {
+    return;
+  }
+
+  state.translation.loading = true;
+  state.translation.error = null;
+  render();
+
+  try {
+    const sourceBlocks = blocks.filter((block) => block.languageId === sourceLanguageId);
+    const translatedBlocks = [];
+    for (const block of sourceBlocks) {
+      translatedBlocks.push(
+        await translateBlockFromSource(block, { sourceLanguageId, targetLanguageId })
+      );
+    }
+
+    const remaining = blocks.filter((block) => block.languageId !== targetLanguageId);
+    blocks.length = 0;
+    blocks.push(...remaining, ...translatedBlocks);
+  } catch (error) {
+    state.translation.error = "Falha ao traduzir.";
+  } finally {
+    state.translation.loading = false;
+    render();
+  }
 }
 
 function applyDocumentSnapshot(snapshot) {
@@ -510,6 +689,38 @@ function renderMeta() {
     `Grid ${documentData.grid.size}px ${documentData.grid.snap ? "On" : "Off"}`;
 }
 
+function renderLanguageActions() {
+  languageActionsHost.innerHTML = "";
+  translationStatus.textContent = "";
+
+  const defaultLanguageId = getDefaultLanguageId();
+  if (!state.activeLanguageId || state.activeLanguageId === defaultLanguageId) {
+    return;
+  }
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className =
+    "inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700";
+  button.innerHTML = '<i data-lucide="rotate-ccw"></i>Atualizar';
+  button.disabled = state.translation.loading;
+  button.addEventListener("click", () => {
+    if (!state.translation.loading) {
+      translateFromDefaultLanguage(state.activeLanguageId);
+    }
+  });
+  languageActionsHost.append(button);
+
+  if (state.translation.loading) {
+    translationStatus.textContent = "Traduzindo...";
+    return;
+  }
+
+  if (state.translation.error) {
+    translationStatus.textContent = state.translation.error;
+  }
+}
+
 function render() {
   formatSelect.value = documentData.page.format;
   orientationSelect.value = documentData.page.orientation;
@@ -535,12 +746,15 @@ function render() {
     state.activeLanguageId,
     (id) => {
       state.activeLanguageId = id;
+      state.selectedBlockId = null;
+      state.editingBlockId = null;
       render();
     }
   );
 
   renderCanvas();
   renderMeta();
+  renderLanguageActions();
   focusEditingBlock();
   createIcons({ icons });
 }

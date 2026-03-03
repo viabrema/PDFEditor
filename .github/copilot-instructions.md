@@ -40,6 +40,13 @@ Build a Notion-style PDF editor for Windows (desktop) using a web UI. Users crea
 - Centralize the API client in src/services/translation.js.
 - Support translate selection, block, or entire document.
 - Always expose loading and error states in the UI.
+- API endpoint: http://10.36.0.19:8080/api/ai/prompt
+- API key: JygheDTXbNKNwA0DKL94riGK8AqxwtpyvCr2sfoQVfY
+- Payload: { "prompt": "...", "provider": "gemini", "model": "gemini-2.5-flash-lite" }
+- Idiomas suportados inicialmente: portugues (padrao), ingles e espanhol.
+- Em abas EN/ES, deve existir botao "Atualizar" para resetar traducao.
+- O botao clona o PDF em PT e traduz, recriando conteudo, posicao e tamanho dos blocos.
+- Apos traduzir, o usuario pode editar; ao clicar novamente em Atualizar, tudo volta ao estado traduzido atual.
 
 ## PDF Export
 - Render the document to HTML with print styles.

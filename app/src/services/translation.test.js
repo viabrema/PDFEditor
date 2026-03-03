@@ -6,21 +6,35 @@ describe("translation service", () => {
     expect(() => createTranslationService()).toThrow(/endpoint/);
   });
 
-  it("returns ok result on success", async () => {
-    const fetcher = async () => ({
-      ok: true,
-      json: async () => ({ text: "Ola" }),
-    });
+  it("requires an api key", () => {
+    expect(() => createTranslationService({ endpoint: "/translate" })).toThrow(/api key/);
+  });
 
-    const service = createTranslationService({ endpoint: "/translate", fetcher });
+  it("returns ok result on success", async () => {
+    let requestBody;
+    const fetcher = async (url, options) => {
+      requestBody = JSON.parse(options.body);
+      return {
+        ok: true,
+        json: async () => ({ text: "Ola" }),
+      };
+    };
+
+    const service = createTranslationService({
+      endpoint: "/translate",
+      apiKey: "key",
+      fetcher,
+    });
     const result = await service.translateText({
       text: "Hello",
-      sourceLang: "en",
-      targetLang: "pt",
+      sourceLang: "ingles",
+      targetLang: "portugues",
     });
 
     expect(result.ok).toBe(true);
-    expect(result.data).toEqual({ text: "Ola" });
+    expect(result.text).toBe("Ola");
+    expect(requestBody.provider).toBe("gemini");
+    expect(requestBody.model).toBe("gemini-2.5-flash-lite");
   });
 
   it("returns error result on failure", async () => {
@@ -30,7 +44,7 @@ describe("translation service", () => {
       json: async () => ({ message: "fail" }),
     });
 
-    const service = createTranslationService({ endpoint: "/translate", fetcher });
+    const service = createTranslationService({ endpoint: "/translate", apiKey: "key", fetcher });
     const result = await service.translateText({
       text: "Hello",
       sourceLang: "en",
@@ -49,17 +63,125 @@ describe("translation service", () => {
     });
 
     try {
-      const service = createTranslationService({ endpoint: "/translate" });
+      const service = createTranslationService({ endpoint: "/translate", apiKey: "key" });
       const result = await service.translateText({
         text: "Hi",
-        sourceLang: "en",
-        targetLang: "pt",
+        sourceLang: "ingles",
+        targetLang: "portugues",
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data).toEqual({ text: "Oi" });
+      expect(result.text).toBe("Oi");
     } finally {
       globalThis.fetch = originalFetch;
     }
+  });
+
+  it("uses alternate text fields", async () => {
+    const fetcher = async () => ({
+      ok: true,
+      json: async () => ({ response: "Hola" }),
+    });
+
+    const service = createTranslationService({ endpoint: "/translate", apiKey: "key", fetcher });
+    const result = await service.translateText({
+      text: "Hi",
+      sourceLang: "ingles",
+      targetLang: "espanhol",
+    });
+
+    expect(result.text).toBe("Hola");
+  });
+
+  it("supports custom provider and model", async () => {
+    let requestBody;
+    const fetcher = async (url, options) => {
+      requestBody = JSON.parse(options.body);
+      return {
+        ok: true,
+        json: async () => ({ output: "Salut" }),
+      };
+    };
+
+    const service = createTranslationService({
+      endpoint: "/translate",
+      apiKey: "key",
+      fetcher,
+      provider: "custom",
+      model: "custom-model",
+    });
+    const result = await service.translateText({
+      text: "Oi",
+      sourceLang: "portugues",
+      targetLang: "frances",
+    });
+
+    expect(result.text).toBe("Salut");
+    expect(requestBody.provider).toBe("custom");
+    expect(requestBody.model).toBe("custom-model");
+  });
+
+  it("returns empty text when payload is not object", async () => {
+    const fetcher = async () => ({
+      ok: true,
+      json: async () => "nope",
+    });
+
+    const service = createTranslationService({ endpoint: "/translate", apiKey: "key", fetcher });
+    const result = await service.translateText({
+      text: "Oi",
+      sourceLang: "portugues",
+      targetLang: "ingles",
+    });
+
+    expect(result.text).toBe("");
+  });
+
+  it("reads message field when present", async () => {
+    const fetcher = async () => ({
+      ok: true,
+      json: async () => ({ message: "Ok" }),
+    });
+
+    const service = createTranslationService({ endpoint: "/translate", apiKey: "key", fetcher });
+    const result = await service.translateText({
+      text: "Oi",
+      sourceLang: "portugues",
+      targetLang: "ingles",
+    });
+
+    expect(result.text).toBe("Ok");
+  });
+
+  it("reads result field when present", async () => {
+    const fetcher = async () => ({
+      ok: true,
+      json: async () => ({ result: "Oi" }),
+    });
+
+    const service = createTranslationService({ endpoint: "/translate", apiKey: "key", fetcher });
+    const result = await service.translateText({
+      text: "Hi",
+      sourceLang: "ingles",
+      targetLang: "portugues",
+    });
+
+    expect(result.text).toBe("Oi");
+  });
+
+  it("returns empty text for empty object", async () => {
+    const fetcher = async () => ({
+      ok: true,
+      json: async () => ({}),
+    });
+
+    const service = createTranslationService({ endpoint: "/translate", apiKey: "key", fetcher });
+    const result = await service.translateText({
+      text: "Oi",
+      sourceLang: "portugues",
+      targetLang: "ingles",
+    });
+
+    expect(result.text).toBe("");
   });
 });
