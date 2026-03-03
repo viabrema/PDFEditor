@@ -46,6 +46,18 @@ body {
   z-index: 4;
 }
 
+.block-toolbar-floating {
+  position: fixed;
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 12px 24px -18px rgba(15, 23, 42, 0.6);
+  z-index: 60;
+}
+
 .toolbar-icon-button {
   display: inline-flex;
   align-items: center;
