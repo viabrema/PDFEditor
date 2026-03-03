@@ -10,9 +10,10 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint \"src/**/*.js\""
+    "lint": "eslint \"src/**/*.{js,jsx}\""
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.6.0",
     "@tailwindcss/cli": "^4.2.1",
     "@tailwindcss/postcss": "^4.2.1",
     "@vitest/coverage-v8": "^4.0.18",
@@ -26,8 +27,10 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
+    "@mdxeditor/editor": "^3.1.0",
     "interactjs": "^1.10.27",
     "lucide": "^0.576.0",
+    "marked": "^12.0.2",
     "prosemirror-commands": "^1.7.1",
     "prosemirror-history": "^1.5.0",
     "prosemirror-keymap": "^1.2.3",
@@ -35,6 +38,8 @@
     "prosemirror-schema-basic": "^1.2.4",
     "prosemirror-schema-list": "^1.5.1",
     "prosemirror-state": "^1.4.4",
-    "prosemirror-view": "^1.41.6"
+    "prosemirror-view": "^1.41.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }

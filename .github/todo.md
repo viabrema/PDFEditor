@@ -50,10 +50,10 @@
 - [x] Atualizar clona PT, traduz e restaura conteudo/posicao/tamanho dos blocos
 
 ## 8) Testes
-- [ ] Testar serializacao do schema
-- [ ] Testar comandos de blocos
-- [ ] Testar matematica de snap-to-grid
-- [ ] Testar servico de traducao (mock)
+- [x] Testar serializacao do schema
+- [x] Testar comandos de blocos
+- [x] Testar matematica de snap-to-grid
+- [x] Testar servico de traducao (mock)
 
 ## 9) Empacotamento
 - [ ] Configurar build do Tauri

@@ -1,5 +1,5 @@
 import { createBlock } from "../blocks/blockModel.js";
-import { buildTextDocFromString, extractTextFromNode } from "./textUtils.js";
+import { extractTextFromNode } from "./textUtils.js";
 
 export function getDefaultLanguageId(documentData) {
   const defaultLanguage = documentData.languages.find((lang) => lang.isDefault);
@@ -33,11 +33,57 @@ export async function translateTextValue({
   if (!text || !text.trim()) {
     return text;
   }
+  if (looksLikeMarkdown(text)) {
+    return translateMarkdownValue({
+      translationService,
+      documentData,
+      text,
+      sourceLanguageId,
+      targetLanguageId,
+    });
+  }
   const result = await translationService.translateText({
     text,
     sourceLang: getLanguagePromptLabel(documentData, sourceLanguageId),
     targetLang: getLanguagePromptLabel(documentData, targetLanguageId),
   });
+  if (!result.ok) {
+    throw new Error("translation_failed");
+  }
+  return result.text || text;
+}
+
+function looksLikeMarkdown(text) {
+  const value = String(text || "");
+  return (
+    /<[^>]+>/.test(value) ||
+    /^#{1,6}\s+/.test(value) ||
+    /^(\s*)([-*]|\d+\.)\s+/m.test(value) ||
+    /\*\*.+\*\*|_.+_|`.+`/.test(value) ||
+    /\[[^\]]+\]\([^\)]+\)/.test(value)
+  );
+}
+
+async function translateMarkdownValue({
+  translationService,
+  documentData,
+  text,
+  sourceLanguageId,
+  targetLanguageId,
+}) {
+  const prompt = [
+    `Traduza do ${getLanguagePromptLabel(documentData, sourceLanguageId)} para ${getLanguagePromptLabel(
+      documentData,
+      targetLanguageId
+    )}.`,
+    "Preserve toda a sintaxe Markdown e tags HTML exatamente como estao.",
+    "Nao altere marcadores, links ou tags.",
+    "Retorne apenas o texto traduzido.",
+    "Texto:",
+    String(text || ""),
+  ].join("\n");
+
+  const result = await translationService.translatePrompt({ prompt });
   if (!result.ok) {
     throw new Error("translation_failed");
   }
@@ -164,6 +210,19 @@ export async function translateBlockFromSource({
   };
 
   if (block.type === "text") {
+    if (typeof block.content === "string") {
+      const translated = await translateTextValue({
+        translationService,
+        documentData,
+        text: block.content,
+        sourceLanguageId,
+        targetLanguageId,
+      });
+      return createBlock({
+        ...base,
+        content: translated,
+      });
+    }
     if (block.content && typeof block.content === "object") {
       const translatedDoc = await translateTextDoc({
         translationService,
@@ -188,7 +247,7 @@ export async function translateBlockFromSource({
     });
     return createBlock({
       ...base,
-      content: buildTextDocFromString(translated),
+      content: translated,
     });
   }
 

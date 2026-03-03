@@ -278,6 +278,7 @@ describe("export service (basic)", () => {
     expect(html).toContain("block-text");
   });
 
+
   it("handles empty text node", () => {
     const html = renderDocumentToHtml({
       title: "EmptyText",

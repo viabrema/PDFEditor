@@ -8,39 +8,45 @@ body {
   margin: 0;
 }
 
-.ProseMirror {
+.mdxeditor,
+.mdxeditor-root {
   outline: none;
   min-height: 120px;
 }
 
-.prose-editor .ProseMirror p {
+.prose-editor .mdxeditor-root p,
+.prose-editor .mdxeditor-root h1,
+.prose-editor .mdxeditor-root h2,
+.prose-editor .mdxeditor-root ul,
+.prose-editor .mdxeditor-root ol,
+.prose-editor .mdxeditor-root li {
   margin: 0;
 }
 
-.prose-editor .ProseMirror h1 {
+.prose-editor .mdxeditor-root h1 {
   margin: 0 0 12px;
   font-size: 24px;
   color: #008737;
 }
 
-.prose-editor .ProseMirror h2 {
+.prose-editor .mdxeditor-root h2 {
   margin: 0 0 10px;
   font-size: 18px;
 }
 
-.prose-editor .ProseMirror ul {
+.prose-editor .mdxeditor-root ul {
   margin: 0 0 10px;
   padding-left: 20px;
   list-style: disc outside;
 }
 
-.prose-editor .ProseMirror ol {
+.prose-editor .mdxeditor-root ol {
   margin: 0 0 10px;
   padding-left: 20px;
   list-style: decimal outside;
 }
 
-.prose-editor .ProseMirror li {
+.prose-editor .mdxeditor-root li {
   margin: 0;
   padding-left: 4px;
 }
@@ -75,8 +81,14 @@ body {
   z-index: 4;
 }
 
+.prose-editor {
+  position: relative;
+}
+
 .block-toolbar-floating {
-  position: fixed;
+  position: absolute;
+  top: -44px;
+  left: 12px;
   display: inline-flex;
   gap: 6px;
   padding: 6px;
@@ -85,6 +97,10 @@ body {
   background: #ffffff;
   box-shadow: 0 12px 24px -18px rgba(15, 23, 42, 0.6);
   z-index: 60;
+}
+
+.mdxeditor-toolbar-hidden {
+  display: none !important;
 }
 
 .toolbar-icon-button {

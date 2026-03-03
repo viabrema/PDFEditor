@@ -1,3 +1,5 @@
+import { marked } from "marked";
+
 const PAGE_SIZES = {
   A4: { width: 794, height: 1123 },
   Letter: { width: 816, height: 1056 },
@@ -98,7 +100,10 @@ function renderNode(node) {
 }
 
 function renderTextBlock(block) {
-  const html = renderNode(block.content) || "";
+  const html =
+    typeof block.content === "string"
+      ? marked.parse(block.content)
+      : renderNode(block.content) || "";
   return `<div class=\"block text-block\" data-block-id=\"${block.id}\">${html}</div>`;
 }
 
