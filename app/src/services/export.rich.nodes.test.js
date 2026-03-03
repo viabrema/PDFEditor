@@ -121,9 +121,92 @@ describe("export service (rich nodes)", () => {
     expect(html).toContain("pm-chart");
   });
 
-  it("renders unknown nodes by children", () => {
+  it("renders heading with alignment", () => {
     const html = renderDocumentToHtml({
       title: "Unknown",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "block-text",
+              type: "text",
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 60 },
+              content: {
+                type: "heading",
+                attrs: { level: 1, textAlign: "center" },
+                content: [{ type: "text", text: "Titulo" }],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(html).toContain("<h1");
+    expect(html).toContain("text-align: center");
+    expect(html).toContain("Titulo");
+  });
+
+  it("renders paragraph alignment", () => {
+    const html = renderDocumentToHtml({
+      title: "Align",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "block-text",
+              type: "text",
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 60 },
+              content: {
+                type: "paragraph",
+                attrs: { textAlign: "right" },
+                content: [{ type: "text", text: "Texto" }],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(html).toContain("text-align: right");
+  });
+
+  it("renders heading without alignment", () => {
+    const html = renderDocumentToHtml({
+      title: "Heading",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "block-text",
+              type: "text",
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 60 },
+              content: {
+                type: "heading",
+                attrs: { level: 2 },
+                content: [{ type: "text", text: "Titulo" }],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(html).toContain("<h2>");
+  });
+
+  it("renders heading without attrs", () => {
+    const html = renderDocumentToHtml({
+      title: "Heading",
       page: { format: "A4", orientation: "portrait" },
       pages: [
         {
@@ -144,6 +227,32 @@ describe("export service (rich nodes)", () => {
       ],
     });
 
-    expect(html).toContain("Titulo");
+    expect(html).toContain("<h1>");
+  });
+
+  it("renders unknown node fallback", () => {
+    const html = renderDocumentToHtml({
+      title: "Unknown",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "block-text",
+              type: "text",
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 60 },
+              content: {
+                type: "unknown",
+                content: [{ type: "text", text: "Fallback" }],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(html).toContain("Fallback");
   });
 });

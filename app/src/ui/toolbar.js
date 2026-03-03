@@ -3,6 +3,31 @@ export function createToolbar(commands, options = {}) {
   const container = document.createElement("div");
   container.className = "flex flex-wrap gap-2";
 
+  const styleSelect = document.createElement("select");
+  styleSelect.className =
+    "rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700";
+  styleSelect.title = "Estilo";
+  styleSelect.setAttribute("aria-label", "Estilo");
+  styleSelect.innerHTML = [
+    { value: "paragraph", label: "Paragrafo" },
+    { value: "title", label: "Titulo" },
+    { value: "subtitle", label: "Subtitulo" },
+  ]
+    .map((item) => `<option value="${item.value}">${item.label}</option>`)
+    .join("");
+  styleSelect.addEventListener("change", () => {
+    const value = styleSelect.value;
+    if (value === "title") {
+      commands?.setHeading?.(1);
+      return;
+    }
+    if (value === "subtitle") {
+      commands?.setHeading?.(2);
+      return;
+    }
+    commands?.setParagraph?.();
+  });
+
   const fontFamilies = [
     "Segoe UI",
     "Times New Roman",
@@ -38,15 +63,34 @@ export function createToolbar(commands, options = {}) {
   });
 
   if (disabled) {
+    styleSelect.disabled = true;
     fontSelect.disabled = true;
     sizeSelect.disabled = true;
   }
 
-  container.append(fontSelect, sizeSelect);
+  container.append(styleSelect, fontSelect, sizeSelect);
 
   const items = [
     { id: "bold", label: "Negrito", icon: "bold", action: commands?.toggleBold },
     { id: "italic", label: "Italico", icon: "italic", action: commands?.toggleItalic },
+    {
+      id: "align-left",
+      label: "Alinhar a esquerda",
+      icon: "align-left",
+      action: () => commands?.setTextAlign?.("left"),
+    },
+    {
+      id: "align-center",
+      label: "Alinhar ao centro",
+      icon: "align-center",
+      action: () => commands?.setTextAlign?.("center"),
+    },
+    {
+      id: "align-right",
+      label: "Alinhar a direita",
+      icon: "align-right",
+      action: () => commands?.setTextAlign?.("right"),
+    },
     { id: "bullet", label: "Lista", icon: "list", action: commands?.toggleBulletList },
     {
       id: "ordered",

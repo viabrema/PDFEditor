@@ -62,7 +62,57 @@ const textStyleMark = {
 
 export function createEditorSchema() {
   const nodes = addListNodes(basicSchema.spec.nodes, "paragraph block*", "block");
-  const extendedNodes = nodes.addToEnd("chart", chartNode);
+  const paragraphSpec = nodes.get("paragraph");
+  const headingSpec = nodes.get("heading");
+
+  const paragraphWithAlign = {
+    ...paragraphSpec,
+    attrs: {
+      ...paragraphSpec.attrs,
+      textAlign: { default: null },
+    },
+    parseDOM: [
+      {
+        tag: "p",
+        getAttrs: (dom) => ({ textAlign: dom.style?.textAlign || null }),
+      },
+    ],
+    toDOM: (node) => {
+      const attrs = {};
+      if (node.attrs.textAlign) {
+        attrs.style = `text-align: ${node.attrs.textAlign}`;
+      }
+      return ["p", attrs, 0];
+    },
+  };
+
+  const headingWithAlign = {
+    ...headingSpec,
+    attrs: {
+      ...headingSpec.attrs,
+      textAlign: { default: null },
+    },
+    parseDOM: [1, 2, 3, 4, 5, 6].map((level) => ({
+      tag: `h${level}`,
+      getAttrs: (dom) => ({
+        level,
+        textAlign: dom.style?.textAlign || null,
+      }),
+    })),
+    toDOM: (node) => {
+      const attrs = {};
+      if (node.attrs.textAlign) {
+        attrs.style = `text-align: ${node.attrs.textAlign}`;
+      }
+      return [`h${node.attrs.level}`, attrs, 0];
+    },
+  };
+
+  const alignedNodes = nodes
+    .update("paragraph", paragraphWithAlign)
+    .update("heading", headingWithAlign);
+
+  const extendedNodes = alignedNodes.addToEnd("chart", chartNode);
   const marks = basicSchema.spec.marks.addToEnd("textStyle", textStyleMark);
   return new Schema({ nodes: extendedNodes, marks });
 }

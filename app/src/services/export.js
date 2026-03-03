@@ -69,8 +69,17 @@ function renderNode(node) {
   switch (node.type) {
     case "doc":
       return children;
-    case "paragraph":
-      return `<p>${children}</p>`;
+    case "paragraph": {
+      const align = node.attrs?.textAlign;
+      const style = align ? ` style="text-align: ${align}"` : "";
+      return `<p${style}>${children}</p>`;
+    }
+    case "heading": {
+      const level = node.attrs?.level || 1;
+      const align = node.attrs?.textAlign;
+      const style = align ? ` style="text-align: ${align}"` : "";
+      return `<h${level}${style}>${children}</h${level}>`;
+    }
     case "bullet_list":
       return `<ul>${children}</ul>`;
     case "ordered_list":
@@ -177,8 +186,10 @@ export function renderDocumentToHtml(document) {
     .text-block { font-size: 14px; line-height: 1.4; padding: 12px; }
     .text-block p { margin: 0 0 10px; }
     .text-block p:last-child { margin-bottom: 0; }
+    .text-block h1 { margin: 0 0 12px; font-size: 24px; color: #008737; }
+    .text-block h2 { margin: 0 0 10px; font-size: 18px; }
     .text-block ul,
-    .text-block ol { margin: 0; padding-left: 20px; }
+    .text-block ol { margin: 0; padding-left: 20px; list-style-position: outside; }
     .text-block hr { border: none; border-top: 1px solid #0f172a; margin: 10px 0; }
     .image-block img { width: 100%; height: 100%; object-fit: cover; }
     .table-block table { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }

@@ -157,6 +157,20 @@ describe("export service (basic)", () => {
     expect(html).not.toContain("block-footer");
   });
 
+  it("handles empty header/footer blocks", () => {
+    const html = renderDocumentToHtml({
+      title: "Regions",
+      page: { format: "A4", orientation: "portrait" },
+      regions: {
+        header: { enabled: true, height: 100, blocks: [] },
+        footer: { enabled: true, height: 80, blocks: null },
+      },
+      pages: [{ id: "page-1", blocks: [] }],
+    });
+
+    expect(html).toContain("data-page-id=\"page-1\"");
+  });
+
   it("handles page blocks when not an array", () => {
     const html = renderDocumentToHtml({
       title: "Blocks",

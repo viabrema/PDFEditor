@@ -35,6 +35,15 @@ describe("toolbar", () => {
       toggleOrderedList: () => {
         clicked += 1;
       },
+      setParagraph: () => {
+        clicked += 1;
+      },
+      setHeading: () => {
+        clicked += 1;
+      },
+      setTextAlign: () => {
+        clicked += 1;
+      },
       setFontFamily: () => {
         clicked += 1;
       },
@@ -43,18 +52,29 @@ describe("toolbar", () => {
       },
     });
 
-    expect(toolbar.querySelectorAll("button")).toHaveLength(4);
-    expect(toolbar.querySelectorAll("select")).toHaveLength(2);
+    expect(toolbar.querySelectorAll("button")).toHaveLength(7);
+    expect(toolbar.querySelectorAll("select")).toHaveLength(3);
 
     toolbar.querySelectorAll("button").forEach((button) => {
       button.click();
     });
 
-    toolbar.querySelectorAll("select").forEach((select) => {
-      select.dispatchEvent(new window.Event("change"));
-    });
+    const selects = toolbar.querySelectorAll("select");
+    const styleSelect = selects[0];
+    const fontSelect = selects[1];
+    const sizeSelect = selects[2];
 
-    expect(clicked).toBe(6);
+    styleSelect.value = "title";
+    styleSelect.dispatchEvent(new window.Event("change"));
+    styleSelect.value = "subtitle";
+    styleSelect.dispatchEvent(new window.Event("change"));
+    styleSelect.value = "paragraph";
+    styleSelect.dispatchEvent(new window.Event("change"));
+
+    fontSelect.dispatchEvent(new window.Event("change"));
+    sizeSelect.dispatchEvent(new window.Event("change"));
+
+    expect(clicked).toBe(12);
   });
 
   it("renders disabled toolbar", () => {
@@ -62,8 +82,8 @@ describe("toolbar", () => {
     const buttons = toolbar.querySelectorAll("button");
     const selects = toolbar.querySelectorAll("select");
 
-    expect(buttons).toHaveLength(4);
-    expect(selects).toHaveLength(2);
+    expect(buttons).toHaveLength(7);
+    expect(selects).toHaveLength(3);
     buttons.forEach((button) => {
       expect(button.disabled).toBe(true);
     });

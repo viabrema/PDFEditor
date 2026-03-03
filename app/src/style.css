@@ -17,6 +17,34 @@ body {
   margin: 0;
 }
 
+.prose-editor .ProseMirror h1 {
+  margin: 0 0 12px;
+  font-size: 24px;
+  color: #008737;
+}
+
+.prose-editor .ProseMirror h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.prose-editor .ProseMirror ul {
+  margin: 0 0 10px;
+  padding-left: 20px;
+  list-style: disc outside;
+}
+
+.prose-editor .ProseMirror ol {
+  margin: 0 0 10px;
+  padding-left: 20px;
+  list-style: decimal outside;
+}
+
+.prose-editor .ProseMirror li {
+  margin: 0;
+  padding-left: 4px;
+}
+
 .block-shell {
   cursor: move;
 }

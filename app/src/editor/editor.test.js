@@ -3,7 +3,7 @@ import { Window } from "happy-dom";
 import { Schema } from "prosemirror-model";
 import { schema as basicSchema } from "prosemirror-schema-basic";
 import { addListNodes } from "prosemirror-schema-list";
-import { TextSelection } from "prosemirror-state";
+import { NodeSelection, TextSelection } from "prosemirror-state";
 import { createEditor, createEditorCommands, createEditorState } from "./editor.js";
 import { createEditorSchema } from "./schema.js";
 
@@ -38,6 +38,9 @@ describe("editor", () => {
     commands.toggleItalic();
     commands.toggleBulletList();
     commands.toggleOrderedList();
+    commands.setParagraph();
+    commands.setHeading(1);
+    commands.setTextAlign("center");
     commands.setFontSize("18px");
     commands.setFontFamily("Georgia");
 
@@ -108,6 +111,34 @@ describe("editor", () => {
 
     view.dispatch(view.state.tr.insertText("a"));
 
+    view.destroy();
+  });
+
+  it("applies block alignment", () => {
+    const mount = document.createElement("div");
+    const onChange = vi.fn();
+    const view = createEditor({ mount, editable: () => true, onChange });
+    const commands = createEditorCommands(view);
+
+    view.dispatch(view.state.tr.insertText("abc"));
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1, 2)));
+    commands.setTextAlign("right");
+
+    expect(onChange).toHaveBeenCalled();
+    view.destroy();
+  });
+
+  it("ignores alignment on non-text blocks", () => {
+    const mount = document.createElement("div");
+    const content = { type: "doc", content: [{ type: "chart" }] };
+    const view = createEditor({ mount, content, editable: () => true });
+    const commands = createEditorCommands(view);
+
+    const selection = NodeSelection.create(view.state.doc, 0);
+    view.dispatch(view.state.tr.setSelection(selection));
+    const result = commands.setTextAlign("center");
+
+    expect(result).toBe(false);
     view.destroy();
   });
 });

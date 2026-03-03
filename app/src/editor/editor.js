@@ -1,6 +1,6 @@
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
-import { baseKeymap, toggleMark } from "prosemirror-commands";
+import { baseKeymap, setBlockType, toggleMark } from "prosemirror-commands";
 import { history, redo, undo } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
 import { wrapInList } from "prosemirror-schema-list";
@@ -71,6 +71,29 @@ function applyTextStyle(view, attrs) {
   return true;
 }
 
+function applyTextAlign(view, align) {
+  const { state, dispatch } = view;
+  const { from, to } = state.selection;
+  let tr = state.tr;
+  let updated = false;
+
+  state.doc.nodesBetween(from, to, (node, pos) => {
+    if (node.type === state.schema.nodes.paragraph || node.type === state.schema.nodes.heading) {
+      tr = tr.setNodeMarkup(pos, undefined, { ...node.attrs, textAlign: align });
+      updated = true;
+      return false;
+    }
+    return true;
+  });
+
+  if (!updated) {
+    return false;
+  }
+
+  dispatch(tr.scrollIntoView());
+  return true;
+}
+
 export function createEditorCommands(view) {
   const { schema } = view.state;
   return {
@@ -78,6 +101,9 @@ export function createEditorCommands(view) {
     toggleItalic: () => runCommand(toggleMark(schema.marks.em), view),
     toggleBulletList: () => runCommand(wrapInList(schema.nodes.bullet_list), view),
     toggleOrderedList: () => runCommand(wrapInList(schema.nodes.ordered_list), view),
+    setParagraph: () => runCommand(setBlockType(schema.nodes.paragraph), view),
+    setHeading: (level) => runCommand(setBlockType(schema.nodes.heading, { level }), view),
+    setTextAlign: (align) => applyTextAlign(view, align),
     setFontSize: (value) => applyTextStyle(view, { fontSize: value }),
     setFontFamily: (value) => applyTextStyle(view, { fontFamily: value }),
   };

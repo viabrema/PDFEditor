@@ -110,4 +110,86 @@ describe("editor schema", () => {
 
     expect(attrs).toEqual({ fontSize: null, fontFamily: "Georgia" });
   });
+
+  it("serializes heading alignment", () => {
+    const schema = createEditorSchema();
+    const node = schema.nodes.heading.create({ level: 1, textAlign: "center" });
+    const domSpec = node.type.spec.toDOM(node);
+
+    expect(domSpec[0]).toBe("h1");
+    expect(domSpec[1].style).toContain("text-align: center");
+  });
+
+  it("parses paragraph alignment from DOM", () => {
+    const schema = createEditorSchema();
+    const element = { style: { textAlign: "right" } };
+    const attrs = schema.nodes.paragraph.spec.parseDOM[0].getAttrs(element);
+
+    expect(attrs).toEqual({ textAlign: "right" });
+  });
+
+  it("parses paragraph without alignment", () => {
+    const schema = createEditorSchema();
+    const element = { style: {} };
+    const attrs = schema.nodes.paragraph.spec.parseDOM[0].getAttrs(element);
+
+    expect(attrs).toEqual({ textAlign: null });
+  });
+
+  it("parses paragraph without style", () => {
+    const schema = createEditorSchema();
+    const element = {};
+    const attrs = schema.nodes.paragraph.spec.parseDOM[0].getAttrs(element);
+
+    expect(attrs).toEqual({ textAlign: null });
+  });
+
+  it("parses heading alignment from DOM", () => {
+    const schema = createEditorSchema();
+    const element = { style: { textAlign: "center" } };
+    const attrs = schema.nodes.heading.spec.parseDOM[0].getAttrs(element);
+
+    expect(attrs).toEqual({ level: 1, textAlign: "center" });
+  });
+
+  it("serializes paragraph without alignment", () => {
+    const schema = createEditorSchema();
+    const node = schema.nodes.paragraph.create();
+    const domSpec = node.type.spec.toDOM(node);
+
+    expect(domSpec[1]).toEqual({});
+  });
+
+  it("serializes heading without alignment", () => {
+    const schema = createEditorSchema();
+    const node = schema.nodes.heading.create({ level: 2 });
+    const domSpec = node.type.spec.toDOM(node);
+
+    expect(domSpec[0]).toBe("h2");
+    expect(domSpec[1]).toEqual({});
+  });
+
+  it("parses heading level from DOM", () => {
+    const schema = createEditorSchema();
+    const element = { style: { textAlign: "left" } };
+    const attrs = schema.nodes.heading.spec.parseDOM[1].getAttrs(element);
+
+    expect(attrs).toEqual({ level: 2, textAlign: "left" });
+  });
+
+  it("parses heading without alignment", () => {
+    const schema = createEditorSchema();
+    const element = { style: {} };
+    const attrs = schema.nodes.heading.spec.parseDOM[2].getAttrs(element);
+
+    expect(attrs).toEqual({ level: 3, textAlign: null });
+  });
+
+  it("parses heading without style", () => {
+    const schema = createEditorSchema();
+    const element = {};
+    const attrs = schema.nodes.heading.spec.parseDOM[3].getAttrs(element);
+
+    expect(attrs).toEqual({ level: 4, textAlign: null });
+  });
 });
