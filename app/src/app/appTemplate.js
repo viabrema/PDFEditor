@@ -57,7 +57,7 @@ export function renderAppTemplate(root) {
           </div>
         </div>
       </header>
-      <section class="mx-auto max-w-5xl px-6 py-6">
+      <section class="w-full px-6 py-6">
         <div class="mb-3 flex flex-wrap items-center gap-3">
           <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Idiomas</div>
           <div class="flex flex-wrap gap-2" id="language-tabs"></div>
@@ -104,7 +104,7 @@ export function renderAppTemplate(root) {
         <div class="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-6">
           <div
             id="canvas"
-            class="flex max-h-[720px] flex-col gap-6 overflow-y-auto rounded-xl bg-slate-50 p-6"
+            class="flex w-full flex-col gap-6 rounded-xl bg-slate-50 p-6"
           ></div>
         </div>
       </section>
