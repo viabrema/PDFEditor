@@ -36,6 +36,15 @@ export function renderAppTemplate(root) {
               <i data-lucide="file-down"></i>
             </button>
             <button
+              id="page-settings"
+              type="button"
+              class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"
+              title="Configuracao da pagina"
+              aria-label="Configuracao da pagina"
+            >
+              <i data-lucide="settings-2"></i>
+            </button>
+            <button
               id="ai-panel-toggle"
               type="button"
               class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"
@@ -49,55 +58,6 @@ export function renderAppTemplate(root) {
         </div>
       </header>
       <section class="mx-auto max-w-5xl px-6 py-6">
-        <div class="mb-4 flex flex-wrap items-end gap-4">
-          <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="page-format">
-              Formato
-            </label>
-            <select
-              id="page-format"
-              class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-            >
-              <option value="A4">A4</option>
-              <option value="Letter">Letter</option>
-            </select>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="page-orientation">
-              Orientacao
-            </label>
-            <select
-              id="page-orientation"
-              class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-            >
-              <option value="portrait">Retrato</option>
-              <option value="landscape">Paisagem</option>
-            </select>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="grid-size">
-              Grid
-            </label>
-            <input
-              id="grid-size"
-              type="number"
-              min="4"
-              max="40"
-              step="1"
-              class="w-24 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-            />
-          </div>
-          <div class="flex items-center gap-2">
-            <input id="grid-snap" type="checkbox" class="h-4 w-4" />
-            <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="grid-snap">
-              Snap
-            </label>
-          </div>
-          <div class="flex flex-col gap-1">
-            <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Pagina ativa</span>
-            <span class="text-sm text-slate-700" id="page-meta"></span>
-          </div>
-        </div>
         <div class="mb-3 flex flex-wrap items-center gap-3">
           <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Idiomas</div>
           <div class="flex flex-wrap gap-2" id="language-tabs"></div>
@@ -148,6 +108,78 @@ export function renderAppTemplate(root) {
           ></div>
         </div>
       </section>
+      <div
+        id="page-settings-modal"
+        class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/40 px-4"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <div class="text-lg font-semibold text-slate-900">Configuracao da pagina</div>
+              <div class="text-xs text-slate-500">Formato, orientacao e grid</div>
+            </div>
+            <button
+              id="page-settings-close"
+              type="button"
+              class="rounded-md border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600"
+            >
+              Fechar
+            </button>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="page-format">
+                Formato
+              </label>
+              <select
+                id="page-format"
+                class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="A4">A4</option>
+                <option value="Letter">Letter</option>
+              </select>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="page-orientation">
+                Orientacao
+              </label>
+              <select
+                id="page-orientation"
+                class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="portrait">Retrato</option>
+                <option value="landscape">Paisagem</option>
+              </select>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="grid-size">
+                Grid
+              </label>
+              <input
+                id="grid-size"
+                type="number"
+                min="4"
+                max="40"
+                step="1"
+                class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+            </div>
+            <div class="flex items-center gap-2 pt-6">
+              <input id="grid-snap" type="checkbox" class="h-4 w-4" />
+              <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="grid-snap">
+                Snap
+              </label>
+            </div>
+          </div>
+          <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Pagina ativa</span>
+            <div id="page-meta"></div>
+          </div>
+        </div>
+      </div>
       <aside id="ai-panel" class="ai-panel" aria-hidden="true">
         <div class="ai-panel-header">
           <div class="text-sm font-semibold text-slate-900">AI Assistente</div>
