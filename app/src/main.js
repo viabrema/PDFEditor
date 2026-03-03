@@ -1366,10 +1366,12 @@ document.addEventListener("click", (event) => {
     return;
   }
 
-  if (state.editingBlockId || state.selectedBlockId) {
-    state.editingBlockId = null;
-    state.selectedBlockId = null;
-    render();
+  if (event.target.closest(".page-surface")) {
+    if (state.editingBlockId || state.selectedBlockId) {
+      state.editingBlockId = null;
+      state.selectedBlockId = null;
+      render();
+    }
   }
 });
 
