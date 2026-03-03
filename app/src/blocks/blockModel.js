@@ -2,6 +2,7 @@ import { createId } from "../utils/id.js";
 
 export const BLOCK_TYPES = {
   TEXT: "text",
+  HEADING: "heading",
   TITLE: "title",
   SUBTITLE: "subtitle",
   IMAGE: "image",

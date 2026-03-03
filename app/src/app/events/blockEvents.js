@@ -51,7 +51,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
     renderer.renderCanvas();
   });
 
-  refs.addTitleButton.addEventListener("click", () => {
+  refs.addHeadingButton.addEventListener("click", () => {
     const { region, isBody, blocksForRegion, regionSize } = getRegionContext();
     const blockSize = { width: 520, height: 120 };
     const position = getNextBlockPosition({
@@ -62,34 +62,12 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
 
     blocks.push(
       createBlock({
-        type: BLOCK_TYPES.TITLE,
+        type: BLOCK_TYPES.HEADING,
         position,
         size: blockSize,
         pageId: isBody ? state.activePageId : null,
         languageId: state.activeLanguageId,
-        metadata: isBody ? {} : { region },
-      })
-    );
-    renderer.renderCanvas();
-  });
-
-  refs.addSubtitleButton.addEventListener("click", () => {
-    const { region, isBody, blocksForRegion, regionSize } = getRegionContext();
-    const blockSize = { width: 520, height: 120 };
-    const position = getNextBlockPosition({
-      blocksForPage: blocksForRegion,
-      blockSize,
-      pageSize: regionSize,
-    });
-
-    blocks.push(
-      createBlock({
-        type: BLOCK_TYPES.SUBTITLE,
-        position,
-        size: blockSize,
-        pageId: isBody ? state.activePageId : null,
-        languageId: state.activeLanguageId,
-        metadata: isBody ? {} : { region },
+        metadata: isBody ? { headingLevel: 1 } : { region, headingLevel: 1 },
       })
     );
     renderer.renderCanvas();

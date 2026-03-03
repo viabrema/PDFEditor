@@ -5,11 +5,8 @@ export function createBlockElement(block, { selected = false, editing = false } 
   const element = document.createElement("div");
   element.className =
     "block-shell absolute rounded-md border border-slate-200 bg-white shadow-sm";
-  if (block.type === "title") {
-    element.classList.add("title-block");
-  }
-  if (block.type === "subtitle") {
-    element.classList.add("subtitle-block");
+  if (block.type === "heading" || block.type === "title" || block.type === "subtitle") {
+    element.classList.add("heading-block");
   }
   if (block.type === "text") {
     element.classList.add("text-block");

@@ -51,6 +51,13 @@ export function renderBlocksInContainer({
   }
 
   blocks.forEach((block) => {
+    if (block.type === "title" || block.type === "subtitle") {
+      block.metadata = {
+        ...(block.metadata || {}),
+        headingLevel: block.type === "subtitle" ? 2 : 1,
+      };
+      block.type = "heading";
+    }
     const isSelected = block.id === state.selectedBlockId;
     const isEditing = block.id === state.editingBlockId;
     const { element, editorHost } = createBlockElement(block, {
@@ -60,7 +67,7 @@ export function renderBlocksInContainer({
     container.append(element);
 
     if (isEditing && block.type === "table") {
-      const toolbar = createToolbar(null, { disabled: true });
+      const toolbar = createToolbar(null, { disabled: true, variant: "table" });
       state.interactions.push(
         mountFloatingToolbar({
           element,
@@ -143,10 +150,15 @@ export function renderBlocksInContainer({
       applyBlockStyles();
 
       if (isEditing) {
+        const isHeading = block.type === "heading";
+        const headingLevel =
+          Number(block.metadata?.headingLevel ?? block.metadata?.level) || 1;
         const toolbar = createToolbar(createEditorCommands(view), {
+          variant: isHeading ? "heading" : "text",
           alignValue: block.metadata?.align || "left",
           fontFamilyValue: block.metadata?.fontFamily || "Segoe UI",
           fontSizeValue: block.metadata?.fontSize || getBlockTextStyle(block).fontSize,
+          headingLevelValue: Math.min(3, Math.max(1, headingLevel)),
           onAlignChange: (align) => {
             block.metadata = { ...(block.metadata || {}), align };
             applyBlockStyles();
@@ -159,6 +171,11 @@ export function renderBlocksInContainer({
           },
           onFontSizeChange: (fontSize) => {
             block.metadata = { ...(block.metadata || {}), fontSize };
+            applyBlockStyles();
+            requestRender();
+          },
+          onHeadingLevelChange: (level) => {
+            block.metadata = { ...(block.metadata || {}), headingLevel: level };
             applyBlockStyles();
             requestRender();
           },

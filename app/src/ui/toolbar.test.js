@@ -20,7 +20,7 @@ describe("toolbar", () => {
     globalThis.document = originalDocument;
   });
 
-  it("renders buttons", () => {
+  it("renders text toolbar", () => {
     let clicked = 0;
     const toolbar = createToolbar(
       {
@@ -38,6 +38,7 @@ describe("toolbar", () => {
         },
       },
       {
+        variant: "text",
         onAlignChange: () => {
           clicked += 1;
         },
@@ -67,12 +68,54 @@ describe("toolbar", () => {
     expect(clicked).toBe(9);
   });
 
+  it("renders heading toolbar", () => {
+    let clicked = 0;
+    const toolbar = createToolbar(
+      {
+        toggleBold: () => {
+          clicked += 1;
+        },
+        toggleItalic: () => {
+          clicked += 1;
+        },
+      },
+      {
+        variant: "heading",
+        onAlignChange: () => {
+          clicked += 1;
+        },
+        onFontFamilyChange: () => {
+          clicked += 1;
+        },
+        onHeadingLevelChange: () => {
+          clicked += 1;
+        },
+      }
+    );
+
+    expect(toolbar.querySelectorAll("button")).toHaveLength(5);
+    expect(toolbar.querySelectorAll("select")).toHaveLength(2);
+
+    toolbar.querySelectorAll("button").forEach((button) => {
+      button.click();
+    });
+
+    const selects = toolbar.querySelectorAll("select");
+    const levelSelect = selects[0];
+    const fontSelect = selects[1];
+
+    levelSelect.dispatchEvent(new window.Event("change"));
+    fontSelect.dispatchEvent(new window.Event("change"));
+
+    expect(clicked).toBe(7);
+  });
+
   it("renders disabled toolbar", () => {
-    const toolbar = createToolbar(null, { disabled: true });
+    const toolbar = createToolbar(null, { disabled: true, variant: "heading" });
     const buttons = toolbar.querySelectorAll("button");
     const selects = toolbar.querySelectorAll("select");
 
-    expect(buttons).toHaveLength(7);
+    expect(buttons).toHaveLength(5);
     expect(selects).toHaveLength(2);
     buttons.forEach((button) => {
       expect(button.disabled).toBe(true);

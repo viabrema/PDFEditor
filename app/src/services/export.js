@@ -97,14 +97,28 @@ function renderNode(node) {
   }
 }
 
+function getHeadingLevel(block) {
+  const rawLevel =
+    block.type === "title"
+      ? 1
+      : block.type === "subtitle"
+        ? 2
+        : block.metadata?.headingLevel ?? block.metadata?.level;
+  const level = Number(rawLevel) || 1;
+  return Math.min(3, Math.max(1, level));
+}
+
 function getBlockTextStyle(block) {
   const type = block.type || "text";
-  const defaults =
-    type === "title"
-      ? { fontSize: "26px", fontWeight: "700", color: "#008737" }
-      : type === "subtitle"
-        ? { fontSize: "18px", fontWeight: "700", color: "#0f172a" }
-        : { fontSize: "16px", fontWeight: "400", color: "#0f172a" };
+  const headingStyles = {
+    1: { fontSize: "26px", fontWeight: "700", color: "#008737" },
+    2: { fontSize: "18px", fontWeight: "700", color: "#0f172a" },
+    3: { fontSize: "16px", fontWeight: "600", color: "#0f172a" },
+  };
+  const isHeading = type === "heading" || type === "title" || type === "subtitle";
+  const defaults = isHeading
+    ? headingStyles[getHeadingLevel(block)]
+    : { fontSize: "16px", fontWeight: "400", color: "#0f172a" };
   return {
     fontSize: block.metadata?.fontSize || defaults.fontSize,
     fontFamily: block.metadata?.fontFamily || "",

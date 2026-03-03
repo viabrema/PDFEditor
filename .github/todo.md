@@ -17,6 +17,7 @@
 - [x] Integrar ProseMirror ou Tiptap core em modo vanilla
 - [x] Implementar schema inicial (texto, imagem, grafico)
 - [x] Implementar toolbar (negrito, italico, listas)
+- [x] Toolbar por bloco (heading/texto)
 - [x] Renderizacao de blocos no canvas/layout
 - [x] Suporte a formato da pagina (A4, Letter, etc)
 - [x] Suporte a layout da pagina (retrato/paisagem)

@@ -88,7 +88,7 @@ export function buildPageAiPrompt({ pageBlocks, instruction, mode, pageSize, gri
     "Formato: {\"actions\":[...]}.",
     "Tipos suportados: update, create, delete.",
     "update: {type:'update', id, contentText?, tableRows?, position?, size?}",
-    "create: {type:'create', blockType:'text'|'title'|'subtitle'|'table', contentText?, tableRows?, position?, size?}",
+    "create: {type:'create', blockType:'text'|'heading'|'table', headingLevel?:1|2|3, contentText?, tableRows?, position?, size?}",
     "tableRows deve ser array de arrays (linhas com celulas).",
     "position e size devem usar numeros em pixels. Nao use porcentagem ou 'auto'.",
     "Use inteiros quando possivel.",

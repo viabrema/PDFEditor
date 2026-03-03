@@ -113,4 +113,194 @@ describe("export service (styles)", () => {
     expect(html).toContain("text-block");
     expect(html).toContain("font-size: 16px");
   });
+
+  it("renders legacy title and subtitle styles", () => {
+    const html = renderDocumentToHtml({
+      title: "Legacy",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "legacy-title",
+              type: "title",
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 60 },
+              content: {
+                type: "doc",
+                content: [
+                  { type: "paragraph", content: [{ type: "text", text: "Titulo" }] },
+                ],
+              },
+            },
+            {
+              id: "legacy-subtitle",
+              type: "subtitle",
+              position: { x: 0, y: 80 },
+              size: { width: 120, height: 60 },
+              content: {
+                type: "doc",
+                content: [
+                  { type: "paragraph", content: [{ type: "text", text: "Sub" }] },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+      const titleMatch = html.match(
+        /class="block text-block" style="([^"]+)" data-block-id="legacy-title"/
+      );
+      const subtitleMatch = html.match(
+        /class="block text-block" style="([^"]+)" data-block-id="legacy-subtitle"/
+      );
+
+    expect(titleMatch).not.toBeNull();
+    expect(subtitleMatch).not.toBeNull();
+    expect(titleMatch[1]).toContain("font-size: 26px");
+    expect(subtitleMatch[1]).toContain("font-size: 18px");
+  });
+
+  it("uses heading level from metadata.level", () => {
+    const html = renderDocumentToHtml({
+      title: "HeadingLevel",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "heading-level",
+              type: "heading",
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 60 },
+              metadata: { level: 2 },
+              content: {
+                type: "doc",
+                content: [
+                  { type: "paragraph", content: [{ type: "text", text: "Nivel" }] },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const match = html.match(
+      /class="block text-block" style="([^"]+)" data-block-id="heading-level"/
+    );
+    expect(match).not.toBeNull();
+    expect(match[1]).toContain("font-size: 18px");
+  });
+
+  it("covers heading level branches", () => {
+    const titleHtml = renderDocumentToHtml({
+      title: "BranchTitle",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "branch-title",
+              type: "title",
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 60 },
+              content: {
+                type: "doc",
+                content: [
+                  { type: "paragraph", content: [{ type: "text", text: "T" }] },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const subtitleHtml = renderDocumentToHtml({
+      title: "BranchSubtitle",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "branch-subtitle",
+              type: "subtitle",
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 60 },
+              content: {
+                type: "doc",
+                content: [
+                  { type: "paragraph", content: [{ type: "text", text: "S" }] },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const headingHtml = renderDocumentToHtml({
+      title: "BranchHeading",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "branch-heading",
+              type: "heading",
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 60 },
+              metadata: { headingLevel: 3 },
+              content: {
+                type: "doc",
+                content: [
+                  { type: "paragraph", content: [{ type: "text", text: "H" }] },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(titleHtml).toContain("font-size: 26px");
+    expect(subtitleHtml).toContain("font-size: 18px");
+    expect(headingHtml).toContain("font-size: 16px");
+  });
+
+  it("defaults heading level when metadata is missing", () => {
+    const html = renderDocumentToHtml({
+      title: "HeadingDefault",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "heading-default",
+              type: "heading",
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 60 },
+              content: {
+                type: "doc",
+                content: [
+                  { type: "paragraph", content: [{ type: "text", text: "H" }] },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(html).toContain("font-size: 26px");
+  });
 });

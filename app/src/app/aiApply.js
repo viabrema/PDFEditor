@@ -119,7 +119,12 @@ export function applyBlockFormatToDoc(content, format) {
 }
 
 export function applyAiResultToBlock({ block, resultText }) {
-  if (block.type === "text" || block.type === "title" || block.type === "subtitle") {
+  if (
+    block.type === "text" ||
+    block.type === "heading" ||
+    block.type === "title" ||
+    block.type === "subtitle"
+  ) {
     const parsed = parseAiJson(resultText);
     if (
       parsed &&
@@ -274,13 +279,16 @@ export function applyAiResultToPage({ resultText, blocks, state }) {
         }
         if (
           (action.blockType === "text" ||
+            action.blockType === "heading" ||
             action.blockType === "title" ||
             action.blockType === "subtitle") &&
           typeof action.contentText === "string"
         ) {
+          const headingLevel = Number(action.headingLevel) || 1;
+          const type = action.blockType === "heading" ? "heading" : action.blockType;
           blocks.push(
             createBlock({
-              type: action.blockType,
+              type,
               content: looksLikeMarkdownList(action.contentText)
                 ? buildTextDocFromMarkdown(action.contentText)
                 : buildTextDocFromString(action.contentText),
@@ -288,6 +296,10 @@ export function applyAiResultToPage({ resultText, blocks, state }) {
               size: normalizeSize(action.size) || { width: 320, height: 160 },
               pageId: state.activePageId,
               languageId: state.activeLanguageId,
+              metadata:
+                type === "heading"
+                  ? { headingLevel: Math.min(3, Math.max(1, headingLevel)) }
+                  : {},
             })
           );
         }

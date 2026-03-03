@@ -17,16 +17,10 @@ body {
   margin: 0;
 }
 
-.block-shell.title-block .ProseMirror {
+.block-shell.heading-block .ProseMirror {
   font-size: 26px;
   font-weight: 700;
   color: #008737;
-}
-
-.block-shell.subtitle-block .ProseMirror {
-  font-size: 18px;
-  font-weight: 700;
-  color: #0f172a;
 }
 
 .block-shell.text-block .ProseMirror {

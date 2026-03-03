@@ -100,24 +100,16 @@ describe("block renderer", () => {
     expect(editorHost.style.fontSize).toBe("20px");
   });
 
-  it("applies title and subtitle classes", () => {
-    const titleBlock = {
+  it("applies heading class", () => {
+    const headingBlock = {
       id: "block-6",
-      type: "title",
-      position: { x: 0, y: 0 },
-      size: { width: 200, height: 100 },
-    };
-    const subtitleBlock = {
-      id: "block-7",
-      type: "subtitle",
+      type: "heading",
       position: { x: 0, y: 0 },
       size: { width: 200, height: 100 },
     };
 
-    const { element: titleElement } = createBlockElement(titleBlock);
-    const { element: subtitleElement } = createBlockElement(subtitleBlock);
+    const { element: headingElement } = createBlockElement(headingBlock);
 
-    expect(titleElement.className).toContain("title-block");
-    expect(subtitleElement.className).toContain("subtitle-block");
+    expect(headingElement.className).toContain("heading-block");
   });
 });

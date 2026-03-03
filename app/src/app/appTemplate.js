@@ -77,22 +77,13 @@ export function renderAppTemplate(root) {
                 <i data-lucide="type"></i>
               </button>
               <button
-                id="add-title-block"
+                id="add-heading-block"
                 type="button"
                 class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
                 title="Novo bloco de titulo"
                 aria-label="Novo bloco de titulo"
               >
                 <i data-lucide="heading-1"></i>
-              </button>
-              <button
-                id="add-subtitle-block"
-                type="button"
-                class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
-                title="Novo bloco de subtitulo"
-                aria-label="Novo bloco de subtitulo"
-              >
-                <i data-lucide="heading-2"></i>
               </button>
               <button
                 id="add-table-block"

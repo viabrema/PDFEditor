@@ -1,12 +1,15 @@
 export function createToolbar(commands, options = {}) {
   const {
     disabled = false,
+    variant = "text",
     onAlignChange,
     onFontFamilyChange,
     onFontSizeChange,
+    onHeadingLevelChange,
     alignValue = "left",
     fontFamilyValue = "Segoe UI",
     fontSizeValue = "16px",
+    headingLevelValue = 1,
   } = options;
   const container = document.createElement("div");
   container.className = "flex flex-wrap gap-2";
@@ -18,40 +21,63 @@ export function createToolbar(commands, options = {}) {
     "Arial",
     "Courier New",
   ];
-  const fontSizes = ["12px", "14px", "16px", "18px", "20px", "24px", "28px"];
+  const fontSizes = ["12px", "14px", "16px", "18px"];
+  const headingLevels = [
+    { value: 1, label: "H1" },
+    { value: 2, label: "H2" },
+    { value: 3, label: "H3" },
+  ];
 
-  const fontSelect = document.createElement("select");
-  fontSelect.className =
-    "rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700";
-  fontSelect.title = "Fonte";
-  fontSelect.setAttribute("aria-label", "Fonte");
-  fontSelect.innerHTML = fontFamilies
-    .map((font) => `<option value="${font}">${font}</option>`)
-    .join("");
-  fontSelect.value = fontFamilyValue;
-  fontSelect.addEventListener("change", () => {
-    onFontFamilyChange?.(fontSelect.value);
-  });
+  const createSelect = ({ title, value, options, onChange }) => {
+    const select = document.createElement("select");
+    select.className =
+      "rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700";
+    select.title = title;
+    select.setAttribute("aria-label", title);
+    select.innerHTML = options
+      .map((option) => `<option value="${option.value}">${option.label}</option>`)
+      .join("");
+    select.value = value;
+    select.addEventListener("change", () => {
+      onChange?.(select.value);
+    });
+    if (disabled) {
+      select.disabled = true;
+    }
+    return select;
+  };
 
-  const sizeSelect = document.createElement("select");
-  sizeSelect.className =
-    "rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700";
-  sizeSelect.title = "Tamanho da fonte";
-  sizeSelect.setAttribute("aria-label", "Tamanho da fonte");
-  sizeSelect.innerHTML = fontSizes
-    .map((size) => `<option value="${size}">${size}</option>`)
-    .join("");
-  sizeSelect.value = fontSizeValue;
-  sizeSelect.addEventListener("change", () => {
-    onFontSizeChange?.(sizeSelect.value);
-  });
-
-  if (disabled) {
-    fontSelect.disabled = true;
-    sizeSelect.disabled = true;
+  if (variant === "heading") {
+    const levelSelect = createSelect({
+      title: "Nivel do titulo",
+      value: String(headingLevelValue),
+      options: headingLevels.map((level) => ({
+        value: String(level.value),
+        label: level.label,
+      })),
+      onChange: (value) => onHeadingLevelChange?.(Number(value)),
+    });
+    container.append(levelSelect);
   }
 
-  container.append(fontSelect, sizeSelect);
+  if (variant === "text") {
+    const sizeSelect = createSelect({
+      title: "Tamanho da fonte",
+      value: fontSizeValue,
+      options: fontSizes.map((size) => ({ value: size, label: size })),
+      onChange: (value) => onFontSizeChange?.(value),
+    });
+    container.append(sizeSelect);
+  }
+
+  const fontSelect = createSelect({
+    title: "Fonte",
+    value: fontFamilyValue,
+    options: fontFamilies.map((font) => ({ value: font, label: font })),
+    onChange: (value) => onFontFamilyChange?.(value),
+  });
+
+  container.append(fontSelect);
 
   const items = [
     { id: "bold", label: "Negrito", icon: "bold", action: commands?.toggleBold },
@@ -74,14 +100,19 @@ export function createToolbar(commands, options = {}) {
       icon: "align-right",
       action: () => onAlignChange?.("right"),
     },
-    { id: "bullet", label: "Lista", icon: "list", action: commands?.toggleBulletList },
-    {
-      id: "ordered",
-      label: "Numerada",
-      icon: "list-ordered",
-      action: commands?.toggleOrderedList,
-    },
   ];
+
+  if (variant === "text") {
+    items.push(
+      { id: "bullet", label: "Lista", icon: "list", action: commands?.toggleBulletList },
+      {
+        id: "ordered",
+        label: "Numerada",
+        icon: "list-ordered",
+        action: commands?.toggleOrderedList,
+      }
+    );
+  }
 
   items.forEach((item) => {
     const button = document.createElement("button");

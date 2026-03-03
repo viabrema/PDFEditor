@@ -185,7 +185,7 @@ describe("export service (rich)", () => {
     expect(html).not.toContain("<span style=");
   });
 
-  it("renders title and subtitle styles", () => {
+  it("renders heading styles", () => {
     const html = renderDocumentToHtml({
       title: "Styles",
       page: { format: "A4", orientation: "portrait" },
@@ -194,22 +194,22 @@ describe("export service (rich)", () => {
           id: "page-1",
           blocks: [
             {
-              id: "block-title",
-              type: "title",
+              id: "block-heading-1",
+              type: "heading",
               position: { x: 0, y: 0 },
               size: { width: 200, height: 100 },
-              metadata: { align: "center" },
+              metadata: { align: "center", headingLevel: 1 },
               content: {
                 type: "doc",
                 content: [{ type: "paragraph", content: [{ type: "text", text: "Oi" }] }],
               },
             },
             {
-              id: "block-subtitle",
-              type: "subtitle",
+              id: "block-heading-3",
+              type: "heading",
               position: { x: 0, y: 120 },
               size: { width: 200, height: 100 },
-              metadata: { fontFamily: "Georgia", fontSize: "20px" },
+              metadata: { fontFamily: "Georgia", headingLevel: 3 },
               content: {
                 type: "doc",
                 content: [{ type: "paragraph", content: [{ type: "text", text: "Ola" }] }],
@@ -223,6 +223,7 @@ describe("export service (rich)", () => {
     expect(html).toContain("font-size: 26px");
     expect(html).toContain("text-align: center");
     expect(html).toContain("font-family: Georgia");
-    expect(html).toContain("font-size: 20px");
+    expect(html).toContain("font-size: 16px");
+    expect(html).toContain("font-weight: 600");
   });
 });
