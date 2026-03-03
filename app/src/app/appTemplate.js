@@ -58,14 +58,13 @@ export function renderAppTemplate(root) {
         </div>
       </header>
       <section class="w-full px-6 py-6">
-        <div class="mb-3 flex flex-wrap items-center gap-3">
-          <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Idiomas</div>
-          <div class="flex flex-wrap gap-2" id="language-tabs"></div>
-          <div class="flex items-center gap-2" id="language-actions"></div>
-          <div id="translation-status" class="text-xs text-slate-500"></div>
-        </div>
-        <div class="mb-4 flex items-center justify-between">
-          <div class="text-sm text-slate-500">Canvas</div>
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Idiomas</div>
+            <div class="flex flex-wrap gap-2" id="language-tabs"></div>
+            <div class="flex items-center gap-2" id="language-actions"></div>
+            <div id="translation-status" class="text-xs text-slate-500"></div>
+          </div>
           <div class="flex items-center gap-2">
             <button
               id="add-text-block"
