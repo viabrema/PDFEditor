@@ -355,6 +355,40 @@ async function translateTextValue({ text, sourceLanguageId, targetLanguageId }) 
   return result.text || text;
 }
 
+async function translateNodeTree(node, { sourceLanguageId, targetLanguageId }) {
+  if (!node || typeof node !== "object") {
+    return node;
+  }
+
+  if (node.type === "text") {
+    const translated = await translateTextValue({
+      text: node.text || "",
+      sourceLanguageId,
+      targetLanguageId,
+    });
+    return {
+      ...node,
+      text: translated,
+    };
+  }
+
+  if (!Array.isArray(node.content)) {
+    return { ...node };
+  }
+
+  const translatedContent = [];
+  for (const child of node.content) {
+    translatedContent.push(
+      await translateNodeTree(child, { sourceLanguageId, targetLanguageId })
+    );
+  }
+
+  return {
+    ...node,
+    content: translatedContent,
+  };
+}
+
 async function translateBlockFromSource(block, { sourceLanguageId, targetLanguageId }) {
   const base = {
     type: block.type,
@@ -366,6 +400,17 @@ async function translateBlockFromSource(block, { sourceLanguageId, targetLanguag
   };
 
   if (block.type === "text") {
+    if (block.content && typeof block.content === "object") {
+      const translatedDoc = await translateNodeTree(block.content, {
+        sourceLanguageId,
+        targetLanguageId,
+      });
+      return createBlock({
+        ...base,
+        content: translatedDoc,
+      });
+    }
+
     const rawText = extractTextFromNode(block.content).trim();
     const translated = await translateTextValue({
       text: rawText,
