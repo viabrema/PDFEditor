@@ -19,22 +19,59 @@ function escapeHtml(value) {
     .replace(/\"/g, "&quot;");
 }
 
-function extractText(node) {
+function renderMarks(text, marks = []) {
+  return marks
+    .slice()
+    .reverse()
+    .reduce((current, mark) => {
+    if (mark.type === "strong") {
+      return `<strong>${current}</strong>`;
+    }
+    if (mark.type === "em") {
+      return `<em>${current}</em>`;
+    }
+    return current;
+  }, text);
+}
+
+function renderNode(node) {
   if (!node) {
     return "";
   }
+
   if (node.type === "text") {
-    return node.text || "";
+    return renderMarks(escapeHtml(node.text || ""), node.marks || []);
   }
-  if (Array.isArray(node.content)) {
-    return node.content.map(extractText).join(" ");
+
+  const children = Array.isArray(node.content)
+    ? node.content.map(renderNode).join("")
+    : "";
+
+  switch (node.type) {
+    case "doc":
+      return children;
+    case "paragraph":
+      return `<p>${children}</p>`;
+    case "bullet_list":
+      return `<ul>${children}</ul>`;
+    case "ordered_list":
+      return `<ol>${children}</ol>`;
+    case "list_item":
+      return `<li>${children}</li>`;
+    case "hard_break":
+      return "<br />";
+    case "horizontal_rule":
+      return "<hr />";
+    case "chart":
+      return '<div class="pm-chart">Chart</div>';
+    default:
+      return children;
   }
-  return "";
 }
 
 function renderTextBlock(block) {
-  const text = extractText(block.content) || "";
-  return `<div class=\"block text-block\" data-block-id=\"${block.id}\">${escapeHtml(text)}</div>`;
+  const html = renderNode(block.content) || "";
+  return `<div class=\"block text-block\" data-block-id=\"${block.id}\">${html}</div>`;
 }
 
 function renderImageBlock(block) {
@@ -88,15 +125,20 @@ export function renderDocumentToHtml(document) {
   const styles = `
     @page { size: ${pageSize.width}px ${pageSize.height}px; margin: 0; }
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: "Times New Roman", serif; color: #0f172a; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; }
     .document { display: flex; flex-direction: column; gap: 24px; padding: 24px; }
     .page { position: relative; background: #fff; border: 1px solid #e2e8f0; }
     .block-wrapper { position: absolute; }
     .block { width: 100%; height: 100%; }
-    .text-block { font-size: 14px; white-space: pre-wrap; }
-    .image-block img { width: 100%; height: 100%; object-fit: contain; }
+    .text-block { font-size: 14px; line-height: 1.4; padding: 12px; }
+    .text-block p { margin: 0 0 10px; }
+    .text-block p:last-child { margin-bottom: 0; }
+    .text-block ul,
+    .text-block ol { margin: 0; padding-left: 20px; }
+    .text-block hr { border: none; border-top: 1px solid #0f172a; margin: 10px 0; }
+    .image-block img { width: 100%; height: 100%; object-fit: cover; }
     .table-block table { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }
-    .table-block td { border: 1px solid #e2e8f0; padding: 6px; font-size: 12px; }
+    .table-block td { border: 1px solid #e2e8f0; padding: 6px 8px; font-size: 14px; }
     @media print {
       body { margin: 0; }
       .document { padding: 0; gap: 0; }
