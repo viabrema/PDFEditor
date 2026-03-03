@@ -16,6 +16,7 @@ import { createIcons, icons } from "lucide";
 import { loadDocumentFromFile, saveDocumentToFile } from "./services/tauriStorage.js";
 import { renderDocumentToHtml } from "./services/export.js";
 import { createTranslationService } from "./services/translation.js";
+import { createAiService } from "./services/ai.js";
 
 const app = document.querySelector("#app");
 app.innerHTML = `
@@ -53,6 +54,15 @@ app.innerHTML = `
             aria-label="Exportar PDF"
           >
             <i data-lucide="file-down"></i>
+          </button>
+          <button
+            id="ai-panel-toggle"
+            type="button"
+            class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"
+            title="Abrir AI"
+            aria-label="Abrir AI"
+          >
+            <i data-lucide="sparkles"></i>
           </button>
           <div id="doc-status" class="text-xs text-slate-500">Documento local</div>
         </div>
@@ -158,6 +168,24 @@ app.innerHTML = `
         ></div>
       </div>
     </section>
+    <aside id="ai-panel" class="ai-panel" aria-hidden="true">
+      <div class="ai-panel-header">
+        <div class="text-sm font-semibold text-slate-900">AI Assistente</div>
+        <button id="ai-panel-close" type="button" class="ai-panel-close">Fechar</button>
+      </div>
+      <div class="ai-panel-body">
+        <div id="ai-target" class="text-xs text-slate-500">Selecione um bloco</div>
+        <textarea
+          id="ai-input"
+          class="ai-panel-input"
+          rows="6"
+          placeholder="Descreva o que deseja mudar..."
+        ></textarea>
+        <button id="ai-send" type="button" class="ai-panel-send">Enviar</button>
+        <div id="ai-status" class="text-xs text-slate-500"></div>
+        <pre id="ai-response" class="ai-panel-response"></pre>
+      </div>
+    </aside>
   </main>
 `;
 
@@ -184,6 +212,13 @@ const state = {
   translation: {
     loading: false,
     error: null,
+  },
+  ai: {
+    open: false,
+    loading: false,
+    error: null,
+    response: "",
+    chatByBlockId: {},
   },
 };
 
@@ -226,6 +261,14 @@ const formatSelect = document.querySelector("#page-format");
 const orientationSelect = document.querySelector("#page-orientation");
 const gridSizeInput = document.querySelector("#grid-size");
 const snapToggle = document.querySelector("#grid-snap");
+const aiPanelToggle = document.querySelector("#ai-panel-toggle");
+const aiPanel = document.querySelector("#ai-panel");
+const aiPanelClose = document.querySelector("#ai-panel-close");
+const aiTarget = document.querySelector("#ai-target");
+const aiInput = document.querySelector("#ai-input");
+const aiSend = document.querySelector("#ai-send");
+const aiStatus = document.querySelector("#ai-status");
+const aiResponse = document.querySelector("#ai-response");
 
 const PAGE_SIZES = {
   A4: { width: 794, height: 1123 },
@@ -239,6 +282,11 @@ const TRANSLATION_ENDPOINT =
 const TRANSLATION_KEY = "JygheDTXbNKNwA0DKL94riGK8AqxwtpyvCr2sfoQVfY";
 
 const translationService = createTranslationService({
+  endpoint: TRANSLATION_ENDPOINT,
+  apiKey: TRANSLATION_KEY,
+});
+
+const aiService = createAiService({
   endpoint: TRANSLATION_ENDPOINT,
   apiKey: TRANSLATION_KEY,
 });
@@ -338,6 +386,61 @@ function buildTextDocFromString(text) {
         : [],
     })),
   };
+}
+
+function getSelectedBlock() {
+  return blocks.find((block) => block.id === state.selectedBlockId) || null;
+}
+
+function sanitizeAiPayload(text) {
+  return String(text || "")
+    .replace(/^```[a-z]*\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+}
+
+function buildAiPrompt({ block, instruction }) {
+  if (block.type === "table") {
+    const rows = Array.isArray(block.content?.rows) ? block.content.rows : [];
+    return [
+      "Voce e um assistente que edita tabelas.",
+      "Retorne apenas um JSON array de arrays com o mesmo formato.",
+      "Tabela (JSON):",
+      JSON.stringify(rows),
+      "Instrucao:",
+      instruction,
+    ].join("\n");
+  }
+
+  const currentText = extractTextFromNode(block.content).trim();
+  return [
+    "Voce e um assistente que edita texto.",
+    "Retorne apenas o texto atualizado, sem aspas.",
+    "Texto atual:",
+    currentText,
+    "Instrucao:",
+    instruction,
+  ].join("\n");
+}
+
+function applyAiResultToBlock({ block, resultText }) {
+  const cleaned = sanitizeAiPayload(resultText);
+
+  if (block.type === "table") {
+    try {
+      const parsed = JSON.parse(cleaned);
+      if (Array.isArray(parsed)) {
+        block.content = { rows: parsed };
+        return true;
+      }
+    } catch (error) {
+      return false;
+    }
+    return false;
+  }
+
+  block.content = buildTextDocFromString(cleaned);
+  return true;
 }
 
 async function translateTextValue({ text, sourceLanguageId, targetLanguageId }) {
@@ -513,19 +616,20 @@ async function translateBlockFromSource(block, { sourceLanguageId, targetLanguag
 
   if (block.type === "table") {
     const rows = Array.isArray(block.content?.rows) ? block.content.rows : [];
-    const translatedRows = [];
-    for (const row of rows) {
-      const translatedRow = [];
-      for (const cell of row) {
-        const translated = await translateTextValue({
-          text: String(cell || ""),
-          sourceLanguageId,
-          targetLanguageId,
-        });
-        translatedRow.push(translated);
-      }
-      translatedRows.push(translatedRow);
-    }
+    const flatCells = rows.flatMap((row) => row.map((cell) => String(cell || "")));
+    const translatedCells = await translateTextBatch({
+      texts: flatCells,
+      sourceLanguageId,
+      targetLanguageId,
+    });
+    let cellIndex = 0;
+    const translatedRows = rows.map((row) =>
+      row.map(() => {
+        const next = translatedCells[cellIndex] ?? "";
+        cellIndex += 1;
+        return next;
+      })
+    );
     return createBlock({
       ...base,
       content: { rows: translatedRows },
@@ -857,6 +961,22 @@ function renderLanguageActions() {
   }
 }
 
+function renderAiPanel() {
+  const selectedBlock = getSelectedBlock();
+  aiPanel.classList.toggle("is-open", state.ai.open);
+  aiPanel.setAttribute("aria-hidden", state.ai.open ? "false" : "true");
+
+  if (!selectedBlock) {
+    aiTarget.textContent = "Selecione um bloco";
+  } else {
+    aiTarget.textContent = `Bloco: ${selectedBlock.type}`;
+  }
+
+  aiSend.disabled = state.ai.loading || !selectedBlock;
+  aiStatus.textContent = state.ai.loading ? "Processando..." : state.ai.error || "";
+  aiResponse.textContent = state.ai.response || "";
+}
+
 function render() {
   formatSelect.value = documentData.page.format;
   orientationSelect.value = documentData.page.orientation;
@@ -891,6 +1011,7 @@ function render() {
   renderCanvas();
   renderMeta();
   renderLanguageActions();
+  renderAiPanel();
   focusEditingBlock();
   createIcons({ icons });
 }
@@ -1129,6 +1250,15 @@ saveDocButton.addEventListener("click", async () => {
 
 exportPdfButton.addEventListener("click", () => {
   const snapshot = buildDocumentSnapshot();
+  const activeLanguageId = state.activeLanguageId;
+  if (activeLanguageId) {
+    snapshot.pages = snapshot.pages.map((page) => ({
+      ...page,
+      blocks: (page.blocks || []).filter(
+        (block) => block.languageId === activeLanguageId
+      ),
+    }));
+  }
   const html = renderDocumentToHtml(snapshot);
   const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
@@ -1143,6 +1273,60 @@ exportPdfButton.addEventListener("click", () => {
     preview.print();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
+});
+
+aiPanelToggle.addEventListener("click", () => {
+  state.ai.open = !state.ai.open;
+  renderAiPanel();
+});
+
+aiPanelClose.addEventListener("click", () => {
+  state.ai.open = false;
+  renderAiPanel();
+});
+
+aiSend.addEventListener("click", async () => {
+  const selectedBlock = getSelectedBlock();
+  const instruction = aiInput.value.trim();
+  if (!selectedBlock || !instruction) {
+    return;
+  }
+
+  state.ai.loading = true;
+  state.ai.error = null;
+  state.ai.response = "";
+  renderAiPanel();
+
+  try {
+    const prompt = buildAiPrompt({ block: selectedBlock, instruction });
+    const chatId = state.ai.chatByBlockId[selectedBlock.id];
+    const result = await aiService.sendPrompt({ prompt, chatId });
+    if (!result.ok) {
+      state.ai.error = "Falha ao gerar resposta.";
+      state.ai.loading = false;
+      renderAiPanel();
+      return;
+    }
+
+    if (result.chatId) {
+      state.ai.chatByBlockId[selectedBlock.id] = result.chatId;
+    }
+    state.ai.response = result.text || "";
+
+    const applied = applyAiResultToBlock({
+      block: selectedBlock,
+      resultText: result.text || "",
+    });
+    if (!applied) {
+      state.ai.error = "Resposta invalida para o tipo de bloco.";
+    }
+    render();
+  } catch (error) {
+    state.ai.error = "Falha ao gerar resposta.";
+  } finally {
+    state.ai.loading = false;
+    renderAiPanel();
+  }
 });
 
 document.addEventListener("click", (event) => {
