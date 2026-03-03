@@ -97,9 +97,38 @@ function renderNode(node) {
   }
 }
 
+function getBlockTextStyle(block) {
+  const type = block.type || "text";
+  const defaults =
+    type === "title"
+      ? { fontSize: "26px", fontWeight: "700", color: "#008737" }
+      : type === "subtitle"
+        ? { fontSize: "18px", fontWeight: "700", color: "#0f172a" }
+        : { fontSize: "16px", fontWeight: "400", color: "#0f172a" };
+  return {
+    fontSize: block.metadata?.fontSize || defaults.fontSize,
+    fontFamily: block.metadata?.fontFamily || "",
+    fontWeight: defaults.fontWeight,
+    color: defaults.color,
+    textAlign: block.metadata?.align || "left",
+  };
+}
+
 function renderTextBlock(block) {
   const html = renderNode(block.content) || "";
-  return `<div class=\"block text-block\" data-block-id=\"${block.id}\">${html}</div>`;
+  const style = getBlockTextStyle(block);
+  const styleParts = [
+    `font-size: ${style.fontSize}`,
+    `font-weight: ${style.fontWeight}`,
+    `color: ${style.color}`,
+    `text-align: ${style.textAlign}`,
+  ];
+  if (style.fontFamily) {
+    styleParts.push(`font-family: ${style.fontFamily}`);
+  }
+  return `<div class=\"block text-block\" style=\"${styleParts.join(
+    "; "
+  )}\" data-block-id=\"${block.id}\">${html}</div>`;
 }
 
 function renderImageBlock(block) {

@@ -82,4 +82,42 @@ describe("block renderer", () => {
     expect(editorHost).toBeNull();
     expect(element.querySelector("table")).toBeTruthy();
   });
+
+  it("applies text block styles", () => {
+    const block = {
+      id: "block-5",
+      type: "text",
+      position: { x: 0, y: 0 },
+      size: { width: 200, height: 100 },
+      metadata: { align: "center", fontFamily: "Georgia", fontSize: "20px" },
+    };
+
+    const { element, editorHost } = createBlockElement(block);
+
+    expect(element.className).toContain("text-block");
+    expect(editorHost.style.textAlign).toBe("center");
+    expect(editorHost.style.fontFamily).toBe("Georgia");
+    expect(editorHost.style.fontSize).toBe("20px");
+  });
+
+  it("applies title and subtitle classes", () => {
+    const titleBlock = {
+      id: "block-6",
+      type: "title",
+      position: { x: 0, y: 0 },
+      size: { width: 200, height: 100 },
+    };
+    const subtitleBlock = {
+      id: "block-7",
+      type: "subtitle",
+      position: { x: 0, y: 0 },
+      size: { width: 200, height: 100 },
+    };
+
+    const { element: titleElement } = createBlockElement(titleBlock);
+    const { element: subtitleElement } = createBlockElement(subtitleBlock);
+
+    expect(titleElement.className).toContain("title-block");
+    expect(subtitleElement.className).toContain("subtitle-block");
+  });
 });

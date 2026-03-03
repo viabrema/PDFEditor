@@ -141,4 +141,39 @@ describe("editor", () => {
     expect(result).toBe(false);
     view.destroy();
   });
+
+  it("pastes plain text", () => {
+    const mount = document.createElement("div");
+    const view = createEditor({ mount, editable: () => true });
+
+    const event = {
+      clipboardData: {
+        getData: () => "Texto colado",
+      },
+      preventDefault: () => {},
+    };
+
+    const handled = view.props.handlePaste(view, event);
+    expect(handled).toBe(true);
+    expect(view.state.doc.textContent).toContain("Texto colado");
+
+    view.destroy();
+  });
+
+  it("ignores paste without text", () => {
+    const mount = document.createElement("div");
+    const view = createEditor({ mount, editable: () => true });
+
+    const event = {
+      clipboardData: {
+        getData: () => null,
+      },
+      preventDefault: () => {},
+    };
+
+    const handled = view.props.handlePaste(view, event);
+    expect(handled).toBe(false);
+
+    view.destroy();
+  });
 });

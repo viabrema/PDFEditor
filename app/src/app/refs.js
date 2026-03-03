@@ -6,6 +6,8 @@ export function getDomRefs() {
     translationStatus: document.querySelector("#translation-status"),
     pageMeta: document.querySelector("#page-meta"),
     addTextButton: document.querySelector("#add-text-block"),
+    addTitleButton: document.querySelector("#add-title-block"),
+    addSubtitleButton: document.querySelector("#add-subtitle-block"),
     addTableButton: document.querySelector("#add-table-block"),
     addImageButton: document.querySelector("#add-image-block"),
     imageInput: document.querySelector("#image-input"),

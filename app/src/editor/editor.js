@@ -33,6 +33,15 @@ export function createEditorView({
   view = new EditorView(mount, {
     state,
     editable,
+    handlePaste(viewInstance, event) {
+      const text = event.clipboardData?.getData("text/plain");
+      if (typeof text !== "string") {
+        return false;
+      }
+      event.preventDefault();
+      viewInstance.dispatch(viewInstance.state.tr.insertText(text));
+      return true;
+    },
     dispatchTransaction(transaction) {
       const nextState = view.state.apply(transaction);
       view.updateState(nextState);

@@ -1,4 +1,4 @@
-import { createBlock } from "../../blocks/blockModel.js";
+import { createBlock, BLOCK_TYPES } from "../../blocks/blockModel.js";
 import { createImageBlockFromFile } from "../../blocks/imageBlock.js";
 import { createTableBlockFromRows, createTableBlockFromText, parseTabularText } from "../../blocks/tableBlock.js";
 import { getNextBlockPosition, getPageSize, getRegionSize } from "../textUtils.js";
@@ -40,6 +40,51 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
 
     blocks.push(
       createBlock({
+        type: BLOCK_TYPES.TEXT,
+        position,
+        size: blockSize,
+        pageId: isBody ? state.activePageId : null,
+        languageId: state.activeLanguageId,
+        metadata: isBody ? {} : { region },
+      })
+    );
+    renderer.renderCanvas();
+  });
+
+  refs.addTitleButton.addEventListener("click", () => {
+    const { region, isBody, blocksForRegion, regionSize } = getRegionContext();
+    const blockSize = { width: 520, height: 120 };
+    const position = getNextBlockPosition({
+      blocksForPage: blocksForRegion,
+      blockSize,
+      pageSize: regionSize,
+    });
+
+    blocks.push(
+      createBlock({
+        type: BLOCK_TYPES.TITLE,
+        position,
+        size: blockSize,
+        pageId: isBody ? state.activePageId : null,
+        languageId: state.activeLanguageId,
+        metadata: isBody ? {} : { region },
+      })
+    );
+    renderer.renderCanvas();
+  });
+
+  refs.addSubtitleButton.addEventListener("click", () => {
+    const { region, isBody, blocksForRegion, regionSize } = getRegionContext();
+    const blockSize = { width: 520, height: 120 };
+    const position = getNextBlockPosition({
+      blocksForPage: blocksForRegion,
+      blockSize,
+      pageSize: regionSize,
+    });
+
+    blocks.push(
+      createBlock({
+        type: BLOCK_TYPES.SUBTITLE,
         position,
         size: blockSize,
         pageId: isBody ? state.activePageId : null,

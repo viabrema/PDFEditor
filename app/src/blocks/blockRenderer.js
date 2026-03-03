@@ -1,9 +1,19 @@
+import { getBlockTextStyle } from "./blockStyles.js";
 import { createTableElement, setTableEditable } from "./tableBlock.js";
 
 export function createBlockElement(block, { selected = false, editing = false } = {}) {
   const element = document.createElement("div");
   element.className =
     "block-shell absolute rounded-md border border-slate-200 bg-white shadow-sm";
+  if (block.type === "title") {
+    element.classList.add("title-block");
+  }
+  if (block.type === "subtitle") {
+    element.classList.add("subtitle-block");
+  }
+  if (block.type === "text") {
+    element.classList.add("text-block");
+  }
   if (selected) {
     element.classList.add("is-selected");
   }
@@ -32,6 +42,12 @@ export function createBlockElement(block, { selected = false, editing = false } 
     editorHost = document.createElement("div");
     editorHost.className = "prose-editor h-full w-full p-3";
     element.append(editorHost);
+    const style = getBlockTextStyle(block);
+    editorHost.style.fontSize = style.fontSize;
+    editorHost.style.fontFamily = style.fontFamily;
+    editorHost.style.fontWeight = style.fontWeight;
+    editorHost.style.color = style.color;
+    editorHost.style.textAlign = style.textAlign;
   }
 
   if (selected) {

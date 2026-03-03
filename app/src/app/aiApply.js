@@ -119,7 +119,7 @@ export function applyBlockFormatToDoc(content, format) {
 }
 
 export function applyAiResultToBlock({ block, resultText }) {
-  if (block.type === "text") {
+  if (block.type === "text" || block.type === "title" || block.type === "subtitle") {
     const parsed = parseAiJson(resultText);
     if (
       parsed &&
@@ -132,10 +132,36 @@ export function applyAiResultToBlock({ block, resultText }) {
           : buildTextDocFromString(parsed.contentText);
       }
       if (parsed.textStyle && typeof parsed.textStyle === "object") {
-        block.content = applyTextStyleToDoc(block.content, parsed.textStyle);
+        if (parsed.textStyle.fontFamily) {
+          block.metadata = {
+            ...(block.metadata || {}),
+            fontFamily: String(parsed.textStyle.fontFamily),
+          };
+        }
+        if (parsed.textStyle.fontSize) {
+          block.metadata = {
+            ...(block.metadata || {}),
+            fontSize: String(parsed.textStyle.fontSize),
+          };
+        }
+        const inlineStyle = {
+          bold: parsed.textStyle.bold,
+          italic: parsed.textStyle.italic,
+        };
+        block.content = applyTextStyleToDoc(block.content, inlineStyle);
       }
       if (parsed.blockFormat && typeof parsed.blockFormat === "object") {
-        block.content = applyBlockFormatToDoc(block.content, parsed.blockFormat);
+        if (parsed.blockFormat.textAlign) {
+          block.metadata = {
+            ...(block.metadata || {}),
+            align: parsed.blockFormat.textAlign,
+          };
+        }
+        const format = { ...parsed.blockFormat };
+        if (format.textAlign) {
+          delete format.textAlign;
+        }
+        block.content = applyBlockFormatToDoc(block.content, format);
       }
       return true;
     }
@@ -246,10 +272,15 @@ export function applyAiResultToPage({ resultText, blocks, state }) {
           );
           return;
         }
-        if (action.blockType === "text" && typeof action.contentText === "string") {
+        if (
+          (action.blockType === "text" ||
+            action.blockType === "title" ||
+            action.blockType === "subtitle") &&
+          typeof action.contentText === "string"
+        ) {
           blocks.push(
             createBlock({
-              type: "text",
+              type: action.blockType,
               content: looksLikeMarkdownList(action.contentText)
                 ? buildTextDocFromMarkdown(action.contentText)
                 : buildTextDocFromString(action.contentText),

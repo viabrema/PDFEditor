@@ -1,32 +1,15 @@
 export function createToolbar(commands, options = {}) {
-  const { disabled = false } = options;
+  const {
+    disabled = false,
+    onAlignChange,
+    onFontFamilyChange,
+    onFontSizeChange,
+    alignValue = "left",
+    fontFamilyValue = "Segoe UI",
+    fontSizeValue = "16px",
+  } = options;
   const container = document.createElement("div");
   container.className = "flex flex-wrap gap-2";
-
-  const styleSelect = document.createElement("select");
-  styleSelect.className =
-    "rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700";
-  styleSelect.title = "Estilo";
-  styleSelect.setAttribute("aria-label", "Estilo");
-  styleSelect.innerHTML = [
-    { value: "paragraph", label: "Paragrafo" },
-    { value: "title", label: "Titulo" },
-    { value: "subtitle", label: "Subtitulo" },
-  ]
-    .map((item) => `<option value="${item.value}">${item.label}</option>`)
-    .join("");
-  styleSelect.addEventListener("change", () => {
-    const value = styleSelect.value;
-    if (value === "title") {
-      commands?.setHeading?.(1);
-      return;
-    }
-    if (value === "subtitle") {
-      commands?.setHeading?.(2);
-      return;
-    }
-    commands?.setParagraph?.();
-  });
 
   const fontFamilies = [
     "Segoe UI",
@@ -45,8 +28,9 @@ export function createToolbar(commands, options = {}) {
   fontSelect.innerHTML = fontFamilies
     .map((font) => `<option value="${font}">${font}</option>`)
     .join("");
+  fontSelect.value = fontFamilyValue;
   fontSelect.addEventListener("change", () => {
-    commands?.setFontFamily?.(fontSelect.value);
+    onFontFamilyChange?.(fontSelect.value);
   });
 
   const sizeSelect = document.createElement("select");
@@ -57,18 +41,17 @@ export function createToolbar(commands, options = {}) {
   sizeSelect.innerHTML = fontSizes
     .map((size) => `<option value="${size}">${size}</option>`)
     .join("");
-  sizeSelect.value = "14px";
+  sizeSelect.value = fontSizeValue;
   sizeSelect.addEventListener("change", () => {
-    commands?.setFontSize?.(sizeSelect.value);
+    onFontSizeChange?.(sizeSelect.value);
   });
 
   if (disabled) {
-    styleSelect.disabled = true;
     fontSelect.disabled = true;
     sizeSelect.disabled = true;
   }
 
-  container.append(styleSelect, fontSelect, sizeSelect);
+  container.append(fontSelect, sizeSelect);
 
   const items = [
     { id: "bold", label: "Negrito", icon: "bold", action: commands?.toggleBold },
@@ -77,19 +60,19 @@ export function createToolbar(commands, options = {}) {
       id: "align-left",
       label: "Alinhar a esquerda",
       icon: "align-left",
-      action: () => commands?.setTextAlign?.("left"),
+      action: () => onAlignChange?.("left"),
     },
     {
       id: "align-center",
       label: "Alinhar ao centro",
       icon: "align-center",
-      action: () => commands?.setTextAlign?.("center"),
+      action: () => onAlignChange?.("center"),
     },
     {
       id: "align-right",
       label: "Alinhar a direita",
       icon: "align-right",
-      action: () => commands?.setTextAlign?.("right"),
+      action: () => onAlignChange?.("right"),
     },
     { id: "bullet", label: "Lista", icon: "list", action: commands?.toggleBulletList },
     {

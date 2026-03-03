@@ -3,6 +3,7 @@ import { createToolbar } from "../ui/toolbar.js";
 import { createBlockElement } from "../blocks/blockRenderer.js";
 import { setupDragResize } from "../blocks/dragResize.js";
 import { fileToDataUrl } from "../blocks/imageBlock.js";
+import { getBlockTextStyle } from "../blocks/blockStyles.js";
 
 export function renderBlocksInContainer({
   container,
@@ -131,8 +132,37 @@ export function renderBlocksInContainer({
       });
       state.views.push(view);
 
+      const applyBlockStyles = () => {
+        const style = getBlockTextStyle(block);
+        editorHost.style.fontSize = style.fontSize;
+        editorHost.style.fontFamily = style.fontFamily;
+        editorHost.style.fontWeight = style.fontWeight;
+        editorHost.style.color = style.color;
+        editorHost.style.textAlign = style.textAlign;
+      };
+      applyBlockStyles();
+
       if (isEditing) {
-        const toolbar = createToolbar(createEditorCommands(view));
+        const toolbar = createToolbar(createEditorCommands(view), {
+          alignValue: block.metadata?.align || "left",
+          fontFamilyValue: block.metadata?.fontFamily || "Segoe UI",
+          fontSizeValue: block.metadata?.fontSize || getBlockTextStyle(block).fontSize,
+          onAlignChange: (align) => {
+            block.metadata = { ...(block.metadata || {}), align };
+            applyBlockStyles();
+            requestRender();
+          },
+          onFontFamilyChange: (fontFamily) => {
+            block.metadata = { ...(block.metadata || {}), fontFamily };
+            applyBlockStyles();
+            requestRender();
+          },
+          onFontSizeChange: (fontSize) => {
+            block.metadata = { ...(block.metadata || {}), fontSize };
+            applyBlockStyles();
+            requestRender();
+          },
+        });
         state.interactions.push(
           mountFloatingToolbar({
             element,

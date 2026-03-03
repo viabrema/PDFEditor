@@ -184,4 +184,45 @@ describe("export service (rich)", () => {
 
     expect(html).not.toContain("<span style=");
   });
+
+  it("renders title and subtitle styles", () => {
+    const html = renderDocumentToHtml({
+      title: "Styles",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "block-title",
+              type: "title",
+              position: { x: 0, y: 0 },
+              size: { width: 200, height: 100 },
+              metadata: { align: "center" },
+              content: {
+                type: "doc",
+                content: [{ type: "paragraph", content: [{ type: "text", text: "Oi" }] }],
+              },
+            },
+            {
+              id: "block-subtitle",
+              type: "subtitle",
+              position: { x: 0, y: 120 },
+              size: { width: 200, height: 100 },
+              metadata: { fontFamily: "Georgia", fontSize: "20px" },
+              content: {
+                type: "doc",
+                content: [{ type: "paragraph", content: [{ type: "text", text: "Ola" }] }],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(html).toContain("font-size: 26px");
+    expect(html).toContain("text-align: center");
+    expect(html).toContain("font-family: Georgia");
+    expect(html).toContain("font-size: 20px");
+  });
 });
