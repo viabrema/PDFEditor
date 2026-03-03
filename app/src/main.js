@@ -413,6 +413,12 @@ function isAnalysisInstruction(instruction) {
   );
 }
 
+function isFormattingInstruction(instruction) {
+  return /(formatacao|formatação|fonte|tamanho|negrito|italico|it[aá]lico|sublinhado)/i.test(
+    instruction
+  );
+}
+
 function buildAiPrompt({ block, instruction, mode }) {
   if (block.type === "table") {
     const rows = Array.isArray(block.content?.rows) ? block.content.rows : [];
@@ -441,6 +447,18 @@ function buildAiPrompt({ block, instruction, mode }) {
     return [
       "Voce e um assistente que analisa texto.",
       "Retorne apenas o texto da analise, sem blocos de codigo.",
+      "Texto atual:",
+      currentText,
+      "Instrucao:",
+      instruction,
+    ].join("\n");
+  }
+  if (mode === "format") {
+    return [
+      "Voce e um assistente que ajusta formatacao de texto.",
+      "Retorne apenas JSON com a resposta.",
+      "Formato: {\"contentText\":string?,\"textStyle\":{\"fontSize\":string?,\"fontFamily\":string?,\"bold\":boolean?,\"italic\":boolean?}}",
+      "Se nao precisar mudar texto, omita contentText.",
       "Texto atual:",
       currentText,
       "Instrucao:",
@@ -516,6 +534,23 @@ function buildPageAiPrompt({ instruction, mode }) {
 function applyAiResultToBlock({ block, resultText }) {
   const cleaned = sanitizeAiPayload(resultText);
 
+  if (block.type === "text") {
+    try {
+      const parsed = JSON.parse(cleaned);
+      if (parsed && typeof parsed === "object" && (parsed.contentText || parsed.textStyle)) {
+        if (typeof parsed.contentText === "string") {
+          block.content = buildTextDocFromString(parsed.contentText);
+        }
+        if (parsed.textStyle && typeof parsed.textStyle === "object") {
+          block.content = applyTextStyleToDoc(block.content, parsed.textStyle);
+        }
+        return true;
+      }
+    } catch (error) {
+      // fallthrough
+    }
+  }
+
   if (block.type === "table") {
     try {
       const parsed = JSON.parse(cleaned);
@@ -531,6 +566,47 @@ function applyAiResultToBlock({ block, resultText }) {
 
   block.content = buildTextDocFromString(cleaned);
   return true;
+}
+
+function applyTextStyleToDoc(content, style) {
+  if (!content || typeof content !== "object") {
+    return content;
+  }
+  const attrs = {};
+  if (style.fontSize) {
+    attrs.fontSize = String(style.fontSize);
+  }
+  if (style.fontFamily) {
+    attrs.fontFamily = String(style.fontFamily);
+  }
+
+  function applyMarks(node) {
+    if (!node || typeof node !== "object") {
+      return node;
+    }
+    if (node.type === "text") {
+      const marks = Array.isArray(node.marks) ? [...node.marks] : [];
+      if (attrs.fontSize || attrs.fontFamily) {
+        marks.push({ type: "textStyle", attrs });
+      }
+      if (style.bold === true) {
+        marks.push({ type: "strong" });
+      }
+      if (style.italic === true) {
+        marks.push({ type: "em" });
+      }
+      return { ...node, marks };
+    }
+    if (!Array.isArray(node.content)) {
+      return { ...node };
+    }
+    return {
+      ...node,
+      content: node.content.map(applyMarks),
+    };
+  }
+
+  return applyMarks(content);
 }
 
 function applyAiResultToPage({ resultText }) {
@@ -1497,7 +1573,11 @@ aiSend.addEventListener("click", async () => {
   renderAiPanel();
 
   try {
-    const mode = isAnalysisInstruction(instruction) ? "analysis" : "edit";
+    const mode = isAnalysisInstruction(instruction)
+      ? "analysis"
+      : isFormattingInstruction(instruction)
+        ? "format"
+        : "edit";
     const prompt = selectedBlock
       ? buildAiPrompt({ block: selectedBlock, instruction, mode })
       : buildPageAiPrompt({ instruction, mode });
