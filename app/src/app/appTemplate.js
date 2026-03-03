@@ -64,10 +64,6 @@ export function renderAppTemplate(root) {
           <div class="flex items-center gap-2" id="language-actions"></div>
           <div id="translation-status" class="text-xs text-slate-500"></div>
         </div>
-        <div class="mb-4 flex flex-wrap items-center gap-3">
-          <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Paginas</div>
-          <div class="flex flex-wrap gap-2" id="page-tabs"></div>
-        </div>
         <div class="mb-4 flex items-center justify-between">
           <div class="text-sm text-slate-500">Canvas</div>
           <div class="flex items-center gap-2">

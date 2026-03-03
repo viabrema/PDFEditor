@@ -1,7 +1,6 @@
 export function getDomRefs() {
   return {
     canvas: document.querySelector("#canvas"),
-    pageTabsHost: document.querySelector("#page-tabs"),
     languageTabsHost: document.querySelector("#language-tabs"),
     languageActionsHost: document.querySelector("#language-actions"),
     translationStatus: document.querySelector("#translation-status"),

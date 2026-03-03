@@ -267,16 +267,6 @@ export function createRenderer({
     refs.snapToggle.checked = documentData.grid.snap;
 
     renderTabs(
-      refs.pageTabsHost,
-      documentData.pages.map((page) => ({ id: page.id, label: page.name })),
-      state.activePageId,
-      (id) => {
-        state.activePageId = id;
-        render();
-      }
-    );
-
-    renderTabs(
       refs.languageTabsHost,
       documentData.languages.map((language) => ({
         id: language.id,
