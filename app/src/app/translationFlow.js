@@ -163,7 +163,12 @@ export async function translateBlockFromSource({
     metadata: { ...block.metadata },
   };
 
-  if (block.type === "text") {
+  if (
+    block.type === "text" ||
+    block.type === "heading" ||
+    block.type === "title" ||
+    block.type === "subtitle"
+  ) {
     if (block.content && typeof block.content === "object") {
       const translatedDoc = await translateTextDoc({
         translationService,
