@@ -10,16 +10,16 @@ describe("blockStyles", () => {
       color: "#008737",
     });
     expect(getBlockDefaultStyle(BLOCK_TYPES.SUBTITLE)).toEqual({
-      fontSize: "18px",
+      fontSize: "22px",
       fontWeight: "700",
-      color: "#0f172a",
+      color: "#1f2937",
     });
 
     const titleStyle = getBlockTextStyle({ type: BLOCK_TYPES.TITLE, metadata: {} });
     const subtitleStyle = getBlockTextStyle({ type: BLOCK_TYPES.SUBTITLE, metadata: {} });
 
     expect(titleStyle.fontSize).toBe("26px");
-    expect(subtitleStyle.fontSize).toBe("18px");
+    expect(subtitleStyle.fontSize).toBe("22px");
   });
 
   it("resolves heading level style", () => {
@@ -28,7 +28,7 @@ describe("blockStyles", () => {
       metadata: { headingLevel: 3 },
     });
 
-    expect(style.fontSize).toBe("16px");
-    expect(style.fontWeight).toBe("600");
+    expect(style.fontSize).toBe("18px");
+    expect(style.fontWeight).toBe("400");
   });
 });

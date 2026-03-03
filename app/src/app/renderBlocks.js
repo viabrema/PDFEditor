@@ -141,11 +141,12 @@ export function renderBlocksInContainer({
 
       const applyBlockStyles = () => {
         const style = getBlockTextStyle(block);
-        editorHost.style.fontSize = style.fontSize;
-        editorHost.style.fontFamily = style.fontFamily;
-        editorHost.style.fontWeight = style.fontWeight;
-        editorHost.style.color = style.color;
-        editorHost.style.textAlign = style.textAlign;
+        const target = editorHost.querySelector(".ProseMirror") || editorHost;
+        target.style.fontSize = style.fontSize;
+        target.style.fontFamily = style.fontFamily;
+        target.style.fontWeight = style.fontWeight;
+        target.style.color = style.color;
+        target.style.textAlign = style.textAlign;
       };
       applyBlockStyles();
 

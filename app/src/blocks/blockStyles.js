@@ -8,8 +8,8 @@ const DEFAULT_TEXT_STYLE = {
 
 const HEADING_LEVEL_STYLES = {
   1: { fontSize: "26px", fontWeight: "700", color: "#008737" },
-  2: { fontSize: "18px", fontWeight: "700", color: "#0f172a" },
-  3: { fontSize: "16px", fontWeight: "600", color: "#0f172a" },
+  2: { fontSize: "22px", fontWeight: "700", color: "#1f2937" },
+  3: { fontSize: "18px", fontWeight: "400", color: "#0f172a" },
 };
 
 function getHeadingLevel(block) {

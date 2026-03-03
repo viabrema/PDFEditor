@@ -151,17 +151,17 @@ describe("export service (styles)", () => {
       ],
     });
 
-      const titleMatch = html.match(
-        /class="block text-block" style="([^"]+)" data-block-id="legacy-title"/
-      );
-      const subtitleMatch = html.match(
-        /class="block text-block" style="([^"]+)" data-block-id="legacy-subtitle"/
-      );
+    const titleMatch = html.match(
+      /class="block text-block" style="([^"]+)" data-block-id="legacy-title"/
+    );
+    const subtitleMatch = html.match(
+      /class="block text-block" style="([^"]+)" data-block-id="legacy-subtitle"/
+    );
 
     expect(titleMatch).not.toBeNull();
     expect(subtitleMatch).not.toBeNull();
     expect(titleMatch[1]).toContain("font-size: 26px");
-    expect(subtitleMatch[1]).toContain("font-size: 18px");
+    expect(subtitleMatch[1]).toContain("font-size: 22px");
   });
 
   it("uses heading level from metadata.level", () => {
@@ -194,7 +194,7 @@ describe("export service (styles)", () => {
       /class="block text-block" style="([^"]+)" data-block-id="heading-level"/
     );
     expect(match).not.toBeNull();
-    expect(match[1]).toContain("font-size: 18px");
+    expect(match[1]).toContain("font-size: 22px");
   });
 
   it("covers heading level branches", () => {
@@ -272,8 +272,8 @@ describe("export service (styles)", () => {
     });
 
     expect(titleHtml).toContain("font-size: 26px");
-    expect(subtitleHtml).toContain("font-size: 18px");
-    expect(headingHtml).toContain("font-size: 16px");
+    expect(subtitleHtml).toContain("font-size: 22px");
+    expect(headingHtml).toContain("font-size: 18px");
   });
 
   it("defaults heading level when metadata is missing", () => {

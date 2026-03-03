@@ -223,7 +223,7 @@ describe("export service (rich)", () => {
     expect(html).toContain("font-size: 26px");
     expect(html).toContain("text-align: center");
     expect(html).toContain("font-family: Georgia");
-    expect(html).toContain("font-size: 16px");
-    expect(html).toContain("font-weight: 600");
+    expect(html).toContain("font-size: 18px");
+    expect(html).toContain("font-weight: 400");
   });
 });

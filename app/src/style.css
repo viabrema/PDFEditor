@@ -17,17 +17,6 @@ body {
   margin: 0;
 }
 
-.block-shell.heading-block .ProseMirror {
-  font-size: 26px;
-  font-weight: 700;
-  color: #008737;
-}
-
-.block-shell.text-block .ProseMirror {
-  font-size: 16px;
-  font-weight: 400;
-  color: #0f172a;
-}
 
 .prose-editor .ProseMirror ul {
   margin: 0 0 10px;
