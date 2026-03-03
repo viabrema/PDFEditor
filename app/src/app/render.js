@@ -224,8 +224,10 @@ export function createRenderer({
     const button = document.createElement("button");
     button.type = "button";
     button.className =
-      "inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700";
-    button.innerHTML = '<i data-lucide="rotate-ccw"></i>Atualizar';
+      "inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-700";
+    button.title = "Atualizar traducao";
+    button.setAttribute("aria-label", "Atualizar traducao");
+    button.innerHTML = '<i data-lucide="languages"></i>';
     button.disabled = state.translation.loading;
     button.addEventListener("click", () => {
       if (!state.translation.loading) {

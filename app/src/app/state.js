@@ -8,6 +8,7 @@ export function createInitialDocument() {
       createLanguage({ id: "lang-pt", label: "PT", isDefault: true }),
       createLanguage({ id: "lang-en", label: "EN" }),
       createLanguage({ id: "lang-es", label: "ES" }),
+      createLanguage({ id: "lang-zh", label: "ZH" }),
     ],
     pages: [
       createPage({ id: "page-1", name: "Pagina 1" }),

@@ -17,6 +17,9 @@ export function getLanguagePromptLabel(documentData, languageId) {
   if (language.label === "ES") {
     return "espanhol";
   }
+  if (language.label === "ZH") {
+    return "chines simplificado";
+  }
   return "ingles";
 }
 
