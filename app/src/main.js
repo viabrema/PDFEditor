@@ -392,6 +392,14 @@ function getSelectedBlock() {
   return blocks.find((block) => block.id === state.selectedBlockId) || null;
 }
 
+function getActivePageBlocks() {
+  return blocks.filter(
+    (block) =>
+      block.pageId === state.activePageId &&
+      block.languageId === state.activeLanguageId
+  );
+}
+
 function sanitizeAiPayload(text) {
   return String(text || "")
     .replace(/^```[a-z]*\s*/i, "")
@@ -449,6 +457,62 @@ function buildAiPrompt({ block, instruction, mode }) {
   ].join("\n");
 }
 
+function buildPageAiPrompt({ instruction, mode }) {
+  const pageBlocks = getActivePageBlocks().map((block) => {
+    if (block.type === "table") {
+      return {
+        id: block.id,
+        type: block.type,
+        position: block.position,
+        size: block.size,
+        content: block.content?.rows || [],
+      };
+    }
+    if (block.type === "image") {
+      return {
+        id: block.id,
+        type: block.type,
+        position: block.position,
+        size: block.size,
+        content: { src: block.content?.src || "" },
+      };
+    }
+    return {
+      id: block.id,
+      type: block.type,
+      position: block.position,
+      size: block.size,
+      content: extractTextFromNode(block.content).trim(),
+    };
+  });
+
+  if (mode === "analysis") {
+    return [
+      "Voce e um assistente que analisa uma pagina com blocos.",
+      "Retorne apenas o texto da analise, sem blocos de codigo.",
+      "Pagina (JSON):",
+      JSON.stringify(pageBlocks),
+      "Instrucao:",
+      instruction,
+    ].join("\n");
+  }
+
+  return [
+    "Voce e um assistente que edita uma pagina com blocos.",
+    "Retorne apenas JSON com a lista de acoes.",
+    "Formato: {\"actions\":[...]}.",
+    "Tipos suportados: update, create, delete.",
+    "update: {type:'update', id, contentText?, tableRows?, position?, size?}",
+    "create: {type:'create', blockType:'text'|'table', contentText?, tableRows?, position?, size?}",
+    "tableRows deve ser array de arrays (linhas com celulas).",
+    "delete: {type:'delete', id}",
+    "Pagina (JSON):",
+    JSON.stringify(pageBlocks),
+    "Instrucao:",
+    instruction,
+  ].join("\n");
+}
+
 function applyAiResultToBlock({ block, resultText }) {
   const cleaned = sanitizeAiPayload(resultText);
 
@@ -467,6 +531,113 @@ function applyAiResultToBlock({ block, resultText }) {
 
   block.content = buildTextDocFromString(cleaned);
   return true;
+}
+
+function applyAiResultToPage({ resultText }) {
+  const cleaned = sanitizeAiPayload(resultText);
+  try {
+    const parsed = JSON.parse(cleaned);
+    const actions = Array.isArray(parsed?.actions) ? parsed.actions : [];
+    if (actions.length === 0) {
+      return false;
+    }
+
+    const normalizeTableRows = (tableRows) => {
+      if (!Array.isArray(tableRows)) {
+        return null;
+      }
+      if (tableRows.length === 0) {
+        return [];
+      }
+      if (Array.isArray(tableRows[0])) {
+        return tableRows.map((row) => (Array.isArray(row) ? row : []));
+      }
+      if (typeof tableRows[0] === "object" && tableRows[0] !== null) {
+        return tableRows.map((row) =>
+          Array.isArray(row?.cells) ? row.cells.map((cell) => String(cell ?? "")) : []
+        );
+      }
+      return null;
+    };
+
+    const byId = new Map(blocks.map((block) => [block.id, block]));
+    actions.forEach((action) => {
+      if (!action || typeof action !== "object") {
+        return;
+      }
+      if (action.type === "delete" && action.id) {
+        const index = blocks.findIndex((block) => block.id === action.id);
+        if (index >= 0) {
+          blocks.splice(index, 1);
+        }
+        return;
+      }
+      if (action.type === "update" && action.id) {
+        const target = byId.get(action.id);
+        if (!target) {
+          return;
+        }
+        if (action.position) {
+          target.position = {
+            x: action.position.x ?? target.position.x,
+            y: action.position.y ?? target.position.y,
+          };
+        }
+        if (action.size) {
+          target.size = {
+            width: action.size.width ?? target.size.width,
+            height: action.size.height ?? target.size.height,
+          };
+        }
+        if (target.type === "table") {
+          const normalized = normalizeTableRows(action.tableRows);
+          if (normalized) {
+            target.content = { rows: normalized };
+          }
+          return;
+        }
+        if (target.type !== "table" && typeof action.contentText === "string") {
+          target.content = buildTextDocFromString(action.contentText);
+        }
+        return;
+      }
+      if (action.type === "create" && action.blockType) {
+        if (action.blockType === "table") {
+          const normalized = normalizeTableRows(action.tableRows);
+          if (!normalized) {
+            return;
+          }
+          blocks.push(
+            createBlock({
+              type: "table",
+              content: { rows: normalized },
+              position: action.position || { x: 32, y: 32 },
+              size: action.size || { width: 320, height: 200 },
+              pageId: state.activePageId,
+              languageId: state.activeLanguageId,
+            })
+          );
+          return;
+        }
+        if (action.blockType === "text" && typeof action.contentText === "string") {
+          blocks.push(
+            createBlock({
+              type: "text",
+              content: buildTextDocFromString(action.contentText),
+              position: action.position || { x: 32, y: 32 },
+              size: action.size || { width: 320, height: 160 },
+              pageId: state.activePageId,
+              languageId: state.activeLanguageId,
+            })
+          );
+        }
+      }
+    });
+
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
 async function translateTextValue({ text, sourceLanguageId, targetLanguageId }) {
@@ -993,12 +1164,12 @@ function renderAiPanel() {
   aiPanel.setAttribute("aria-hidden", state.ai.open ? "false" : "true");
 
   if (!selectedBlock) {
-    aiTarget.textContent = "Selecione um bloco";
+    aiTarget.textContent = "Pagina ativa";
   } else {
     aiTarget.textContent = `Bloco: ${selectedBlock.type}`;
   }
 
-  aiSend.disabled = state.ai.loading || !selectedBlock;
+  aiSend.disabled = state.ai.loading;
   aiStatus.textContent = state.ai.loading ? "Processando..." : state.ai.error || "";
   aiResponse.textContent = state.ai.response || "";
 }
@@ -1315,7 +1486,9 @@ aiSend.addEventListener("click", async () => {
   const selectedBlock = getSelectedBlock();
   const instruction = aiInput.value.trim();
   if (!selectedBlock || !instruction) {
-    return;
+    if (!instruction) {
+      return;
+    }
   }
 
   state.ai.loading = true;
@@ -1325,8 +1498,11 @@ aiSend.addEventListener("click", async () => {
 
   try {
     const mode = isAnalysisInstruction(instruction) ? "analysis" : "edit";
-    const prompt = buildAiPrompt({ block: selectedBlock, instruction, mode });
-    const chatId = state.ai.chatByBlockId[selectedBlock.id];
+    const prompt = selectedBlock
+      ? buildAiPrompt({ block: selectedBlock, instruction, mode })
+      : buildPageAiPrompt({ instruction, mode });
+    const chatKey = selectedBlock ? selectedBlock.id : `page:${state.activePageId}`;
+    const chatId = state.ai.chatByBlockId[chatKey];
     const result = await aiService.sendPrompt({ prompt, chatId });
     if (!result.ok) {
       state.ai.error = "Falha ao gerar resposta.";
@@ -1336,7 +1512,7 @@ aiSend.addEventListener("click", async () => {
     }
 
     if (result.chatId) {
-      state.ai.chatByBlockId[selectedBlock.id] = result.chatId;
+      state.ai.chatByBlockId[chatKey] = result.chatId;
     }
     state.ai.response = result.text || "";
 
@@ -1345,10 +1521,12 @@ aiSend.addEventListener("click", async () => {
       return;
     }
 
-    const applied = applyAiResultToBlock({
-      block: selectedBlock,
-      resultText: result.text || "",
-    });
+    const applied = selectedBlock
+      ? applyAiResultToBlock({
+          block: selectedBlock,
+          resultText: result.text || "",
+        })
+      : applyAiResultToPage({ resultText: result.text || "" });
     if (!applied) {
       state.ai.error = "Resposta invalida para o tipo de bloco.";
     }
