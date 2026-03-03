@@ -2,6 +2,7 @@ import { createEditor, createEditorCommands } from "../editor/editor.js";
 import { createToolbar } from "../ui/toolbar.js";
 import { createBlockElement } from "../blocks/blockRenderer.js";
 import { setupDragResize } from "../blocks/dragResize.js";
+import { fileToDataUrl } from "../blocks/imageBlock.js";
 
 export function renderBlocksInContainer({
   container,
@@ -89,6 +90,23 @@ export function renderBlocksInContainer({
     element.addEventListener("dblclick", (event) => {
       event.stopPropagation();
       if (block.type === "image") {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.addEventListener("change", async () => {
+          const file = input.files?.[0];
+          if (!file) {
+            return;
+          }
+          try {
+            const src = await fileToDataUrl(file);
+            block.content = { ...(block.content || {}), src };
+            requestRender();
+          } catch (error) {
+            // ignore file errors
+          }
+        });
+        input.click();
         return;
       }
       state.activePageId = pageId;
