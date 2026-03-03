@@ -27,6 +27,10 @@ describe("documentModel", () => {
     expect(document.grid.snap).toBe(true);
     expect(document.languages).toHaveLength(1);
     expect(document.pages).toHaveLength(1);
+    expect(document.regions.header.enabled).toBe(true);
+    expect(document.regions.header.height).toBe(96);
+    expect(document.regions.footer.enabled).toBe(true);
+    expect(document.regions.footer.height).toBe(96);
   });
 
   it("serializes and deserializes", () => {
@@ -45,11 +49,17 @@ describe("documentModel", () => {
         createLanguage({ id: "lang-2" }),
       ],
       activeLanguageId: "lang-2",
+      regions: {
+        header: { enabled: false, height: 120 },
+      },
       pages: [createPage({ id: "page-2", name: "Page 2" })],
     });
 
     expect(document.activeLanguageId).toBe("lang-2");
     expect(document.pages[0].name).toBe("Page 2");
+    expect(document.regions.header.enabled).toBe(false);
+    expect(document.regions.header.height).toBe(120);
+    expect(document.regions.footer.enabled).toBe(true);
     expect(document.metadata.createdAt).toContain("T");
   });
 });

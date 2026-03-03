@@ -22,6 +22,7 @@
 - [x] Suporte a layout da pagina (retrato/paisagem)
 - [x] Suporte a multiplas paginas por documento
 - [x] Suporte a abas de idiomas por documento
+- [x] Cabecalho e rodape por pagina com resize
 
 ## 4) Drag e resize
 - [x] Integrar Interact.js (ou equivalente)

@@ -30,6 +30,7 @@ export function createDocument(options = {}) {
     activeLanguageId,
     pages,
     metadata,
+    regions,
   } = options;
 
   const resolvedLanguages = Array.isArray(languages) && languages.length > 0
@@ -39,6 +40,21 @@ export function createDocument(options = {}) {
   const defaultLanguage = resolvedLanguages.find((lang) => lang.isDefault) || resolvedLanguages[0];
 
   const resolvedPages = Array.isArray(pages) && pages.length > 0 ? pages : [createPage()];
+
+  const defaultRegions = {
+    header: { enabled: true, height: 96 },
+    footer: { enabled: true, height: 96 },
+  };
+  const resolvedRegions = {
+    header: {
+      ...defaultRegions.header,
+      ...(regions?.header || {}),
+    },
+    footer: {
+      ...defaultRegions.footer,
+      ...(regions?.footer || {}),
+    },
+  };
 
   return {
     version: DOCUMENT_SCHEMA_VERSION,
@@ -55,6 +71,7 @@ export function createDocument(options = {}) {
     languages: resolvedLanguages,
     activeLanguageId: activeLanguageId || defaultLanguage.id,
     pages: resolvedPages,
+    regions: resolvedRegions,
     metadata: {
       createdAt: metadata?.createdAt || new Date().toISOString(),
       updatedAt: metadata?.updatedAt || new Date().toISOString(),

@@ -42,6 +42,7 @@ export async function createImageBlockFromFile(file, options = {}) {
     maxSize,
     readerFactory,
     imageFactory,
+    metadata,
   } = options;
 
   const fallbackSize = maxSize || {
@@ -71,5 +72,6 @@ export async function createImageBlockFromFile(file, options = {}) {
     size,
     pageId,
     languageId,
+    metadata,
   });
 }

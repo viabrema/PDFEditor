@@ -76,3 +76,23 @@ export function getNextBlockPosition({ blocksForPage, blockSize, pageSize }) {
 
   return { x: nextX, y: nextY };
 }
+
+export function getRegionSize({ documentData, region }) {
+  const pageSize = getPageSize(
+    documentData.page?.format,
+    documentData.page?.orientation
+  );
+  if (region === "header") {
+    return {
+      width: pageSize.width,
+      height: documentData.regions?.header?.height ?? 96,
+    };
+  }
+  if (region === "footer") {
+    return {
+      width: pageSize.width,
+      height: documentData.regions?.footer?.height ?? 96,
+    };
+  }
+  return pageSize;
+}

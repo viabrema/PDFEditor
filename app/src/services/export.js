@@ -110,8 +110,12 @@ function renderTableBlock(block) {
   return `<div class=\"block table-block\" data-block-id=\"${block.id}\"><table><tbody>${body}</tbody></table></div>`;
 }
 
-function renderBlock(block) {
-  const style = `left:${block.position.x}px;top:${block.position.y}px;width:${block.size.width}px;height:${block.size.height}px;`;
+function renderBlock(block, offset = { x: 0, y: 0 }) {
+  const style =
+    `left:${block.position.x + offset.x}px;` +
+    `top:${block.position.y + offset.y}px;` +
+    `width:${block.size.width}px;` +
+    `height:${block.size.height}px;`;
 
   if (block.type === "image") {
     return `<div class=\"block-wrapper\" style=\"${style}\">${renderImageBlock(block)}</div>`;
@@ -122,22 +126,43 @@ function renderBlock(block) {
   return `<div class=\"block-wrapper\" style=\"${style}\">${renderTextBlock(block)}</div>`;
 }
 
-function renderPage(page, blocks, pageSize) {
-  const blockMarkup = blocks.map(renderBlock).join("");
+function renderRegionBlocks(blocks, offset) {
+  if (!Array.isArray(blocks) || blocks.length === 0) {
+    return "";
+  }
+  return blocks.map((block) => renderBlock(block, offset)).join("");
+}
+
+function renderPage(page, blocks, pageSize, regions) {
+  const blockMarkup = blocks.map((block) => renderBlock(block)).join("");
+  const headerEnabled = regions?.header?.enabled ?? true;
+  const footerEnabled = regions?.footer?.enabled ?? true;
+  const headerHeight = regions?.header?.height ?? 0;
+  const footerHeight = regions?.footer?.height ?? 0;
+  const headerBlocks = headerEnabled ? regions?.header?.blocks || [] : [];
+  const footerBlocks = footerEnabled ? regions?.footer?.blocks || [] : [];
+  const headerMarkup = renderRegionBlocks(headerBlocks, { x: 0, y: 0 });
+  const footerMarkup = renderRegionBlocks(footerBlocks, {
+    x: 0,
+    y: pageSize.height - footerHeight,
+  });
   return `
     <section class=\"page\" data-page-id=\"${page.id}\" style=\"width:${pageSize.width}px;height:${pageSize.height}px;\">
       ${blockMarkup}
+      ${headerMarkup}
+      ${footerMarkup}
     </section>`;
 }
 
 export function renderDocumentToHtml(document) {
   const pages = Array.isArray(document?.pages) ? document.pages : [];
   const pageSize = getPageSize(document?.page?.format, document?.page?.orientation);
+  const regions = document?.regions;
 
   const pageMarkup = pages
     .map((page) => {
       const blocks = Array.isArray(page.blocks) ? page.blocks : [];
-      return renderPage(page, blocks, pageSize);
+      return renderPage(page, blocks, pageSize, regions);
     })
     .join("");
 

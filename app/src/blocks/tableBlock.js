@@ -62,6 +62,7 @@ export function createTableBlockFromRows(rows, options = {}) {
     languageId,
     position = { x: 32, y: 32 },
     pageSize,
+    metadata,
   } = options;
 
   const normalized = normalizeRows(rows);
@@ -76,6 +77,7 @@ export function createTableBlockFromRows(rows, options = {}) {
     size,
     pageId,
     languageId,
+    metadata,
   });
 }
 

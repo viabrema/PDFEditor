@@ -20,6 +20,8 @@ export function getDomRefs() {
     orientationSelect: document.querySelector("#page-orientation"),
     gridSizeInput: document.querySelector("#grid-size"),
     snapToggle: document.querySelector("#grid-snap"),
+    headerToggle: document.querySelector("#page-header-toggle"),
+    footerToggle: document.querySelector("#page-footer-toggle"),
     aiPanelToggle: document.querySelector("#ai-panel-toggle"),
     aiPanel: document.querySelector("#ai-panel"),
     aiPanelClose: document.querySelector("#ai-panel-close"),

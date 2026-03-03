@@ -12,16 +12,33 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
 
   function buildDocumentSnapshot() {
     const pages = documentData.pages.map((page) => {
-      const pageBlocks = blocks.filter((block) => block.pageId === page.id);
+      const pageBlocks = blocks.filter(
+        (block) =>
+          block.pageId === page.id &&
+          block.metadata?.region !== "header" &&
+          block.metadata?.region !== "footer"
+      );
       return {
         ...page,
         blocks: pageBlocks,
       };
     });
 
+    const regions = {
+      header: {
+        ...(documentData.regions?.header || {}),
+        blocks: blocks.filter((block) => block.metadata?.region === "header"),
+      },
+      footer: {
+        ...(documentData.regions?.footer || {}),
+        blocks: blocks.filter((block) => block.metadata?.region === "footer"),
+      },
+    };
+
     return {
       ...documentData,
       pages,
+      regions,
       metadata: {
         ...documentData.metadata,
         updatedAt: new Date().toISOString(),
@@ -35,6 +52,20 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
     }
 
     Object.assign(documentData, snapshot);
+    const defaultRegions = {
+      header: { enabled: true, height: 96 },
+      footer: { enabled: true, height: 96 },
+    };
+    documentData.regions = {
+      header: {
+        ...defaultRegions.header,
+        ...(snapshot.regions?.header || {}),
+      },
+      footer: {
+        ...defaultRegions.footer,
+        ...(snapshot.regions?.footer || {}),
+      },
+    };
     blocks.length = 0;
 
     snapshot.pages?.forEach((page) => {
@@ -50,9 +81,28 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
       });
     });
 
+    snapshot.regions?.header?.blocks?.forEach((block) => {
+      blocks.push({
+        ...block,
+        pageId: null,
+        languageId: block.languageId || snapshot.activeLanguageId,
+        metadata: { ...(block.metadata || {}), region: "header" },
+      });
+    });
+
+    snapshot.regions?.footer?.blocks?.forEach((block) => {
+      blocks.push({
+        ...block,
+        pageId: null,
+        languageId: block.languageId || snapshot.activeLanguageId,
+        metadata: { ...(block.metadata || {}), region: "footer" },
+      });
+    });
+
     state.activePageId = documentData.pages[0]?.id || null;
     state.activeLanguageId =
       documentData.activeLanguageId || documentData.languages[0]?.id || null;
+    state.activeRegion = "body";
     state.selectedBlockId = null;
     state.editingBlockId = null;
     renderer.render();
@@ -106,6 +156,16 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
           (block) => block.languageId === activeLanguageId
         ),
       }));
+      if (snapshot.regions?.header?.blocks) {
+        snapshot.regions.header.blocks = snapshot.regions.header.blocks.filter(
+          (block) => block.languageId === activeLanguageId
+        );
+      }
+      if (snapshot.regions?.footer?.blocks) {
+        snapshot.regions.footer.blocks = snapshot.regions.footer.blocks.filter(
+          (block) => block.languageId === activeLanguageId
+        );
+      }
     }
     const html = renderDocumentToHtml(snapshot);
     const blob = new Blob([html], { type: "text/html" });

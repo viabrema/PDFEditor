@@ -171,6 +171,16 @@ export function renderAppTemplate(root) {
               </label>
             </div>
           </div>
+          <div class="mt-4 flex flex-wrap items-center gap-4">
+            <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+              <input id="page-header-toggle" type="checkbox" class="h-4 w-4" />
+              Exibir cabecalho
+            </label>
+            <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+              <input id="page-footer-toggle" type="checkbox" class="h-4 w-4" />
+              Exibir rodape
+            </label>
+          </div>
           <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
             <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Pagina ativa</span>
             <div id="page-meta"></div>

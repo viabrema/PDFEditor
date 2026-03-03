@@ -77,6 +77,86 @@ describe("export service (basic)", () => {
     expect(html).toContain("<table>");
   });
 
+  it("renders header and footer blocks", () => {
+    const html = renderDocumentToHtml({
+      title: "Regions",
+      page: { format: "A4", orientation: "portrait" },
+      regions: {
+        header: {
+          enabled: true,
+          height: 100,
+          blocks: [
+            {
+              id: "block-header",
+              type: "text",
+              position: { x: 10, y: 10 },
+              size: { width: 120, height: 40 },
+              content: { type: "doc", content: [{ type: "text", text: "Topo" }] },
+            },
+          ],
+        },
+        footer: {
+          enabled: true,
+          height: 80,
+          blocks: [
+            {
+              id: "block-footer",
+              type: "text",
+              position: { x: 20, y: 10 },
+              size: { width: 120, height: 40 },
+              content: { type: "doc", content: [{ type: "text", text: "Base" }] },
+            },
+          ],
+        },
+      },
+      pages: [{ id: "page-1", blocks: [] }],
+    });
+
+    expect(html).toContain("block-header");
+    expect(html).toContain("top:10px");
+    expect(html).toContain("block-footer");
+    expect(html).toContain("top:1053px");
+  });
+
+  it("skips disabled header and footer", () => {
+    const html = renderDocumentToHtml({
+      title: "Regions",
+      page: { format: "A4", orientation: "portrait" },
+      regions: {
+        header: {
+          enabled: false,
+          height: 100,
+          blocks: [
+            {
+              id: "block-header",
+              type: "text",
+              position: { x: 10, y: 10 },
+              size: { width: 120, height: 40 },
+              content: { type: "doc", content: [{ type: "text", text: "Topo" }] },
+            },
+          ],
+        },
+        footer: {
+          enabled: false,
+          height: 80,
+          blocks: [
+            {
+              id: "block-footer",
+              type: "text",
+              position: { x: 20, y: 10 },
+              size: { width: 120, height: 40 },
+              content: { type: "doc", content: [{ type: "text", text: "Base" }] },
+            },
+          ],
+        },
+      },
+      pages: [{ id: "page-1", blocks: [] }],
+    });
+
+    expect(html).not.toContain("block-header");
+    expect(html).not.toContain("block-footer");
+  });
+
   it("handles page blocks when not an array", () => {
     const html = renderDocumentToHtml({
       title: "Blocks",

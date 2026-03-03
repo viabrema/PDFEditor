@@ -25,6 +25,7 @@ export function createInitialState(documentData) {
     interactions: [],
     selectedBlockId: null,
     editingBlockId: null,
+    activeRegion: "body",
     translation: {
       loading: false,
       error: null,

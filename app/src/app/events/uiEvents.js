@@ -47,6 +47,38 @@ export function bindUiEvents({ documentData, state, refs, renderer }) {
     renderer.renderCanvas();
   });
 
+  refs.headerToggle.addEventListener("change", (event) => {
+    if (!documentData.regions) {
+      documentData.regions = { header: { enabled: true }, footer: { enabled: true } };
+    }
+    documentData.regions.header = {
+      ...documentData.regions.header,
+      enabled: event.target.checked,
+    };
+    if (!event.target.checked && state.activeRegion === "header") {
+      state.activeRegion = "body";
+      state.selectedBlockId = null;
+      state.editingBlockId = null;
+    }
+    renderer.render();
+  });
+
+  refs.footerToggle.addEventListener("change", (event) => {
+    if (!documentData.regions) {
+      documentData.regions = { header: { enabled: true }, footer: { enabled: true } };
+    }
+    documentData.regions.footer = {
+      ...documentData.regions.footer,
+      enabled: event.target.checked,
+    };
+    if (!event.target.checked && state.activeRegion === "footer") {
+      state.activeRegion = "body";
+      state.selectedBlockId = null;
+      state.editingBlockId = null;
+    }
+    renderer.render();
+  });
+
   refs.aiPanelToggle.addEventListener("click", () => {
     state.ai.open = !state.ai.open;
     renderer.renderAiPanel();

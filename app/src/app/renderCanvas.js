@@ -1,0 +1,181 @@
+import { getPageSize } from "./textUtils.js";
+import { renderBlocksInContainer } from "./renderBlocks.js";
+import { setupRegionResize } from "./regionResize.js";
+
+export function renderCanvasView({ documentData, state, blocks, refs, requestRender }) {
+  const activeBlocks = blocks.filter(
+    (block) => block.languageId === state.activeLanguageId
+  );
+  const headerBlocks = activeBlocks.filter(
+    (block) => block.metadata?.region === "header"
+  );
+  const footerBlocks = activeBlocks.filter(
+    (block) => block.metadata?.region === "footer"
+  );
+  const bodyBlocks = activeBlocks.filter(
+    (block) =>
+      block.metadata?.region !== "header" && block.metadata?.region !== "footer"
+  );
+
+  documentData.pages.forEach((page) => {
+    const pageWrapper = document.createElement("div");
+    pageWrapper.className = "page-shell";
+
+    const { width, height } = getPageSize(
+      documentData.page.format,
+      documentData.page.orientation
+    );
+
+    const pageHeader = document.createElement("div");
+    pageHeader.className = "mb-2 flex items-center justify-between text-xs text-slate-500";
+    pageHeader.textContent = page.name;
+    pageWrapper.append(pageHeader);
+
+    const pageSurface = document.createElement("div");
+    const isActivePage = page.id === state.activePageId;
+    pageSurface.className = documentData.grid.snap
+      ? "page-surface grid-on"
+      : "page-surface";
+    if (isActivePage) {
+      pageSurface.classList.add("is-active");
+    }
+    pageSurface.style.width = `${width}px`;
+    pageSurface.style.height = `${height}px`;
+    pageSurface.style.setProperty("--grid-size", `${documentData.grid.size}px`);
+    pageWrapper.append(pageSurface);
+
+    pageSurface.addEventListener("click", () => {
+      const shouldClear = state.editingBlockId || state.selectedBlockId;
+      const shouldRender =
+        shouldClear ||
+        state.activePageId !== page.id ||
+        state.activeRegion !== "body";
+      state.activePageId = page.id;
+      state.activeRegion = "body";
+      if (shouldClear) {
+        state.editingBlockId = null;
+        state.selectedBlockId = null;
+      }
+      if (shouldRender) {
+        requestRender();
+      }
+    });
+
+    const pageBlocks = bodyBlocks.filter((block) => block.pageId === page.id);
+
+    if (pageBlocks.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "absolute inset-0 flex items-center justify-center text-sm text-slate-300";
+      empty.textContent = "Sem blocos";
+      pageSurface.append(empty);
+    }
+
+    renderBlocksInContainer({
+      container: pageSurface,
+      blocks: pageBlocks,
+      state,
+      documentData,
+      pageId: page.id,
+      region: "body",
+      requestRender,
+    });
+
+    if (documentData.regions?.header?.enabled) {
+      const headerRegion = document.createElement("div");
+      headerRegion.className = "page-region is-header";
+      headerRegion.style.height = `${documentData.regions.header.height}px`;
+      headerRegion.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const shouldClear = state.editingBlockId || state.selectedBlockId;
+        const shouldRender =
+          shouldClear ||
+          state.activePageId !== page.id ||
+          state.activeRegion !== "header";
+        state.activePageId = page.id;
+        state.activeRegion = "header";
+        if (shouldClear) {
+          state.editingBlockId = null;
+          state.selectedBlockId = null;
+        }
+        if (shouldRender) {
+          requestRender();
+        }
+      });
+
+      const headerHandle = document.createElement("div");
+      headerHandle.className = "region-resize-handle is-bottom";
+      headerRegion.append(headerHandle);
+
+      renderBlocksInContainer({
+        container: headerRegion,
+        blocks: headerBlocks,
+        state,
+        documentData,
+        pageId: page.id,
+        region: "header",
+        requestRender,
+      });
+
+      pageSurface.append(headerRegion);
+      state.interactions.push(
+        setupRegionResize({
+          element: headerRegion,
+          region: "header",
+          documentData,
+          pageSize: { width, height },
+          onFinish: requestRender,
+        })
+      );
+    }
+
+    if (documentData.regions?.footer?.enabled) {
+      const footerRegion = document.createElement("div");
+      footerRegion.className = "page-region is-footer";
+      footerRegion.style.height = `${documentData.regions.footer.height}px`;
+      footerRegion.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const shouldClear = state.editingBlockId || state.selectedBlockId;
+        const shouldRender =
+          shouldClear ||
+          state.activePageId !== page.id ||
+          state.activeRegion !== "footer";
+        state.activePageId = page.id;
+        state.activeRegion = "footer";
+        if (shouldClear) {
+          state.editingBlockId = null;
+          state.selectedBlockId = null;
+        }
+        if (shouldRender) {
+          requestRender();
+        }
+      });
+
+      const footerHandle = document.createElement("div");
+      footerHandle.className = "region-resize-handle is-top";
+      footerRegion.append(footerHandle);
+
+      renderBlocksInContainer({
+        container: footerRegion,
+        blocks: footerBlocks,
+        state,
+        documentData,
+        pageId: page.id,
+        region: "footer",
+        requestRender,
+      });
+
+      pageSurface.append(footerRegion);
+      state.interactions.push(
+        setupRegionResize({
+          element: footerRegion,
+          region: "footer",
+          documentData,
+          pageSize: { width, height },
+          onFinish: requestRender,
+        })
+      );
+    }
+
+    refs.canvas.append(pageWrapper);
+  });
+}
