@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { translateBlockFromSource } from "./translationFlow.js";
+import { translateBlockFromSource, translateFromDefaultLanguage } from "./translationFlow.js";
 import { extractTextFromNode } from "./textUtils.js";
 
 const documentData = {
@@ -76,6 +76,47 @@ describe("translationFlow", () => {
 
     expect(translated.type).toBe("title");
     expect(translated.languageId).toBe("lang-en");
+    expect(extractTextFromNode(translated.content).trim()).toBe("Hello");
+  });
+
+  it("translates blocks without languageId", async () => {
+    const translationService = {
+      translatePrompt: async () => ({ ok: true, text: "[\"Hello\"]" }),
+      translateText: async () => ({ ok: true, text: "Hello" }),
+    };
+
+    const blocks = [
+      {
+        id: "block-3",
+        type: "text",
+        position: { x: 0, y: 0 },
+        size: { width: 120, height: 60 },
+        pageId: "page-1",
+        content: {
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: "Oi" }],
+            },
+          ],
+        },
+      },
+    ];
+    const state = { translation: { loading: false, error: null } };
+    const render = () => {};
+
+    await translateFromDefaultLanguage({
+      translationService,
+      documentData,
+      state,
+      blocks,
+      render,
+      targetLanguageId: "lang-en",
+    });
+
+    const translated = blocks.find((block) => block.languageId === "lang-en");
+    expect(translated).toBeTruthy();
     expect(extractTextFromNode(translated.content).trim()).toBe("Hello");
   });
 });

@@ -245,7 +245,9 @@ export async function translateFromDefaultLanguage({
   render();
 
   try {
-    const sourceBlocks = blocks.filter((block) => block.languageId === sourceLanguageId);
+    const sourceBlocks = blocks.filter(
+      (block) => block.languageId === sourceLanguageId || !block.languageId
+    );
     const translatedBlocks = [];
     for (const block of sourceBlocks) {
       translatedBlocks.push(
