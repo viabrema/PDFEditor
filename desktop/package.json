@@ -6,7 +6,11 @@
     "icons": "node scripts/make-icon.mjs",
     "dev": "node scripts/check-cargo.mjs && tauri dev",
     "build": "node scripts/check-cargo.mjs && tauri build",
-    "postinstall": "node scripts/make-icon.mjs"
+    "postinstall": "node scripts/make-icon.mjs",
+    "fmt:check": "cargo fmt --all -- --check",
+    "lint:rust": "cargo clippy --workspace --all-targets -- -D warnings",
+    "test:rust": "cargo test --workspace",
+    "verify:rust": "npm run fmt:check && npm run lint:rust && npm run test:rust"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.9.5",

@@ -1,4 +1,10 @@
-export function createAiService({ endpoint, apiKey, fetcher, provider, model } = {}) {
+export function createAiService({
+  endpoint,
+  apiKey,
+  fetcher,
+  provider,
+  model,
+} = /** @type {any} */ ({})) {
   if (!endpoint) {
     throw new Error("AI endpoint is required.");
   }

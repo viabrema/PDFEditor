@@ -21,6 +21,16 @@ cd desktop/scripts
 
 Isto preenche `src-tauri/bundled-chromium/` (gitignored). Em alternativa: **Chrome ou Edge** instalados no Windows são detetados automaticamente; ou defina `CHROMIUM_PATH` para qualquer `chrome.exe` / `msedge.exe` / `chrome-headless-shell.exe`.
 
+## Verificação local (Rust)
+
+Na pasta **`desktop/`** (com Rust instalado):
+
+```bash
+npm run verify:rust
+```
+
+Isto corre formatação (`cargo fmt --check`), **Clippy** com avisos como erros e testes do workspace. Opcional para o crate `pdf-export`: `cargo llvm-cov -p pdf-export --summary-only` (requer `cargo-llvm-cov`).
+
 ## Comandos
 
 Na pasta **`desktop/`**:

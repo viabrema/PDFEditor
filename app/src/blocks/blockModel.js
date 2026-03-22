@@ -13,9 +13,9 @@ export const BLOCK_TYPES = {
 export function createBlock({
   id = createId("block"),
   type = BLOCK_TYPES.TEXT,
-  content = "",
-  position = {},
-  size = {},
+  content = /** @type {any} */ (""),
+  position = /** @type {any} */ ({}),
+  size = /** @type {any} */ ({}),
   metadata = {},
   pageId = null,
   languageId = null,

@@ -102,8 +102,7 @@ pub fn absolutize_output_path(path: &Path) -> Result<PathBuf, ExportError> {
     if path.is_absolute() {
         return Ok(path.to_path_buf());
     }
-    let cwd =
-        std::env::current_dir().map_err(|e| ExportError::Io(e.to_string()))?;
+    let cwd = std::env::current_dir().map_err(|e| ExportError::Io(e.to_string()))?;
     Ok(cwd.join(path))
 }
 
@@ -124,10 +123,7 @@ pub fn path_to_file_url(path: &Path) -> Result<String, ExportError> {
 
 /// Arguments for `chrome-headless-shell` / Chromium headless print-to-pdf.
 pub fn build_chrome_print_args(pdf_output: &Path, html_file_url: &str) -> Vec<OsString> {
-    let print_arg = format!(
-        "--print-to-pdf={}",
-        pdf_output.to_string_lossy()
-    );
+    let print_arg = format!("--print-to-pdf={}", pdf_output.to_string_lossy());
     vec![
         OsString::from("--headless=new"),
         OsString::from("--disable-gpu"),
@@ -230,8 +226,13 @@ mod tests {
     fn build_chrome_print_args_order() {
         let pdf = PathBuf::from(r"C:\out\a.pdf");
         let args = build_chrome_print_args(&pdf, "file:///C:/tmp/x.html");
-        assert!(args.iter().any(|a| a.to_string_lossy().contains("print-to-pdf")));
-        assert_eq!(args.last().unwrap().to_string_lossy(), "file:///C:/tmp/x.html");
+        assert!(args
+            .iter()
+            .any(|a| a.to_string_lossy().contains("print-to-pdf")));
+        assert_eq!(
+            args.last().unwrap().to_string_lossy(),
+            "file:///C:/tmp/x.html"
+        );
     }
 
     #[test]
@@ -260,13 +261,8 @@ mod tests {
             exit_code: std::cell::Cell::new(1),
             write_pdf_to: None,
         };
-        let err = export_html_to_pdf(
-            &runner,
-            Path::new("fake-chrome.exe"),
-            "<html/>",
-            &pdf,
-        )
-        .unwrap_err();
+        let err =
+            export_html_to_pdf(&runner, Path::new("fake-chrome.exe"), "<html/>", &pdf).unwrap_err();
         assert_eq!(err, ExportError::ChromeFailed(1));
     }
 
@@ -279,13 +275,8 @@ mod tests {
             exit_code: std::cell::Cell::new(0),
             write_pdf_to: None,
         };
-        let err = export_html_to_pdf(
-            &runner,
-            Path::new("fake-chrome.exe"),
-            "<html/>",
-            &pdf,
-        )
-        .unwrap_err();
+        let err =
+            export_html_to_pdf(&runner, Path::new("fake-chrome.exe"), "<html/>", &pdf).unwrap_err();
         assert_eq!(err, ExportError::PdfMissing);
     }
 

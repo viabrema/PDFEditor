@@ -10,7 +10,19 @@ body {
 
 .ProseMirror {
   outline: none;
-  min-height: 120px;
+}
+
+/* Blocos de texto: conteúdo maior que a caixa → barras de rolagem no contentor */
+.prose-editor {
+  overflow: auto;
+  min-height: 0;
+  max-height: 100%;
+  box-sizing: border-box;
+}
+
+.prose-editor .ProseMirror {
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
 .prose-editor .ProseMirror p {

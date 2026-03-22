@@ -1,4 +1,10 @@
-export function createTranslationService({ endpoint, apiKey, fetcher, provider, model } = {}) {
+export function createTranslationService({
+  endpoint,
+  apiKey,
+  fetcher,
+  provider,
+  model,
+} = /** @type {any} */ ({})) {
   if (!endpoint) {
     throw new Error("Translation endpoint is required.");
   }

@@ -6,7 +6,7 @@ import { keymap } from "prosemirror-keymap";
 import { wrapInList } from "prosemirror-schema-list";
 import { createEditorSchema } from "./schema.js";
 
-export function createEditorState({ schema = createEditorSchema(), content } = {}) {
+export function createEditorState({ schema = createEditorSchema(), content } = /** @type {any} */ ({})) {
   const doc = content ? schema.nodeFromJSON(content) : schema.topNodeType.createAndFill();
   return EditorState.create({
     schema,
@@ -118,7 +118,7 @@ export function createEditorCommands(view) {
   };
 }
 
-export function createEditor({ mount, schema, content, editable, onChange } = {}) {
+export function createEditor({ mount, schema, content, editable, onChange } = /** @type {any} */ ({})) {
   const resolvedSchema = schema || createEditorSchema();
   const state = createEditorState({ schema: resolvedSchema, content });
   return createEditorView({ mount, state, editable, onChange });

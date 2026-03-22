@@ -1,3 +1,4 @@
+// @ts-nocheck — specs ProseMirror (toDOM / NodeSpec) vs. tipos estritos do pacote.
 import { Schema } from "prosemirror-model";
 import { schema as basicSchema } from "prosemirror-schema-basic";
 import { addListNodes } from "prosemirror-schema-list";

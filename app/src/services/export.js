@@ -53,6 +53,39 @@ function sanitizeFontValue(value) {
   return value ? String(value).replace(/[";<>]/g, "").trim() : "";
 }
 
+/** Deve coincidir com `.text-block { padding }` em `renderDocumentToHtml`. */
+const EXPORT_TEXT_BLOCK_PADDING_Y = 24;
+
+/** Deve coincidir com `.text-block { line-height }` em `renderDocumentToHtml`. */
+const EXPORT_TEXT_LINE_HEIGHT_RATIO = 1.4;
+
+export function parseCssPx(value, fallbackPx) {
+  const m = String(value || "").match(/([\d.]+)\s*px/i);
+  return m ? parseFloat(m[1]) : fallbackPx;
+}
+
+/**
+ * Nº de linhas de texto que cabem na caixa do bloco (export PDF), para line-clamp + reticências.
+ */
+function computeExportTextLineClamp(block) {
+  const h = Number(block?.size?.height);
+  if (!Number.isFinite(h) || h <= 0) {
+    return 1;
+  }
+  const style = getBlockTextStyle(block);
+  const fontPx = parseCssPx(style.fontSize, 16);
+  const inner = Math.max(0, h - EXPORT_TEXT_BLOCK_PADDING_Y);
+  const lineHeightPx = fontPx * EXPORT_TEXT_LINE_HEIGHT_RATIO;
+  if (lineHeightPx <= 0) {
+    return 1;
+  }
+  let lines = Math.floor(inner / lineHeightPx);
+  if (lines > 2) {
+    lines -= 1;
+  }
+  return Math.max(1, Math.min(lines, 9999));
+}
+
 function renderNode(node) {
   if (!node) {
     return "";
@@ -131,6 +164,7 @@ function getBlockTextStyle(block) {
 function renderTextBlock(block) {
   const html = renderNode(block.content) || "";
   const style = getBlockTextStyle(block);
+  const lineClamp = computeExportTextLineClamp(block);
   const styleParts = [
     `font-size: ${style.fontSize}`,
     `font-weight: ${style.fontWeight}`,
@@ -140,9 +174,20 @@ function renderTextBlock(block) {
   if (style.fontFamily) {
     styleParts.push(`font-family: ${style.fontFamily}`);
   }
+  const clampParts = [
+    "max-height: 100%",
+    "overflow: hidden",
+    "display: -webkit-box",
+    "-webkit-box-orient: vertical",
+    `-webkit-line-clamp: ${lineClamp}`,
+    `line-clamp: ${lineClamp}`,
+    "word-break: break-word",
+  ];
   return `<div class=\"block text-block\" style=\"${styleParts.join(
     "; "
-  )}\" data-block-id=\"${block.id}\">${html}</div>`;
+  )}\" data-block-id=\"${block.id}\"><div class=\"text-block-export-flow\" style=\"${clampParts.join(
+    "; "
+  )}\">${html}</div></div>`;
 }
 
 function renderImageBlock(block) {
@@ -226,7 +271,8 @@ export function renderDocumentToHtml(document) {
     .page { position: relative; background: #fff; border: 1px solid #e2e8f0; }
     .block-wrapper { position: absolute; }
     .block { width: 100%; height: 100%; }
-    .text-block { font-size: 14px; line-height: 1.4; padding: 12px; }
+    .text-block { font-size: 14px; line-height: 1.4; padding: 12px; overflow: hidden; }
+    .text-block-export-flow { min-height: 0; }
     .text-block p { margin: 0 0 10px; }
     .text-block p:last-child { margin-bottom: 0; }
     .text-block h1 { margin: 0 0 12px; font-size: 24px; color: #008737; }

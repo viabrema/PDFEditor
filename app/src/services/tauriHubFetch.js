@@ -7,7 +7,8 @@ export function isTauriRuntime() {
 }
 
 /**
- * @returns {typeof fetch | null}
+ * Compatível com a assinatura de `fetch` usada pelos serviços; o retorno é um subconjunto de `Response`.
+ * @returns {any}
  */
 export function createTauriHubFetcher() {
   if (!isTauriRuntime()) {

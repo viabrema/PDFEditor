@@ -1,21 +1,45 @@
 ---
-description: Testes Vitest, cobertura, lint, commits e todo.md
+description: Após codificar — typecheck, lint, cobertura (app) e fmt/clippy/test (desktop); meta 100% no escopo instrumentado
 alwaysApply: true
 ---
 
-# Testes e fluxo de trabalho
+# Fluxo obrigatório após alterações de código
 
-## Testes
-- **JavaScript (`app/`)**: Vitest; cobrir serialização de schema, comandos de blocos, snap à grelha, tradução (API mockada). Sem rede real nos unit tests.
-- **Rust (`desktop/crates/pdf-export`)**: meta **100% de cobertura local** com `cargo llvm-cov -p pdf-export` (instalar `cargo-llvm-cov`; ver `desktop/README.md`). Usar traits/mocks para não depender de Chromium nem de rede nos testes por defeito.
-- **API HTTP futura**: contratos testados com mocks; integração com rede só em job/ambiente dedicado, não como requisito do unit test default.
+Antes de dar uma tarefa como concluída (e antes de commit quando aplicável), o agente deve correr as verificações abaixo e corrigir falhas até ficarem verdes.
 
-## Antes de considerar uma feature concluída
-- Atualizar `todo.md` e ir marcando itens conforme a implementação avança.
-- Correr testes **com coverage** e garantir que passam antes de marcar como concluído.
-- Manter **cobertura de testes em 100%** (meta do projeto).
-- Correr **lint** e corrigir avisos antes de marcar como concluído.
+## `app/` (Vite + JS)
 
-## Commits
+Na pasta **`app/`**, em sequência:
+
+1. **`npm run typecheck`** — `tsc --noEmit` com `checkJs` sobre o conjunto definido em `tsconfig.json` (módulos em `blocks/`, `editor/`, `services/`, `utils/`, `ui/` + config Vitest). **Não inclui** `src/main.js` nem `src/app/**` (bootstrap / colagem de UI); ao alterar esses ficheiros, validar manualmente com `npm run dev` / Tauri.
+2. **`npm run lint`** — ESLint em `src/**/*.js`.
+3. **`npm run test:coverage`** — Vitest com limiares **100%** em statements, branches, functions e lines, sobre os ficheiros instrumentados (ver `vitest.config.js`: inclui `src/**/*.js` e exclui entrada da app, `src/app/**`, e pontes Tauri **`tauriHubFetch.js`** / **`tauriStorage.js`** — IPC/plugins difíceis de simular; cobertura real desses caminhos via smoke/E2E no desktop).
+
+Atalho: **`npm run verify`** = typecheck + lint + test:coverage.
+
+### Cobertura 100%
+
+- A meta de **100%** aplica-se ao **conjunto coberto pelo relatório** (não a linhas excluídas no `vitest.config.js`).
+- Ao adicionar ficheiros novos em pastas instrumentadas, incluir testes até o relatório voltar a 100%.
+- Se integração Tauri no front precisar de testes unitários fortes, remover a exclusão em `vitest.config.js` e cobrir com mocks adequados.
+
+## `desktop/` (Rust + Tauri)
+
+Na pasta **`desktop/`** (Rust no PATH):
+
+1. **`npm run fmt:check`** — `cargo fmt --all -- --check`.
+2. **`npm run lint:rust`** — `cargo clippy --workspace --all-targets -- -D warnings`.
+3. **`npm run test:rust`** — `cargo test --workspace`.
+
+Atalho: **`npm run verify:rust`** = os três acima.
+
+### Cobertura LLVM (opcional, meta do crate `pdf-export`)
+
+- Com [cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov) instalado: na pasta `desktop/`, `cargo llvm-cov -p pdf-export --summary-only` (meta **100%** no `pdf-export`, conforme `desktop/README.md`).
+- Não bloqueia o `verify:rust` por defeito (depende de ferramenta extra); usar em alterações ao crate `pdf-export`.
+
+## Commits e qualidade
+
 - Alterações pequenas e incrementais.
-- Ao mudar comportamento do editor, atualizar testes correspondentes.
+- Comportamento novo ou corrigido: atualizar ou acrescentar testes no mesmo PR/commit lógico.
+- Manter `todo.md` / lista de trabalho alinhada com o estado real.

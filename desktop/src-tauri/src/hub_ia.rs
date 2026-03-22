@@ -54,9 +54,10 @@ pub async fn hub_ia_prompt(input: HubIaPromptInput) -> Result<HubIaPromptOutput,
     let status = res.status().as_u16();
     let text = res.text().await.map_err(|e| e.to_string())?;
 
-    let body = serde_json::from_str::<serde_json::Value>(&text).unwrap_or_else(|_| {
-        serde_json::Value::String(text)
-    });
+    let body = match serde_json::from_str::<serde_json::Value>(&text) {
+        Ok(v) => v,
+        Err(_) => serde_json::Value::String(text),
+    };
 
     Ok(HubIaPromptOutput { status, body })
 }

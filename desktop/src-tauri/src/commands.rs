@@ -80,9 +80,7 @@ fn system_browser_for_pdf_candidates() -> Vec<PathBuf> {
         out.push(root.join(r"Microsoft\Edge\Application\msedge.exe"));
     }
     if let Ok(local) = std::env::var("LOCALAPPDATA") {
-        out.push(
-            PathBuf::from(local).join(r"Google\Chrome\Application\chrome.exe"),
-        );
+        out.push(PathBuf::from(local).join(r"Google\Chrome\Application\chrome.exe"));
     }
     out
 }

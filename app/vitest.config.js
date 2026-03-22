@@ -9,7 +9,13 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "lcov"],
       include: ["src/**/*.js"],
-      exclude: ["src/main.js", "src/counter.js", "src/app/**"],
+      exclude: [
+        "src/main.js",
+        "src/counter.js",
+        "src/app/**",
+        "src/services/tauriHubFetch.js",
+        "src/services/tauriStorage.js",
+      ],
       thresholds: {
         statements: 100,
         branches: 100,

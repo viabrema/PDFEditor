@@ -6,7 +6,7 @@ export function applyDrag({
   delta = { x: 0, y: 0 },
   gridSize,
   snapEnabled,
-} = {}) {
+} = /** @type {any} */ ({})) {
   const next = {
     x: position.x + delta.x,
     y: position.y + delta.y,
