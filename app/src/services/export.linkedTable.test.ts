@@ -90,7 +90,7 @@ describe("export service (linked table)", () => {
     expect(html).not.toMatch(/colspan="/);
   });
 
-  it("renders cell inline styles and row height", () => {
+  it("renders cell inline styles without fixed tr height (rowHeights ignorados no PDF)", () => {
     const html = renderDocumentToHtml({
       title: "Linked",
       page: { format: "A4", orientation: "portrait" },
@@ -118,6 +118,7 @@ describe("export service (linked table)", () => {
     });
     expect(html).toContain('style="');
     expect(html).toContain("font-weight:bold");
-    expect(html).toContain('height:22pt');
+    expect(html).not.toContain("height:22pt");
+    expect(html).toContain("table.table-block-excel tbody tr");
   });
 });

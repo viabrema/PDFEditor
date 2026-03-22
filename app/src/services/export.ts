@@ -278,6 +278,17 @@ export function renderDocumentToHtml(document?: any) {
     .table-block { overflow: hidden; }
     .table-block-export-clip { width: 100%; height: 100%; overflow: hidden; }
     .table-block table { width: 100%; height: auto; border-collapse: collapse; table-layout: fixed; }
+    /* Igual ao canvas: tabelas Excel preenchem o bloco e as linhas repartem altura (sem height fixo em tr). */
+    .table-block table.table-block-excel {
+      height: 100%;
+      min-height: 100%;
+    }
+    .table-block table.table-block-excel tbody {
+      height: 100%;
+    }
+    .table-block table.table-block-excel tbody tr {
+      height: 1px;
+    }
     .table-block td {
       border: 1px solid #e2e8f0;
       padding: 6px 8px;
@@ -289,6 +300,8 @@ export function renderDocumentToHtml(document?: any) {
     }
     .table-block-excel td {
       border: none;
+      padding: 2px 6px;
+      line-height: 1.15;
     }
     @media print {
       body { margin: 0; }

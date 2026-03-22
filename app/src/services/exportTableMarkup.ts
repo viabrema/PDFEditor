@@ -18,7 +18,7 @@ export function renderTableBlockMarkup(
     id: string;
     type?: string;
     metadata?: { fontScale?: unknown };
-    content?: { rows?: unknown; merges?: unknown; cellStyles?: unknown; rowHeights?: unknown };
+    content?: { rows?: unknown; merges?: unknown; cellStyles?: unknown };
   },
   escapeHtml: (v: unknown) => string,
 ): string {
@@ -29,7 +29,6 @@ export function renderTableBlockMarkup(
     block.type === "linkedTable" || Object.keys(cellStyles).length > 0;
   const fontScale =
     block.type === "linkedTable" ? clampLinkedTableFontScale(block.metadata?.fontScale) : 1;
-  const rowHeights = block.content?.rowHeights as (number | null)[] | undefined;
   const skip = new Set<string>();
   for (const m of merges) {
     for (let dr = 0; dr < m.rowspan; dr++) {
@@ -45,9 +44,6 @@ export function renderTableBlockMarkup(
   const body = rows
     .map((row, r) => {
       const cells: string[] = [];
-      const rh = rowHeights?.[r];
-      const trStyle =
-        typeof rh === "number" && rh > 0 ? ` style="height:${rh}pt"` : "";
       for (let c = 0; c < row.length; c++) {
         if (skip.has(`${r},${c}`)) {
           continue;
@@ -63,7 +59,7 @@ export function renderTableBlockMarkup(
         const styleAttr = css ? ` style="${escapeHtmlStyleAttr(css)}"` : "";
         cells.push(`<td${rs}${cs}${styleAttr}>${escapeHtml(cell)}</td>`);
       }
-      return `<tr${trStyle}>${cells.join("")}</tr>`;
+      return `<tr>${cells.join("")}</tr>`;
     })
     .join("");
 
