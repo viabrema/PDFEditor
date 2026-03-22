@@ -2,5 +2,11 @@
   "identifier": "default",
   "description": "Default permissions for PDF Editor",
   "windows": ["main"],
-  "permissions": ["core:default", "dialog:default", "fs:default"]
+  "permissions": [
+    "core:default",
+    "dialog:default",
+    "fs:default",
+    "fs:read-files",
+    "fs:write-files"
+  ]
 }
