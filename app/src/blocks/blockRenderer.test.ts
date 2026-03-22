@@ -109,7 +109,7 @@ describe("block renderer", () => {
     expect(td?.rowSpan).toBe(2);
     expect(td?.colSpan).toBe(2);
     expect(td?.getAttribute("style")).toContain("font-weight:bold");
-    expect(element.querySelector("tr")?.style.height).toBe("32pt");
+    expect(element.querySelector("tr")?.style.height).toBe("");
   });
 
   it("applies text block styles", () => {

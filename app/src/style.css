@@ -151,9 +151,18 @@ body {
   font-size: 14px;
 }
 
+/* Preenche o bloco no resize; tr com height 1px reparte o espaco extra por linhas (sem altura minima fixa por linha). */
 .table-block-host .table-block {
-  height: auto;
+  height: 100%;
   min-height: 100%;
+}
+
+.table-block-host .table-block tbody {
+  height: 100%;
+}
+
+.table-block-host .table-block tbody tr {
+  height: 1px;
 }
 
 .table-block td {
@@ -163,6 +172,12 @@ body {
   overflow: hidden;
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+/* Menos padding/leading = linhas podem apertar mais quando o bloco fica baixo. */
+.table-block-host .table-block td {
+  padding: 2px 6px;
+  line-height: 1.15;
 }
 
 .table-block td:focus {

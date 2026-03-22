@@ -157,12 +157,13 @@ function buildMergedCellSkipSet(merges: ExcelTableMerge[]): Set<string> {
   return skip;
 }
 
+/** `rowHeights` mantem-se no modelo para exportacao PDF; no canvas as linhas seguem a altura do conteudo. */
 export function updateTableBody(
   table,
   rows,
   merges: ExcelTableMerge[] | null | undefined = null,
   cellStyles: Record<string, ExcelTableCellStyle> | null | undefined = null,
-  rowHeights: (number | null)[] | null | undefined = null,
+  _rowHeights: (number | null)[] | null | undefined = null,
 ) {
   const tbody = table.querySelector("tbody") || table.appendChild(document.createElement("tbody"));
   tbody.innerHTML = "";
@@ -176,10 +177,6 @@ export function updateTableBody(
 
   rows.forEach((row, r) => {
     const tr = document.createElement("tr");
-    const rh = rowHeights?.[r];
-    if (typeof rh === "number" && rh > 0) {
-      tr.style.height = `${rh}pt`;
-    }
     row.forEach((value, c) => {
       if (skip.has(`${r},${c}`)) {
         return;
