@@ -3,6 +3,7 @@ import { createAiService } from "./services/ai.js";
 import { createTranslationService } from "./services/translation.js";
 import { renderAppTemplate } from "./app/appTemplate.js";
 import { getTranslationEndpoint, TRANSLATION_KEY } from "./app/config.js";
+import { createTauriHubFetcher } from "./services/tauriHubFetch.js";
 import { bindEvents } from "./app/events.js";
 import { createAiFlow } from "./app/aiFlow.js";
 import { createRenderer } from "./app/render.js";
@@ -19,11 +20,17 @@ const state = createInitialState(documentData);
 const blocks = createInitialBlocks();
 
 const endpoint = getTranslationEndpoint();
+const hubFetch = createTauriHubFetcher();
 const translationService = createTranslationService({
   endpoint,
   apiKey: TRANSLATION_KEY,
+  fetcher: hubFetch || undefined,
 });
-const aiService = createAiService({ endpoint, apiKey: TRANSLATION_KEY });
+const aiService = createAiService({
+  endpoint,
+  apiKey: TRANSLATION_KEY,
+  fetcher: hubFetch || undefined,
+});
 
 const aiFlow = createAiFlow({ blocks, state, documentData });
 

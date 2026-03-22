@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   createTauriAdapter,
+  getTauriBackend,
   loadDocumentFromFile,
   pickOpenPath,
+  pickPdfSavePath,
   pickSavePath,
   saveDocumentToFile,
 } from "./tauriStorage.js";
@@ -20,6 +22,10 @@ const sampleDocument = {
 };
 
 describe("tauri storage", () => {
+  it("getTauriBackend returns null without Tauri window", async () => {
+    expect(await getTauriBackend()).toBeNull();
+  });
+
   it("creates adapter from fs", async () => {
     const fs = {
       readTextFile: vi.fn(async () => "{}"),
@@ -56,6 +62,21 @@ describe("tauri storage", () => {
 
   it("throws when dialog open missing", async () => {
     await expect(pickOpenPath({})).rejects.toThrow(/dialog API/);
+  });
+
+  it("picks pdf save path", async () => {
+    const dialog = { save: vi.fn(async () => "out.pdf") };
+    const path = await pickPdfSavePath({ dialog });
+    expect(path).toBe("out.pdf");
+    expect(dialog.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: [{ name: "PDF", extensions: ["pdf"] }],
+      })
+    );
+  });
+
+  it("throws when dialog save missing for pdf", async () => {
+    await expect(pickPdfSavePath({})).rejects.toThrow(/dialog API/);
   });
 
   it("saves document with provided path", async () => {

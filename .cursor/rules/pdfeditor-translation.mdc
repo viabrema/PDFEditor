@@ -13,6 +13,7 @@ alwaysApply: false
 
 ## Configuração (sem secrets nas regras)
 - Endpoint e chave de API: usar `app/src/app/config.js`, variáveis de ambiente Vite (`VITE_*`) ou configuração local **não commitada** — **não** colocar chaves em ficheiros versionados nem em regras `.mdc`.
+- URL do POST: `VITE_AI_PROMPT_URL` (URL completa) ou `VITE_AI_API_ORIGIN` + `VITE_AI_PROMPT_PATH` (default `/ai/prompt`) — o path tem de coincidir com o que o backend realmente expõe.
 - Payload típico (ajustar ao backend real): `{ "prompt": "...", "provider": "gemini", "model": "gemini-2.5-flash-lite" }`.
 
 ## Idiomas e abas

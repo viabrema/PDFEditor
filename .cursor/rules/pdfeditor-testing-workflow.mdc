@@ -6,9 +6,9 @@ alwaysApply: true
 # Testes e fluxo de trabalho
 
 ## Testes
-- Usar Vitest para testes unitários.
-- Cobrir: serialização de schema, comandos de blocos, matemática de snap à grelha, serviço de tradução (com API mockada).
-- Testes rápidos e isolados: **sem chamadas de rede reais**; mock do cliente HTTP.
+- **JavaScript (`app/`)**: Vitest; cobrir serialização de schema, comandos de blocos, snap à grelha, tradução (API mockada). Sem rede real nos unit tests.
+- **Rust (`desktop/crates/pdf-export`)**: meta **100% de cobertura local** com `cargo llvm-cov -p pdf-export` (instalar `cargo-llvm-cov`; ver `desktop/README.md`). Usar traits/mocks para não depender de Chromium nem de rede nos testes por defeito.
+- **API HTTP futura**: contratos testados com mocks; integração com rede só em job/ambiente dedicado, não como requisito do unit test default.
 
 ## Antes de considerar uma feature concluída
 - Atualizar `todo.md` e ir marcando itens conforme a implementação avança.

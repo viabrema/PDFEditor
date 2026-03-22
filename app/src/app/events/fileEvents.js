@@ -1,14 +1,13 @@
-import { loadDocumentFromFile, saveDocumentToFile } from "../../services/tauriStorage.js";
+import { invoke } from "@tauri-apps/api/core";
+import {
+  getTauriBackend,
+  loadDocumentFromFile,
+  pickPdfSavePath,
+  saveDocumentToFile,
+} from "../../services/tauriStorage.js";
 import { renderDocumentToHtml } from "../../services/export.js";
 
 export function bindFileEvents({ documentData, state, blocks, refs, stateFile, renderer }) {
-  async function getTauriApi() {
-    const tauri = globalThis.__TAURI__;
-    if (!tauri?.fs || !tauri?.dialog) {
-      return null;
-    }
-    return { fs: tauri.fs, dialog: tauri.dialog };
-  }
 
   function buildDocumentSnapshot() {
     const pages = documentData.pages.map((page) => {
@@ -109,7 +108,7 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
   }
 
   refs.openDocButton.addEventListener("click", async () => {
-    const tauri = await getTauriApi();
+    const tauri = await getTauriBackend();
     if (!tauri) {
       refs.docStatus.textContent = "Tauri indisponivel";
       return;
@@ -126,7 +125,7 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
   });
 
   refs.saveDocButton.addEventListener("click", async () => {
-    const tauri = await getTauriApi();
+    const tauri = await getTauriBackend();
     if (!tauri) {
       refs.docStatus.textContent = "Tauri indisponivel";
       return;
@@ -146,7 +145,7 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
     refs.docStatus.textContent = path.split(/[\\/]/).pop();
   });
 
-  refs.exportPdfButton.addEventListener("click", () => {
+  refs.exportPdfButton.addEventListener("click", async () => {
     const snapshot = buildDocumentSnapshot();
     const activeLanguageId = state.activeLanguageId;
     if (activeLanguageId) {
@@ -168,6 +167,25 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
       }
     }
     const html = renderDocumentToHtml(snapshot);
+
+    const tauri = await getTauriBackend();
+    if (tauri) {
+      try {
+        const outputPath = await pickPdfSavePath(tauri);
+        if (!outputPath) {
+          return;
+        }
+        await invoke("export_pdf_from_html", {
+          input: { html, outputPath },
+        });
+        refs.docStatus.textContent = outputPath.split(/[\\/]/).pop();
+      } catch (err) {
+        console.error(err);
+        refs.docStatus.textContent = "Falha ao exportar PDF";
+      }
+      return;
+    }
+
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const preview = window.open(url, "_blank");

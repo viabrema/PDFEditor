@@ -9,14 +9,14 @@ alwaysApply: true
 Editor estilo Notion para PDF no Windows (desktop) com UI web: blocos arrastáveis e redimensionáveis, texto rico, imagens/gráficos, tradução via API própria, exportação PDF. Projeto leve, sem UI pesada em frameworks.
 
 ## Stack
-- Shell: Tauri (Windows desktop)
+- Shell: Tauri 2 (Windows desktop), projeto em **`desktop/`** (ver regra `pdfeditor-desktop.mdc`)
 - UI: Vite + Vanilla JS (ESM) em `app/`
 - Estilos: Tailwind CSS
-- Testes: Vitest
+- Testes: Vitest (`app/`); Rust: `cargo test` / `cargo llvm-cov` no workspace `desktop/`
 - Editor: ProseMirror (ou núcleo Tiptap em modo vanilla, se aplicável)
 - Drag/resize: Interact.js (ou equivalente)
-- Persistência: JSON local via FS Tauri; cache IndexedDB opcional
-- PDF: HTML + pipeline print/PDF
+- Persistência: JSON local via plugins Tauri (`fs`); cache IndexedDB opcional
+- PDF: HTML via `export.js`; ficheiro `.pdf` binário no desktop via **Chromium headless** empacotado + comando Rust
 
 ## Estrutura (`app/src/`)
 - `app/` — bootstrap, estado global, fluxos IA/tradução, render

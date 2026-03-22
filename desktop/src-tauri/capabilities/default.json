@@ -1,0 +1,6 @@
+{
+  "identifier": "default",
+  "description": "Default permissions for PDF Editor",
+  "windows": ["main"],
+  "permissions": ["core:default", "dialog:default", "fs:default"]
+}

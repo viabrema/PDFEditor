@@ -1,0 +1,15 @@
+{
+  "name": "pdf-editor-desktop",
+  "private": true,
+  "scripts": {
+    "tauri": "tauri",
+    "icons": "node scripts/make-icon.mjs",
+    "dev": "node scripts/check-cargo.mjs && tauri dev",
+    "build": "node scripts/check-cargo.mjs && tauri build",
+    "postinstall": "node scripts/make-icon.mjs"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.9.5",
+    "png-to-ico": "^2.1.8"
+  }
+}

@@ -1,18 +1,15 @@
 import { defineConfig } from "vite";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  root: __dirname,
+  clearScreen: false,
+  envPrefix: ["VITE_", "TAURI_"],
   server: {
-    proxy: {
-      "/api/ai/prompt": {
-        target: "http://10.36.0.19:8080",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/api/ai": {
-        target: "http://10.36.0.19:8080",
-        changeOrigin: true,
-        secure: false,
-      },
-    },
+    port: 5173,
+    strictPort: true,
   },
 });

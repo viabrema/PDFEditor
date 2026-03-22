@@ -1,11 +1,17 @@
 ---
-description: Exportação PDF — HTML, estilos de impressão e output determinístico
-globs: app/src/services/export.js,app/src/services/export*.test.js
+description: Exportação PDF — HTML no app, PDF binário no desktop
+globs: app/src/services/export.js,app/src/services/export*.test.js,app/src/app/events/fileEvents.js,app/src/services/tauriStorage.js,desktop/crates/pdf-export/**/*.rs,desktop/src-tauri/**/*.rs
 alwaysApply: false
 ---
 
 # Exportação PDF
 
-- Renderizar o documento para HTML com estilos adequados a **print**.
+## Frontend (`app/`)
+- Renderizar o documento para HTML com estilos adequados a **print** (`renderDocumentToHtml`).
 - Garantir que imagens e fontes estão disponíveis ou incorporadas no momento da exportação.
-- Preferir output **determinístico** (layout estável entre exportações).
+- No **browser** (sem Tauri): fallback pode manter preview + `print()`.
+- No **desktop** (Tauri): gravar `.pdf` via `invoke('export_pdf_from_html', { html, outputPath })` após `dialog.save` com filtro PDF.
+
+## Desktop (`desktop/`)
+- Conversão HTML → PDF com **chrome-headless-shell** empacotado; lógica no crate **`pdf-export`**, comando fino em **`src-tauri`**.
+- Preferir output **determinístico** (mesma versão do Chromium versionada no script de setup).

@@ -1,0 +1,28 @@
+---
+description: Shell desktop Tauri em desktop/, crate Rust pdf-export e exportação PDF com Chromium
+globs: desktop/**/*
+alwaysApply: false
+---
+
+# Desktop (Tauri + Rust)
+
+## Layout do repositório
+- **`app/`** — frontend Vite + Vanilla JS (sem alterar o propósito).
+- **`desktop/`** — tudo o que é aplicação desktop:
+  - **`desktop/Cargo.toml`** — workspace Cargo com members `crates/pdf-export` e `src-tauri`.
+  - **`desktop/crates/pdf-export/`** — biblioteca Rust com a lógica de exportação PDF (HTML temporário, validação de paths, invocação headless, trait injetável para testes).
+  - **`desktop/src-tauri/`** — shell Tauri 2 fino: plugins (`dialog`, `fs`), `#[tauri::command]` que delega em `pdf-export`, `tauri.conf.json`, recursos empacotados.
+
+Não colocar `src-tauri` na raiz do repo; o CLI Tauri corre com **cwd = `desktop/`** (ou scripts npm que façam `cd desktop`).
+
+## Exportação PDF
+- O frontend continua a gerar HTML com `renderDocumentToHtml` (`app/src/services/export.js`).
+- Em desktop, o comando Rust usa **Chromium `chrome-headless-shell`** empacotado em `desktop/src-tauri/bundled-chromium/` (preenchido pelo script `desktop/scripts/setup-chromium.ps1`, pasta gitignored).
+- Variável de ambiente **`CHROMIUM_PATH`** opcional para override em desenvolvimento.
+
+## API externa (futuro)
+- Clientes HTTP devem usar **trait** (ex. `HttpClient`) + implementação real só no binário/plugin Tauri; testes com mocks (`wiremock`, `mockall`, etc.) — **sem rede** nos unit tests por defeito.
+
+## Cobertura Rust
+- Meta **100% de cobertura no crate `pdf-export`**, verificação **local** com `cargo llvm-cov` (ver `desktop/README.md`).
+- Lógica testável fica no crate; `src-tauri` mantém-se fino.

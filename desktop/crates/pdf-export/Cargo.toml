@@ -1,0 +1,12 @@
+[package]
+name = "pdf-export"
+version = "0.1.0"
+edition = "2021"
+description = "HTML to PDF via headless Chromium (testable core)"
+
+[dependencies]
+uuid = { version = "1", features = ["v4"] }
+
+[lib]
+name = "pdf_export"
+path = "src/lib.rs"
