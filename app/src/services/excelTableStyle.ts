@@ -1,4 +1,13 @@
-import type { Alignment, Border, Borders, Cell, Color, Fill, Font } from "exceljs";
+import type { Alignment, Border, Borders, Cell, Fill, Font } from "exceljs";
+import { excelColorToCss, getWorkbookClrSchemeMap, type OoxmlColorSource } from "./excelThemeColors";
+
+export type { OoxmlColorSource } from "./excelThemeColors";
+export {
+  argbToCss,
+  excelColorToCss,
+  getWorkbookClrSchemeMap,
+  parseThemeClrScheme,
+} from "./excelThemeColors";
 
 /** Estilo serializavel por celula (CSS) para canvas + export PDF. */
 export type ExcelTableCellStyle = {
@@ -32,58 +41,49 @@ const BORDER_STYLE_CSS: Partial<Record<string, string>> = {
   mediumDashDotDot: "2px dashed",
 };
 
-export function argbToCss(color: Partial<Color> | undefined): string | undefined {
-  if (!color) {
-    return undefined;
-  }
-  const argb = color.argb;
-  if (typeof argb !== "string" || argb.length < 6) {
-    return undefined;
-  }
-  const hex = argb.replace(/^#/, "").toUpperCase();
-  if (hex.length === 8) {
-    return `#${hex.slice(2)}`;
-  }
-  if (hex.length === 6) {
-    return `#${hex}`;
-  }
-  return undefined;
-}
-
-export function fillToBackgroundColor(fill: Fill | undefined): string | undefined {
+export function fillToBackgroundColor(
+  fill: Fill | undefined,
+  clrMap: Record<string, string>,
+): string | undefined {
   if (!fill || typeof fill !== "object") {
     return undefined;
   }
   if (fill.type === "pattern") {
     if (fill.pattern === "solid" && fill.fgColor) {
-      return argbToCss(fill.fgColor);
+      return excelColorToCss(fill.fgColor as OoxmlColorSource, clrMap);
     }
     if (fill.pattern !== "none" && fill.fgColor) {
-      const c = argbToCss(fill.fgColor);
+      const c = excelColorToCss(fill.fgColor as OoxmlColorSource, clrMap);
       if (c) {
         return c;
       }
     }
     if (fill.bgColor) {
-      return argbToCss(fill.bgColor);
+      return excelColorToCss(fill.bgColor as OoxmlColorSource, clrMap);
     }
   }
   if (fill.type === "gradient" && Array.isArray(fill.stops) && fill.stops.length > 0) {
-    return argbToCss(fill.stops[0].color);
+    return excelColorToCss(fill.stops[0].color as OoxmlColorSource, clrMap);
   }
   return undefined;
 }
 
-function borderSideToCss(side: Partial<Border> | undefined): string | undefined {
+function borderSideToCss(
+  side: Partial<Border> | undefined,
+  clrMap: Record<string, string>,
+): string | undefined {
   if (!side?.style) {
     return undefined;
   }
   const widthStyle = BORDER_STYLE_CSS[side.style] || "1px solid";
-  const col = argbToCss(side.color) || "#000000";
+  const col = excelColorToCss(side.color as OoxmlColorSource, clrMap) || "#000000";
   return `${widthStyle} ${col}`;
 }
 
-export function bordersToSides(border: Partial<Borders> | undefined): Pick<
+export function bordersToSides(
+  border: Partial<Borders> | undefined,
+  clrMap: Record<string, string>,
+): Pick<
   ExcelTableCellStyle,
   "borderTop" | "borderRight" | "borderBottom" | "borderLeft"
 > {
@@ -91,10 +91,10 @@ export function bordersToSides(border: Partial<Borders> | undefined): Pick<
     return {};
   }
   return {
-    borderTop: borderSideToCss(border.top),
-    borderRight: borderSideToCss(border.right),
-    borderBottom: borderSideToCss(border.bottom),
-    borderLeft: borderSideToCss(border.left),
+    borderTop: borderSideToCss(border.top, clrMap),
+    borderRight: borderSideToCss(border.right, clrMap),
+    borderBottom: borderSideToCss(border.bottom, clrMap),
+    borderLeft: borderSideToCss(border.left, clrMap),
   };
 }
 
@@ -128,6 +128,7 @@ function verticalToCss(
 export function fontAndAlignmentToStyle(
   font: Partial<Font> | undefined,
   alignment: Partial<Alignment> | undefined,
+  clrMap: Record<string, string>,
 ): Partial<ExcelTableCellStyle> {
   const out: Partial<ExcelTableCellStyle> = {};
   if (font?.name) {
@@ -142,7 +143,7 @@ export function fontAndAlignmentToStyle(
   if (font?.italic === true) {
     out.fontStyle = "italic";
   }
-  const fg = argbToCss(font?.color);
+  const fg = excelColorToCss(font?.color as OoxmlColorSource, clrMap);
   if (fg) {
     out.color = fg;
   }
@@ -162,10 +163,11 @@ export function excelStyleLayersToCellStyle(options: {
   font?: Partial<Font>;
   alignment?: Partial<Alignment>;
   border?: Partial<Borders>;
+  clrMap: Record<string, string>;
 }): ExcelTableCellStyle | null {
-  const fromFont = fontAndAlignmentToStyle(options.font, options.alignment);
-  const bg = fillToBackgroundColor(options.fill);
-  const sides = bordersToSides(options.border);
+  const fromFont = fontAndAlignmentToStyle(options.font, options.alignment, options.clrMap);
+  const bg = fillToBackgroundColor(options.fill, options.clrMap);
+  const sides = bordersToSides(options.border, options.clrMap);
   const merged: ExcelTableCellStyle = {
     ...fromFont,
     ...(bg ? { backgroundColor: bg } : {}),
@@ -179,11 +181,13 @@ export function excelCellToTableStyle(cell: Cell): ExcelTableCellStyle | null {
   if (!s) {
     return null;
   }
+  const clrMap = getWorkbookClrSchemeMap(cell.workbook);
   return excelStyleLayersToCellStyle({
     fill: s.fill,
     font: s.font,
     alignment: s.alignment,
     border: s.border,
+    clrMap,
   });
 }
 

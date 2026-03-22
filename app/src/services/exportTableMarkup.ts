@@ -14,6 +14,7 @@ export type ExportTableMerge = {
 export function renderTableBlockMarkup(
   block: {
     id: string;
+    type?: string;
     content?: { rows?: unknown; merges?: unknown; cellStyles?: unknown; rowHeights?: unknown };
   },
   escapeHtml: (v: unknown) => string,
@@ -21,6 +22,8 @@ export function renderTableBlockMarkup(
   const rows = Array.isArray(block.content?.rows) ? (block.content!.rows as string[][]) : [];
   const merges = (Array.isArray(block.content?.merges) ? block.content!.merges : []) as ExportTableMerge[];
   const cellStyles = (block.content?.cellStyles as Record<string, ExcelTableCellStyle> | undefined) || {};
+  const excelBorderMode =
+    block.type === "linkedTable" || Object.keys(cellStyles).length > 0;
   const rowHeights = block.content?.rowHeights as (number | null)[] | undefined;
   const skip = new Set<string>();
   for (const m of merges) {
@@ -57,5 +60,6 @@ export function renderTableBlockMarkup(
     })
     .join("");
 
-  return `<div class="block table-block" data-block-id="${block.id}"><div class="table-block-export-clip"><table><tbody>${body}</tbody></table></div></div>`;
+  const tableCls = excelBorderMode ? ' class="table-block-excel"' : "";
+  return `<div class="block table-block" data-block-id="${block.id}"><div class="table-block-export-clip"><table${tableCls}><tbody>${body}</tbody></table></div></div>`;
 }

@@ -31,7 +31,7 @@ describe("export service (linked table)", () => {
 
     expect(html).toContain("block-linked");
     expect(html).toContain("table-block-export-clip");
-    expect(html).toContain("<table>");
+    expect(html).toContain('class="table-block-excel"');
     expect(html).toContain("L1");
   });
 

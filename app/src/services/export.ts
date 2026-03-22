@@ -287,6 +287,9 @@ export function renderDocumentToHtml(document?: any) {
       overflow-wrap: anywhere;
       word-break: break-word;
     }
+    .table-block-excel td {
+      border: none;
+    }
     @media print {
       body { margin: 0; }
       .document { padding: 0; gap: 0; }
