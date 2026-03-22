@@ -1,4 +1,5 @@
 import { getPageSize } from "./textUtils";
+import { effectiveBlockLanguageId } from "./translationFlow";
 import { renderBlocksInContainer } from "./renderBlocks";
 import { setupRegionResize } from "./regionResize";
 
@@ -18,7 +19,7 @@ export function renderCanvasView({
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
 }) {
   const activeBlocks = blocks.filter(
-    (block) => block.languageId === state.activeLanguageId
+    (block) => effectiveBlockLanguageId(block, documentData) === state.activeLanguageId,
   );
   const headerBlocks = activeBlocks.filter(
     (block) => block.metadata?.region === "header"

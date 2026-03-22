@@ -6,6 +6,7 @@ import {
 } from "./aiPrompts";
 import { applyAiResultToBlock, applyAiResultToPage } from "./aiApply";
 import { getPageSize } from "./textUtils";
+import { effectiveBlockLanguageId } from "./translationFlow";
 
 export function createAiFlow({ blocks, state, documentData }) {
   function getSelectedBlock() {
@@ -16,7 +17,7 @@ export function createAiFlow({ blocks, state, documentData }) {
     return blocks.filter(
       (block) =>
         block.pageId === state.activePageId &&
-        block.languageId === state.activeLanguageId
+        effectiveBlockLanguageId(block, documentData) === state.activeLanguageId,
     );
   }
 

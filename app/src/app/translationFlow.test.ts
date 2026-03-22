@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { translateBlockFromSource, translateFromDefaultLanguage } from "./translationFlow";
+import {
+  translateBlockFromSource,
+  translateFromDefaultLanguage,
+  translateTextBatch,
+} from "./translationFlow";
 import { extractTextFromNode } from "./textUtils";
 
 const documentData = {
@@ -115,8 +119,51 @@ describe("translationFlow", () => {
       targetLanguageId: "lang-en",
     });
 
+    expect(blocks[0].languageId).toBe("lang-pt");
     const translated = blocks.find((block) => block.languageId === "lang-en");
     expect(translated).toBeTruthy();
     expect(extractTextFromNode(translated.content).trim()).toBe("Hello");
+  });
+
+  it("translateTextBatch splits large lists into chunks", async () => {
+    const calls: number[] = [];
+    const translationService = {
+      translatePrompt: async ({ prompt }: { prompt: string }) => {
+        const m = prompt.match(/Texto \(JSON array\):\n(.*)$/s);
+        const arr = m ? (JSON.parse(m[1]) as string[]) : [];
+        calls.push(arr.length);
+        const json = JSON.stringify(arr.map((s) => `_${s}`));
+        return { ok: true, text: json };
+      },
+    };
+    const texts = Array.from({ length: 45 }, (_, i) => `c${i}`);
+    const out = await translateTextBatch({
+      translationService,
+      documentData,
+      texts,
+      sourceLanguageId: "lang-pt",
+      targetLanguageId: "lang-en",
+    });
+    expect(calls).toEqual([40, 5]);
+    expect(out).toHaveLength(45);
+    expect(out[0]).toBe("_c0");
+    expect(out[44]).toBe("_c44");
+  });
+
+  it("translateTextBatch keeps originals when API returns fewer array entries", async () => {
+    const translationService = {
+      translatePrompt: async () => ({
+        ok: true,
+        text: JSON.stringify(["A", "B"]),
+      }),
+    };
+    const out = await translateTextBatch({
+      translationService,
+      documentData,
+      texts: ["x", "y", "z"],
+      sourceLanguageId: "lang-pt",
+      targetLanguageId: "lang-en",
+    });
+    expect(out).toEqual(["A", "B", "z"]);
   });
 });

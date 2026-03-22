@@ -6,6 +6,14 @@ export function getDefaultLanguageId(documentData) {
   return defaultLanguage?.id || documentData.languages[0]?.id || null;
 }
 
+/** Idioma efetivo para filtro UI: blocos sem languageId contam como idioma por defeito. */
+export function effectiveBlockLanguageId(block: { languageId?: string | null }, documentData: any) {
+  if (block.languageId != null && block.languageId !== "") {
+    return block.languageId;
+  }
+  return getDefaultLanguageId(documentData);
+}
+
 export function getLanguagePromptLabel(documentData, languageId) {
   const language = documentData.languages.find((item) => item.id === languageId);
   if (!language) {
@@ -44,13 +52,21 @@ export async function translateTextValue({
   return result.text || text;
 }
 
-export async function translateTextBatch({
+const TRANSLATE_BATCH_CHUNK_SIZE = 40;
+
+async function translateTextBatchChunk({
   translationService,
   documentData,
   texts,
   sourceLanguageId,
   targetLanguageId,
-}) {
+}: {
+  translationService: any;
+  documentData: any;
+  texts: string[];
+  sourceLanguageId: string;
+  targetLanguageId: string;
+}): Promise<string[]> {
   const normalized = texts.map((text) => String(text || ""));
   if (normalized.every((text) => !text.trim())) {
     return normalized;
@@ -61,7 +77,7 @@ export async function translateTextBatch({
       documentData,
       targetLanguageId
     )}.`,
-    "Retorne apenas um JSON array de strings na mesma ordem.",
+    "Retorne apenas um JSON array de strings na mesma ordem e com o mesmo numero de elementos.",
     "Texto (JSON array):",
     JSON.stringify(normalized),
   ].join("\n");
@@ -78,14 +94,47 @@ export async function translateTextBatch({
       .replace(/```\s*$/i, "")
       .trim();
     const parsed = JSON.parse(cleaned);
-    if (Array.isArray(parsed) && parsed.length === normalized.length) {
-      return parsed.map((value) => String(value));
+    if (Array.isArray(parsed)) {
+      return normalized.map((orig, i) => {
+        const v = parsed[i];
+        if (typeof v === "string") {
+          return v;
+        }
+        return v != null ? String(v) : orig;
+      });
     }
-  } catch (error) {
+  } catch {
     return normalized;
   }
 
   return normalized;
+}
+
+export async function translateTextBatch({
+  translationService,
+  documentData,
+  texts,
+  sourceLanguageId,
+  targetLanguageId,
+}) {
+  const normalized = texts.map((text) => String(text || ""));
+  if (normalized.every((text) => !text.trim())) {
+    return normalized;
+  }
+
+  const out: string[] = [];
+  for (let i = 0; i < normalized.length; i += TRANSLATE_BATCH_CHUNK_SIZE) {
+    const slice = normalized.slice(i, i + TRANSLATE_BATCH_CHUNK_SIZE);
+    const part = await translateTextBatchChunk({
+      translationService,
+      documentData,
+      texts: slice,
+      sourceLanguageId,
+      targetLanguageId,
+    });
+    out.push(...part);
+  }
+  return out;
 }
 
 export async function translateTextDoc({
@@ -245,9 +294,13 @@ export async function translateFromDefaultLanguage({
   render();
 
   try {
-    const sourceBlocks = blocks.filter(
-      (block) => block.languageId === sourceLanguageId || !block.languageId
-    );
+    for (const block of blocks) {
+      if (block.languageId == null || block.languageId === "") {
+        block.languageId = sourceLanguageId;
+      }
+    }
+
+    const sourceBlocks = blocks.filter((block) => block.languageId === sourceLanguageId);
     const translatedBlocks = [];
     for (const block of sourceBlocks) {
       translatedBlocks.push(

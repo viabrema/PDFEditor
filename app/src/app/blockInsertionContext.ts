@@ -1,10 +1,12 @@
 import { getPageSize, getRegionSize } from "./textUtils";
+import { effectiveBlockLanguageId } from "./translationFlow";
 
 export function getBlockInsertionRegionContext({ documentData, state, blocks }) {
   const region = state.activeRegion || "body";
   const isBody = region === "body";
   const blocksForRegion = blocks.filter((block) => {
-    const matchesLanguage = block.languageId === state.activeLanguageId;
+    const matchesLanguage =
+      effectiveBlockLanguageId(block, documentData) === state.activeLanguageId;
     if (!matchesLanguage) {
       return false;
     }

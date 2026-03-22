@@ -6,6 +6,7 @@ import {
   saveDocumentToFile,
 } from "../../services/tauriStorage";
 import { renderDocumentToHtml } from "../../services/export";
+import { effectiveBlockLanguageId } from "../translationFlow";
 
 export function bindFileEvents({ documentData, state, blocks, refs, stateFile, renderer }) {
 
@@ -152,17 +153,17 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
       snapshot.pages = snapshot.pages.map((page) => ({
         ...page,
         blocks: (page.blocks || []).filter(
-          (block) => block.languageId === activeLanguageId
+          (block) => effectiveBlockLanguageId(block, snapshot) === activeLanguageId,
         ),
       }));
       if (snapshot.regions?.header?.blocks) {
         snapshot.regions.header.blocks = snapshot.regions.header.blocks.filter(
-          (block) => block.languageId === activeLanguageId
+          (block) => effectiveBlockLanguageId(block, snapshot) === activeLanguageId,
         );
       }
       if (snapshot.regions?.footer?.blocks) {
         snapshot.regions.footer.blocks = snapshot.regions.footer.blocks.filter(
-          (block) => block.languageId === activeLanguageId
+          (block) => effectiveBlockLanguageId(block, snapshot) === activeLanguageId,
         );
       }
     }
