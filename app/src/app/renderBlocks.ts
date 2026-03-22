@@ -2,6 +2,7 @@ import { createEditor, createEditorCommands } from "../editor/editor";
 import { createToolbar } from "../ui/toolbar";
 import { createBlockElement } from "../blocks/blockRenderer";
 import { setupDragResize } from "../blocks/dragResize";
+import { clampLinkedTableFontScale, syncTableElementWithBlock } from "../blocks/tableBlock";
 import { fileToDataUrl } from "../blocks/imageBlock";
 import { getBlockTextStyle } from "../blocks/blockStyles";
 
@@ -86,6 +87,32 @@ export function renderBlocksInContainer({
       );
     }
 
+    if (isEditing && block.type === "linkedTable") {
+      const toolbar = createToolbar(null, {
+        variant: "linkedTable",
+        fontScaleValue: clampLinkedTableFontScale(block.metadata?.fontScale),
+        onFontScaleChange: (scale: number) => {
+          block.metadata = { ...(block.metadata || {}), fontScale: scale };
+          const shell = document.querySelector(
+            `.block-shell[data-block-id="${block.id}"]`,
+          );
+          const table = shell?.querySelector("table.table-block") as HTMLTableElement | undefined;
+          if (table) {
+            syncTableElementWithBlock(table, block, true);
+          }
+        },
+        onLinkedTableExcelConfigure: linkedTableBridge?.reconfigure
+          ? () => linkedTableBridge.reconfigure!(block)
+          : undefined,
+      });
+      state.interactions.push(
+        mountFloatingToolbar({
+          element,
+          toolbar,
+        })
+      );
+    }
+
     element.addEventListener("click", (event) => {
       event.stopPropagation();
       state.activePageId = pageId;
@@ -107,10 +134,6 @@ export function renderBlocksInContainer({
 
     element.addEventListener("dblclick", async (event) => {
       event.stopPropagation();
-      if (block.type === "linkedTable" && linkedTableBridge?.reconfigure) {
-        await linkedTableBridge.reconfigure(block);
-        return;
-      }
       if (block.type === "image") {
         const input = document.createElement("input");
         input.type = "file";

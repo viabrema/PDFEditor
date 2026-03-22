@@ -112,6 +112,18 @@ describe("block renderer", () => {
     expect(element.querySelector("tr")?.style.height).toBe("");
   });
 
+  it("linked table cells are editable when block is in editing mode", () => {
+    const block = {
+      id: "block-linked-editing",
+      type: "linkedTable",
+      content: { rows: [["x"]] },
+      position: { x: 0, y: 0 },
+      size: { width: 200, height: 100 },
+    };
+    const { element } = createBlockElement(block, { editing: true });
+    expect(element.querySelector("td")?.getAttribute("contenteditable")).toBe("true");
+  });
+
   it("applies text block styles", () => {
     const block = {
       id: "block-5",

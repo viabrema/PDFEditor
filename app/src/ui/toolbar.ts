@@ -6,13 +6,58 @@ export function createToolbar(commands: any, options: any = {}) {
     onFontFamilyChange,
     onFontSizeChange,
     onHeadingLevelChange,
+    onFontScaleChange,
+    onLinkedTableExcelConfigure,
     alignValue = "left",
     fontFamilyValue = "Segoe UI",
     fontSizeValue = "16px",
     headingLevelValue = 1,
+    fontScaleValue = 1,
   } = options;
   const container = document.createElement("div");
-  container.className = "flex flex-wrap gap-2";
+  container.className = "flex flex-wrap items-center gap-2";
+
+  if (variant === "linkedTable") {
+    const label = document.createElement("span");
+    label.className = "text-xs font-medium text-slate-600";
+    label.textContent = "Escala";
+
+    const range = document.createElement("input");
+    range.type = "range";
+    range.min = "0.5";
+    range.max = "2";
+    range.step = "0.05";
+    range.value = String(fontScaleValue);
+    range.title = "Escala da fonte (0,5 a 2)";
+    range.setAttribute("aria-label", "Escala da fonte");
+    range.className = "h-2 w-32 accent-slate-700";
+
+    const valueEl = document.createElement("span");
+    valueEl.className = "w-9 text-xs tabular-nums text-slate-700";
+    valueEl.textContent = Number(fontScaleValue).toFixed(2);
+
+    range.addEventListener("input", () => {
+      const v = Number(range.value);
+      valueEl.textContent = v.toFixed(2);
+      onFontScaleChange?.(v);
+    });
+
+    container.append(label, range, valueEl);
+
+    if (onLinkedTableExcelConfigure) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className =
+        "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
+      btn.title = "Alterar ficheiro ou intervalo Excel";
+      btn.setAttribute("aria-label", "Alterar ficheiro ou intervalo Excel");
+      btn.innerHTML = `<i data-lucide="file-spreadsheet"></i>`;
+      btn.addEventListener("click", () => onLinkedTableExcelConfigure());
+      container.append(btn);
+    }
+
+    return container;
+  }
 
   const fontFamilies = [
     "Segoe UI",

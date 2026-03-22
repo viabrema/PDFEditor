@@ -110,6 +110,32 @@ describe("toolbar", () => {
     expect(clicked).toBe(7);
   });
 
+  it("renders linked table toolbar with scale slider and excel button", () => {
+    let scale = 0;
+    let excel = 0;
+    const toolbar = createToolbar(null, {
+      variant: "linkedTable",
+      fontScaleValue: 1,
+      onFontScaleChange: (v: number) => {
+        scale = v;
+      },
+      onLinkedTableExcelConfigure: () => {
+        excel += 1;
+      },
+    });
+
+    expect(toolbar.querySelector('input[type="range"]')).toBeTruthy();
+    const range = toolbar.querySelector('input[type="range"]') as HTMLInputElement;
+    range.value = "1.5";
+    range.dispatchEvent(new window.Event("input", { bubbles: true }));
+    expect(scale).toBe(1.5);
+
+    const btn = toolbar.querySelector("button");
+    expect(btn).toBeTruthy();
+    btn?.click();
+    expect(excel).toBe(1);
+  });
+
   it("renders disabled toolbar", () => {
     const toolbar = createToolbar(null, { disabled: true, variant: "heading" });
     const buttons = toolbar.querySelectorAll("button");

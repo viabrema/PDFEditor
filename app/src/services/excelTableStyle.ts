@@ -191,6 +191,27 @@ export function excelCellToTableStyle(cell: Cell): ExcelTableCellStyle | null {
   });
 }
 
+/** Escala apenas `fontSize` (pt ou px) para pré-visualização / exportação de tabelas linkadas. */
+export function scaleExcelCellStyleFontSize(
+  style: ExcelTableCellStyle,
+  scale: number,
+): ExcelTableCellStyle {
+  if (scale === 1 || !style.fontSize) {
+    return style;
+  }
+  const pt = /^(\d+(?:\.\d+)?)pt$/i.exec(style.fontSize);
+  if (pt) {
+    const n = Math.round(parseFloat(pt[1]) * scale * 100) / 100;
+    return { ...style, fontSize: `${n}pt` };
+  }
+  const px = /^(\d+(?:\.\d+)?)px$/i.exec(style.fontSize);
+  if (px) {
+    const n = Math.round(parseFloat(px[1]) * scale * 100) / 100;
+    return { ...style, fontSize: `${n}px` };
+  }
+  return style;
+}
+
 export function cellStyleToCssString(style: ExcelTableCellStyle): string {
   const parts: string[] = [];
   if (style.color) {

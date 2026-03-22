@@ -42,7 +42,7 @@ export function createBlockElement(block, { selected = false, editing = false } 
     element.classList.add("linked-table-shell");
     const host = document.createElement("div");
     host.className = "table-block-host h-full w-full";
-    const table = createTableElement(block, { readOnly: true });
+    const table = createTableElement(block, { readOnly: !editing });
     host.append(table);
     element.append(host);
   } else {

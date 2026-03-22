@@ -1,6 +1,8 @@
+import { TABLE_BLOCK_BASE_FONT_PX, clampLinkedTableFontScale } from "../blocks/tableBlock";
 import {
   cellStyleToCssString,
   escapeHtmlStyleAttr,
+  scaleExcelCellStyleFontSize,
   type ExcelTableCellStyle,
 } from "./excelTableStyle";
 
@@ -15,6 +17,7 @@ export function renderTableBlockMarkup(
   block: {
     id: string;
     type?: string;
+    metadata?: { fontScale?: unknown };
     content?: { rows?: unknown; merges?: unknown; cellStyles?: unknown; rowHeights?: unknown };
   },
   escapeHtml: (v: unknown) => string,
@@ -24,6 +27,8 @@ export function renderTableBlockMarkup(
   const cellStyles = (block.content?.cellStyles as Record<string, ExcelTableCellStyle> | undefined) || {};
   const excelBorderMode =
     block.type === "linkedTable" || Object.keys(cellStyles).length > 0;
+  const fontScale =
+    block.type === "linkedTable" ? clampLinkedTableFontScale(block.metadata?.fontScale) : 1;
   const rowHeights = block.content?.rowHeights as (number | null)[] | undefined;
   const skip = new Set<string>();
   for (const m of merges) {
@@ -52,7 +57,9 @@ export function renderTableBlockMarkup(
         const rs = m && m.rowspan > 1 ? ` rowspan="${m.rowspan}"` : "";
         const cs = m && m.colspan > 1 ? ` colspan="${m.colspan}"` : "";
         const st = cellStyles[`${r},${c}`];
-        const css = st ? cellStyleToCssString(st) : "";
+        const scaled =
+          st && fontScale !== 1 ? scaleExcelCellStyleFontSize(st, fontScale) : st;
+        const css = scaled ? cellStyleToCssString(scaled) : "";
         const styleAttr = css ? ` style="${escapeHtmlStyleAttr(css)}"` : "";
         cells.push(`<td${rs}${cs}${styleAttr}>${escapeHtml(cell)}</td>`);
       }
@@ -60,6 +67,13 @@ export function renderTableBlockMarkup(
     })
     .join("");
 
-  const tableCls = excelBorderMode ? ' class="table-block-excel"' : "";
-  return `<div class="block table-block" data-block-id="${block.id}"><div class="table-block-export-clip"><table${tableCls}><tbody>${body}</tbody></table></div></div>`;
+  const tableAttrs: string[] = [];
+  if (excelBorderMode) {
+    tableAttrs.push('class="table-block-excel"');
+  }
+  if (fontScale !== 1) {
+    tableAttrs.push(`style="font-size:${TABLE_BLOCK_BASE_FONT_PX * fontScale}px"`);
+  }
+  const tableOpen = tableAttrs.length ? ` ${tableAttrs.join(" ")}` : "";
+  return `<div class="block table-block" data-block-id="${block.id}"><div class="table-block-export-clip"><table${tableOpen}><tbody>${body}</tbody></table></div></div>`;
 }

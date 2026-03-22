@@ -13,10 +13,17 @@ import {
   fontAndAlignmentToStyle,
   getWorkbookClrSchemeMap,
   parseThemeClrScheme,
+  scaleExcelCellStyleFontSize,
 } from "./excelTableStyle";
 
 describe("excelTableStyle", () => {
   const defaultClr = getWorkbookClrSchemeMap(new ExcelJS.Workbook());
+
+  it("scaleExcelCellStyleFontSize scales pt and px font sizes", () => {
+    expect(scaleExcelCellStyleFontSize({ fontSize: "10pt" }, 2).fontSize).toBe("20pt");
+    expect(scaleExcelCellStyleFontSize({ fontSize: "12px" }, 0.5).fontSize).toBe("6px");
+    expect(scaleExcelCellStyleFontSize({ fontWeight: "bold" }, 2).fontSize).toBeUndefined();
+  });
 
   it("argbToCss maps 8 and 6 char hex", () => {
     expect(argbToCss({ argb: "FFFF0000" })).toBe("#FF0000");
