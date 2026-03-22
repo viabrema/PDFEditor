@@ -7,6 +7,8 @@ export function getDomRefs() {
     zoomOutButton: document.querySelector("#zoom-out"),
     zoomInButton: document.querySelector("#zoom-in"),
     zoomInput: document.querySelector("#zoom-input"),
+    addPageButton: document.querySelector("#add-page"),
+    removePageButton: document.querySelector("#remove-page"),
     languageTabsHost: document.querySelector("#language-tabs"),
     languageActionsHost: document.querySelector("#language-actions"),
     translationStatus: document.querySelector("#translation-status"),

@@ -61,6 +61,26 @@ export function renderAppTemplate(root) {
         <div class="sticky top-0 z-30 -mx-6 mb-4 border-b border-slate-200 bg-slate-50/95 px-6 py-3 backdrop-blur">
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-3">
+              <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Paginas</div>
+              <button
+                id="add-page"
+                type="button"
+                class="icon-button rounded-md border border-slate-300 bg-white px-2 py-2 text-slate-700"
+                title="Nova pagina"
+                aria-label="Nova pagina"
+              >
+                <i data-lucide="file-plus"></i>
+              </button>
+              <button
+                id="remove-page"
+                type="button"
+                class="icon-button rounded-md border border-slate-300 bg-white px-2 py-2 text-slate-700"
+                title="Apagar pagina ativa"
+                aria-label="Apagar pagina ativa"
+              >
+                <i data-lucide="file-minus"></i>
+              </button>
+              <div class="h-6 w-px bg-slate-200" aria-hidden="true"></div>
               <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Idiomas</div>
               <div class="flex flex-wrap gap-2" id="language-tabs"></div>
               <div class="flex items-center gap-2" id="language-actions"></div>

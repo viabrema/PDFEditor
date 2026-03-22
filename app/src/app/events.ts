@@ -3,6 +3,7 @@ import { bindBlockEvents } from "./events/blockEvents";
 import { bindFileEvents } from "./events/fileEvents";
 import { bindLinkedTableEvents } from "./events/linkedTableEvents";
 import { bindMiscEvents } from "./events/miscEvents";
+import { bindPageEvents } from "./events/pageEvents";
 import { bindUiEvents } from "./events/uiEvents";
 
 export function bindEvents({
@@ -18,6 +19,7 @@ export function bindEvents({
   linkedTableBridge,
 }) {
   bindUiEvents({ documentData, state, refs, renderer });
+  bindPageEvents({ documentData, state, blocks, refs, renderer });
   bindBlockEvents({ documentData, state, blocks, refs, renderer });
   bindLinkedTableEvents({
     documentData,

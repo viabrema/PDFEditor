@@ -219,6 +219,14 @@ export function createRenderer({
   }
 
   function render() {
+    if (refs.removePageButton) {
+      const onlyOne = documentData.pages.length <= 1;
+      (refs.removePageButton as HTMLButtonElement).disabled = onlyOne;
+      refs.removePageButton.title = onlyOne
+        ? "Nao e possivel apagar a unica pagina"
+        : "Apagar pagina ativa";
+    }
+
     refs.formatSelect.value = documentData.page.format;
     refs.orientationSelect.value = documentData.page.orientation;
     refs.gridSizeInput.value = documentData.grid.size;

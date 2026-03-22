@@ -11,10 +11,7 @@ export function createInitialDocument() {
       createLanguage({ id: "lang-es", label: "ES" }),
       createLanguage({ id: "lang-zh", label: "ZH" }),
     ],
-    pages: [
-      createPage({ id: "page-1", name: "Pagina 1" }),
-      createPage({ id: "page-2", name: "Pagina 2" }),
-    ],
+    pages: [createPage({ id: "page-1", name: "Pagina 1" })],
   });
 }
 
