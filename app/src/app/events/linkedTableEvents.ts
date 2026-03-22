@@ -99,6 +99,8 @@ export function bindLinkedTableEvents({
         pageSize: ctx.regionSize,
         metadata: ctx.isBody ? {} : { region: ctx.region },
         merges: result.merges,
+        cellStyles: result.cellStyles,
+        rowHeights: result.rowHeights,
       },
     );
     blocks.push(block);
