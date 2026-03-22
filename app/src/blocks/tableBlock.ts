@@ -1,5 +1,6 @@
 import { createBlock, BLOCK_TYPES } from "./blockModel";
 import type { ExcelTableMerge } from "../services/excelRange";
+import { cellStyleToCssString, type ExcelTableCellStyle } from "../services/excelTableStyle";
 
 const DEFAULT_CELL_WIDTH = 120;
 const DEFAULT_CELL_HEIGHT = 36;
@@ -99,6 +100,8 @@ export function createLinkedTableBlockFromRows(
     pageSize,
     metadata,
     merges = [],
+    cellStyles,
+    rowHeights,
   } = options;
 
   const normalized = normalizeRows(rows);
@@ -106,10 +109,17 @@ export function createLinkedTableBlockFromRows(
   const safeRows = normalized.length > 0 ? normalized : fallback;
   const size = computeTableSize(safeRows, pageSize);
   const safeMerges = Array.isArray(merges) ? merges : [];
+  const content: Record<string, unknown> = { rows: safeRows, merges: safeMerges };
+  if (cellStyles && typeof cellStyles === "object" && Object.keys(cellStyles).length > 0) {
+    content.cellStyles = cellStyles;
+  }
+  if (Array.isArray(rowHeights) && rowHeights.some((x) => x != null)) {
+    content.rowHeights = rowHeights;
+  }
 
   return createBlock({
     type: BLOCK_TYPES.LINKED_TABLE,
-    content: { rows: safeRows, merges: safeMerges },
+    content,
     position,
     size,
     pageId,
@@ -147,7 +157,13 @@ function buildMergedCellSkipSet(merges: ExcelTableMerge[]): Set<string> {
   return skip;
 }
 
-export function updateTableBody(table, rows, merges: ExcelTableMerge[] | null | undefined = null) {
+export function updateTableBody(
+  table,
+  rows,
+  merges: ExcelTableMerge[] | null | undefined = null,
+  cellStyles: Record<string, ExcelTableCellStyle> | null | undefined = null,
+  rowHeights: (number | null)[] | null | undefined = null,
+) {
   const tbody = table.querySelector("tbody") || table.appendChild(document.createElement("tbody"));
   tbody.innerHTML = "";
   const list = Array.isArray(merges) ? merges : [];
@@ -156,9 +172,14 @@ export function updateTableBody(table, rows, merges: ExcelTableMerge[] | null | 
   for (const m of list) {
     mergeAt.set(`${m.r},${m.c}`, m);
   }
+  const styles = cellStyles && typeof cellStyles === "object" ? cellStyles : null;
 
   rows.forEach((row, r) => {
     const tr = document.createElement("tr");
+    const rh = rowHeights?.[r];
+    if (typeof rh === "number" && rh > 0) {
+      tr.style.height = `${rh}pt`;
+    }
     row.forEach((value, c) => {
       if (skip.has(`${r},${c}`)) {
         return;
@@ -166,6 +187,13 @@ export function updateTableBody(table, rows, merges: ExcelTableMerge[] | null | 
       const td = document.createElement("td");
       td.contentEditable = "true";
       td.textContent = value;
+      const st = styles?.[`${r},${c}`];
+      if (st) {
+        const css = cellStyleToCssString(st);
+        if (css) {
+          td.setAttribute("style", css);
+        }
+      }
       const m = mergeAt.get(`${r},${c}`);
       if (m && (m.rowspan > 1 || m.colspan > 1)) {
         if (m.rowspan > 1) {
@@ -221,7 +249,12 @@ export function createTableElement(block, options: { readOnly?: boolean } = {}) 
   }
   const rows = normalizeRows(block.content?.rows || createEmptyTable());
   const merges = Array.isArray(block.content?.merges) ? block.content.merges : [];
-  updateTableBody(table, rows, merges);
+  const cellStyles =
+    block.content?.cellStyles && typeof block.content.cellStyles === "object"
+      ? (block.content.cellStyles as Record<string, ExcelTableCellStyle>)
+      : null;
+  const rowHeights = Array.isArray(block.content?.rowHeights) ? (block.content.rowHeights as (number | null)[]) : null;
+  updateTableBody(table, rows, merges, cellStyles, rowHeights);
   setTableEditable(table, !readOnly);
   if (!readOnly) {
     attachTableHandlers({ table, block });

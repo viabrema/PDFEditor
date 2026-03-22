@@ -42,6 +42,20 @@ describe("excelLink", () => {
     expect(getLinkedTablesToRefresh([{ id: "x", type: BLOCK_TYPES.TEXT }], null)).toEqual([]);
   });
 
+  it("loadExcelLinkTableContent returns cellStyles when workbook has styled cell", async () => {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("S");
+    const c = ws.getCell(1, 1);
+    c.value = "x";
+    c.font = { bold: true, color: { argb: "FF00FF00" } };
+    const buf = new Uint8Array(await wb.xlsx.writeBuffer());
+    const data = await loadExcelLinkTableContent(
+      { filePath: "C:\\fake\\f.xlsx", sheetName: "S", range: "A1:A1" },
+      async () => buf,
+    );
+    expect(data.cellStyles?.["0,0"]?.fontWeight).toBe("bold");
+  });
+
   it("loadExcelLinkTableContent returns merges from workbook", async () => {
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet("S");

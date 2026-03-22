@@ -1,4 +1,7 @@
 import ExcelJS, { ValueType } from "exceljs";
+import { excelCellToTableStyle, type ExcelTableCellStyle } from "./excelTableStyle";
+
+export type { ExcelTableCellStyle } from "./excelTableStyle";
 
 /** .xlsx / .xlsm são ficheiros ZIP; assinatura local file header começa por "PK". */
 export function validateXlsxZipBytes(bytes: Uint8Array): void {
@@ -168,6 +171,10 @@ export type ExcelTableMerge = {
 export type ExcelTableContent = {
   rows: string[][];
   merges: ExcelTableMerge[];
+  /** Chave "r,c" (0-based no intervalo); apenas celulas com estilo. */
+  cellStyles?: Record<string, ExcelTableCellStyle>;
+  /** Altura da linha em pontos (Excel), mesmo comprimento que `rows`; null = automatico. */
+  rowHeights?: (number | null)[];
 };
 
 type SheetMergeRect = { top: number; left: number; bottom: number; right: number };
@@ -215,17 +222,35 @@ function cellPlainForTableGrid(cell: ExcelJS.Cell): string {
 export function extractTableContentFromWorksheet(sheet: ExcelJS.Worksheet, range: string): ExcelTableContent {
   const b = parseA1Range(range);
   const rows: string[][] = [];
+  const cellStyles: Record<string, ExcelTableCellStyle> = {};
+  const rowHeights: (number | null)[] = [];
+
   for (let r = b.top; r <= b.bottom; r++) {
     const row: string[] = [];
+    const excelRow = sheet.getRow(r);
+    const h = excelRow.height;
+    rowHeights.push(typeof h === "number" && h > 0 ? h : null);
+
     for (let c = b.left; c <= b.right; c++) {
-      row.push(cellPlainForTableGrid(sheet.getCell(r, c)));
+      const cell = sheet.getCell(r, c);
+      row.push(cellPlainForTableGrid(cell));
+      const st = excelCellToTableStyle(cell);
+      if (st) {
+        cellStyles[`${r - b.top},${c - b.left}`] = st;
+      }
     }
     rows.push(row);
   }
-  return {
-    rows,
-    merges: mergesForExtractedRange(sheet, b),
-  };
+
+  const merges = mergesForExtractedRange(sheet, b);
+  const out: ExcelTableContent = { rows, merges };
+  if (Object.keys(cellStyles).length > 0) {
+    out.cellStyles = cellStyles;
+  }
+  if (rowHeights.some((x) => x != null)) {
+    out.rowHeights = rowHeights;
+  }
+  return out;
 }
 
 export async function extractRangeToTableContent(

@@ -1,6 +1,6 @@
 ---
 description: Tabelas linkadas a Excel — bloco linkedTable, Tauri, JSON, atualização e PDF
-globs: app/src/services/excelRange.ts,app/src/services/excelLink.ts,app/src/app/linkedTableWizard.ts,app/src/app/events/linkedTableEvents.ts,app/src/blocks/tableBlock.ts,app/src/blocks/blockRenderer.ts,app/src/services/export.ts,app/src/services/exportTableMarkup.ts,app/src/services/tauriStorage.ts,desktop/src-tauri/capabilities/*.json,docs/linked-excel-tables.md
+globs: app/src/services/excelRange.ts,app/src/services/excelTableStyle.ts,app/src/services/excelLink.ts,app/src/app/linkedTableWizard.ts,app/src/app/events/linkedTableEvents.ts,app/src/blocks/tableBlock.ts,app/src/blocks/blockRenderer.ts,app/src/services/export.ts,app/src/services/exportTableMarkup.ts,app/src/services/tauriStorage.ts,desktop/src-tauri/capabilities/*.json,docs/linked-excel-tables.md
 alwaysApply: false
 ---
 
@@ -9,7 +9,7 @@ alwaysApply: false
 ## Invariantes
 
 - Tipo de bloco: `linkedTable` (`BLOCK_TYPES.LINKED_TABLE` em `blockModel.ts`).
-- `content.rows`: snapshot em `string[][]` para canvas e PDF; `content.merges`: opcional, `{ r, c, rowspan, colspan }[]` (índices relativos ao intervalo); lido do Excel via ExcelJS (`_merges`), só retângulos **totalmente** dentro do range.
+- `content.rows`: snapshot em `string[][]` para canvas e PDF; `content.merges`: opcional; `content.cellStyles`: opcional, mapa `"r,c"` → estilos (ver `excelTableStyle.ts`); `content.rowHeights`: opcional (pontos Excel). Estilos vêm de `cell.style` (ExcelJS); cores só por ARGB resolvido.
 - **Atualizar / reconfigurar link:** não recalcular `block.size` nem `block.position` — preservar layout da caixa.
 - `metadata.excelLink`: `{ filePath, sheetName, range }` — `range` normalizado (maiúsculas) via `normalizeRangeString`.
 - **Atualizar links:** se `selectedBlockId` for um `linkedTable`, só esse bloco; senão, todos os `linkedTable` em `blocks` (ver `getLinkedTablesToRefresh` em `excelLink.ts`).

@@ -93,6 +93,8 @@ describe("block renderer", () => {
           ["", ""],
         ],
         merges: [{ r: 0, c: 0, rowspan: 2, colspan: 2 }],
+        cellStyles: { "0,0": { color: "#cc0000", fontWeight: "bold" } },
+        rowHeights: [32, null],
       },
       position: { x: 0, y: 0 },
       size: { width: 200, height: 100 },
@@ -106,6 +108,8 @@ describe("block renderer", () => {
     expect(td?.getAttribute("contenteditable")).toBe("false");
     expect(td?.rowSpan).toBe(2);
     expect(td?.colSpan).toBe(2);
+    expect(td?.getAttribute("style")).toContain("font-weight:bold");
+    expect(element.querySelector("tr")?.style.height).toBe("32pt");
   });
 
   it("applies text block styles", () => {

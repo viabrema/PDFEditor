@@ -264,6 +264,20 @@ describe("excelRange", () => {
       expect(rows[1][2]).toBe("y");
     });
 
+    it("extractTableContentFromWorksheet captures row height and cell styles", () => {
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet("Styled");
+      ws.getRow(1).height = 27;
+      const c = ws.getCell(1, 1);
+      c.value = "z";
+      c.font = { bold: true, size: 10, name: "Arial" };
+      c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFEECC" } };
+      const out = extractTableContentFromWorksheet(ws, "A1:A1");
+      expect(out.rowHeights?.[0]).toBe(27);
+      expect(out.cellStyles?.["0,0"]?.fontWeight).toBe("bold");
+      expect(out.cellStyles?.["0,0"]?.backgroundColor).toBe("#FFEECC");
+    });
+
     it("extractTableContentFromWorksheet handles sheet without _merges", async () => {
       const bytes = await buildSampleBuffer();
       const wb = await loadExcelWorkbook(bytes);

@@ -18,6 +18,8 @@ Funcionalidade para analistas que trabalham com **folhas Excel grandes** (vária
 - `type`: `"linkedTable"`.
 - `content.rows`: matriz de strings (último snapshot para UI e exportação PDF). Células escravas de mesclagem no Excel ficam com string vazia; o valor aparece só na célula “mestre”.
 - `content.merges` (opcional): lista `{ r, c, rowspan, colspan }` em coordenadas **0-based** relativas ao canto superior esquerdo do intervalo. Só entram mesclagens **totalmente contidas** no intervalo escolhido (se o intervalo cortar uma mesclagem maior, essa mesclagem não é reproduzida).
+- `content.cellStyles` (opcional): mapa `"linha,col"` → estilo CSS (`color`, `backgroundColor`, `fontFamily`, `fontSize`, `fontWeight`, `fontStyle`, `textAlign`, `verticalAlign`, `borderTop`/`Right`/`Bottom`/`Left`) lido do Excel via ExcelJS. Cores de **tema** sem ARGB resolvido podem não aparecer.
+- `content.rowHeights` (opcional): alturas de linha em **pontos** (Excel), um valor por linha do intervalo (`null` = altura automática).
 - `metadata.excelLink`:
   - `filePath`: caminho absoluto no Windows/macOS/Linux (no browser, `__browser__:nome.xlsx`).
   - `sheetName`: nome da folha (não só índice).
@@ -33,14 +35,14 @@ Funcionalidade para analistas que trabalham com **folhas Excel grandes** (vária
 
 | Área | Ficheiros |
 |------|-----------|
-| Parse A1 + leitura Excel | `app/src/services/excelRange.ts`, `excelCellToPlainString` |
+| Parse A1 + leitura Excel + estilos | `app/src/services/excelRange.ts`, `app/src/services/excelTableStyle.ts` |
 | Link + refresh | `app/src/services/excelLink.ts` |
 | Tauri: picker + bytes | `app/src/services/tauriStorage.ts` (`pickExcelOpenPath`, `readBinaryFileFromPath`) |
 | Wizard + modal | `app/src/app/linkedTableWizard.ts` |
 | Eventos UI | `app/src/app/events/linkedTableEvents.ts` |
 | Bloco / DOM | `app/src/blocks/blockModel.ts`, `tableBlock.ts`, `blockRenderer.ts` |
 | Duplo clique | `app/src/app/renderBlocks.ts` + `linkedTableBridge` em `main.ts` / `render.ts` |
-| PDF | `app/src/services/export.ts` (mesmo markup que `table`) |
+| PDF | `app/src/services/export.ts`, `exportTableMarkup.ts` |
 | Permissões Tauri | `desktop/src-tauri/capabilities/default.json` (`fs:allow-read-file` com `**`) |
 
 ## Licença da dependência

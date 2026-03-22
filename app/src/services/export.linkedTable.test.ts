@@ -89,4 +89,35 @@ describe("export service (linked table)", () => {
     expect(html).toContain('rowspan="2"');
     expect(html).not.toMatch(/colspan="/);
   });
+
+  it("renders cell inline styles and row height", () => {
+    const html = renderDocumentToHtml({
+      title: "Linked",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "b3",
+              type: "linkedTable",
+              position: { x: 0, y: 0 },
+              size: { width: 200, height: 80 },
+              content: {
+                rows: [["x"]],
+                cellStyles: {
+                  "0,0": { color: "#ff0000", fontWeight: "bold" },
+                },
+                rowHeights: [22],
+              },
+              metadata: { excelLink: { filePath: "C:\\f.xlsx", sheetName: "S", range: "A1:A1" } },
+            },
+          ],
+        },
+      ],
+    });
+    expect(html).toContain('style="');
+    expect(html).toContain("font-weight:bold");
+    expect(html).toContain('height:22pt');
+  });
 });

@@ -48,6 +48,16 @@ export function bindLinkedTableEvents({
       return;
     }
     block.content = { ...(block.content || {}), rows: result.rows, merges: result.merges };
+    if (result.cellStyles) {
+      block.content.cellStyles = result.cellStyles;
+    } else {
+      delete block.content.cellStyles;
+    }
+    if (result.rowHeights) {
+      block.content.rowHeights = result.rowHeights;
+    } else {
+      delete block.content.rowHeights;
+    }
     block.metadata = {
       ...(block.metadata || {}),
       excelLink: {
@@ -109,8 +119,18 @@ export function bindLinkedTableEvents({
         continue;
       }
       try {
-        const { rows, merges } = await loadExcelLinkTableContent(link);
-        block.content = { ...(block.content || {}), rows, merges };
+        const data = await loadExcelLinkTableContent(link);
+        block.content = { ...(block.content || {}), rows: data.rows, merges: data.merges };
+        if (data.cellStyles) {
+          block.content.cellStyles = data.cellStyles;
+        } else {
+          delete block.content.cellStyles;
+        }
+        if (data.rowHeights) {
+          block.content.rowHeights = data.rowHeights;
+        } else {
+          delete block.content.rowHeights;
+        }
       } catch (e) {
         const msg =
           e instanceof Error

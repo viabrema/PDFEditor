@@ -1,3 +1,9 @@
+import {
+  cellStyleToCssString,
+  escapeHtmlStyleAttr,
+  type ExcelTableCellStyle,
+} from "./excelTableStyle";
+
 export type ExportTableMerge = {
   r: number;
   c: number;
@@ -6,11 +12,16 @@ export type ExportTableMerge = {
 };
 
 export function renderTableBlockMarkup(
-  block: { id: string; content?: { rows?: unknown; merges?: unknown } },
+  block: {
+    id: string;
+    content?: { rows?: unknown; merges?: unknown; cellStyles?: unknown; rowHeights?: unknown };
+  },
   escapeHtml: (v: unknown) => string,
 ): string {
   const rows = Array.isArray(block.content?.rows) ? (block.content!.rows as string[][]) : [];
   const merges = (Array.isArray(block.content?.merges) ? block.content!.merges : []) as ExportTableMerge[];
+  const cellStyles = (block.content?.cellStyles as Record<string, ExcelTableCellStyle> | undefined) || {};
+  const rowHeights = block.content?.rowHeights as (number | null)[] | undefined;
   const skip = new Set<string>();
   for (const m of merges) {
     for (let dr = 0; dr < m.rowspan; dr++) {
@@ -26,6 +37,9 @@ export function renderTableBlockMarkup(
   const body = rows
     .map((row, r) => {
       const cells: string[] = [];
+      const rh = rowHeights?.[r];
+      const trStyle =
+        typeof rh === "number" && rh > 0 ? ` style="height:${rh}pt"` : "";
       for (let c = 0; c < row.length; c++) {
         if (skip.has(`${r},${c}`)) {
           continue;
@@ -34,9 +48,12 @@ export function renderTableBlockMarkup(
         const m = mergeAt.get(`${r},${c}`);
         const rs = m && m.rowspan > 1 ? ` rowspan="${m.rowspan}"` : "";
         const cs = m && m.colspan > 1 ? ` colspan="${m.colspan}"` : "";
-        cells.push(`<td${rs}${cs}>${escapeHtml(cell)}</td>`);
+        const st = cellStyles[`${r},${c}`];
+        const css = st ? cellStyleToCssString(st) : "";
+        const styleAttr = css ? ` style="${escapeHtmlStyleAttr(css)}"` : "";
+        cells.push(`<td${rs}${cs}${styleAttr}>${escapeHtml(cell)}</td>`);
       }
-      return `<tr>${cells.join("")}</tr>`;
+      return `<tr${trStyle}>${cells.join("")}</tr>`;
     })
     .join("");
 
