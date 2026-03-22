@@ -213,7 +213,7 @@ export function renderAppTemplate(root) {
       </footer>
       <div
         id="page-settings-modal"
-        class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/40 px-4"
+        class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/40 px-4"
         aria-hidden="true"
         role="dialog"
         aria-modal="true"
@@ -295,7 +295,7 @@ export function renderAppTemplate(root) {
       </div>
       <div
         id="chart-config-modal"
-        class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/40 px-4"
+        class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/40 px-4"
         aria-hidden="true"
         role="dialog"
         aria-modal="true"
@@ -439,7 +439,7 @@ export function renderAppTemplate(root) {
       </div>
       <div
         id="excel-link-modal"
-        class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/40 px-4"
+        class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/40 px-4"
         aria-hidden="true"
         role="dialog"
         aria-modal="true"
