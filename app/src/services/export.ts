@@ -21,6 +21,13 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
+function escapeHtmlAttr(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;");
+}
+
 function renderMarks(text, marks = []) {
   return marks
     .slice()
@@ -201,6 +208,21 @@ function renderTableBlock(block) {
   return renderTableBlockMarkup(block, escapeHtml);
 }
 
+function renderChartBlock(block) {
+  const preview = block.content?.previewDataUrl;
+  const idAttr = escapeHtml(block.id);
+  if (
+    preview &&
+    typeof preview === "string" &&
+    preview.trim().startsWith("data:image/")
+  ) {
+    return `<div class="block chart-block-export" data-block-id="${idAttr}"><img src="${escapeHtmlAttr(
+      preview,
+    )}" alt="Grafico" style="width:100%;height:100%;object-fit:contain;display:block;" /></div>`;
+  }
+  return `<div class="block chart-block-export chart-block-export-placeholder" data-block-id="${idAttr}" style="display:flex;align-items:center;justify-content:center;font-size:13px;color:#64748b;text-align:center;padding:8px;">Grafico nao configurado</div>`;
+}
+
 function renderBlock(block, offset = { x: 0, y: 0 }) {
   const style =
     `left:${block.position.x + offset.x}px;` +
@@ -213,6 +235,9 @@ function renderBlock(block, offset = { x: 0, y: 0 }) {
   }
   if (block.type === "table" || block.type === "linkedTable") {
     return `<div class="block-wrapper" style="${style}">${renderTableBlock(block)}</div>`;
+  }
+  if (block.type === "chart") {
+    return `<div class="block-wrapper" style="${style}">${renderChartBlock(block)}</div>`;
   }
   return `<div class="block-wrapper" style="${style}">${renderTextBlock(block)}</div>`;
 }
@@ -275,6 +300,7 @@ export function renderDocumentToHtml(document?: any) {
     .text-block ol { margin: 0; padding-left: 20px; list-style-position: outside; }
     .text-block hr { border: none; border-top: 1px solid #0f172a; margin: 10px 0; }
     .image-block img { width: 100%; height: 100%; object-fit: cover; }
+    .chart-block-export { width: 100%; height: 100%; overflow: hidden; background: #fff; }
     .table-block { overflow: hidden; }
     .table-block-export-clip { width: 100%; height: 100%; overflow: hidden; }
     .table-block table { width: 100%; height: auto; border-collapse: collapse; table-layout: fixed; }

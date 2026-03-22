@@ -5,10 +5,21 @@ import { setupDragResize } from "../blocks/dragResize";
 import { clampLinkedTableFontScale, syncTableElementWithBlock } from "../blocks/tableBlock";
 import { fileToDataUrl } from "../blocks/imageBlock";
 import { getBlockTextStyle } from "../blocks/blockStyles";
+import { getChartContent, isChartConfigured } from "../blocks/chartBlock";
+import { resolveChartTableData } from "../blocks/chartDataFromTableBlock";
+import { buildChartJsConfiguration } from "../blocks/chartSpecToChartJs";
+import { validateChartConfiguration } from "../blocks/chartValidation";
+import {
+  destroyBlockChart,
+  mountChartForBlock,
+  resizeBlockChart,
+} from "../blocks/chartRuntime";
+import { openChartConfiguration } from "./chartModal";
 
 export function renderBlocksInContainer({
   container,
   blocks,
+  allBlocks,
   state,
   documentData,
   pageId,
@@ -18,6 +29,8 @@ export function renderBlocksInContainer({
 }: {
   container: HTMLElement;
   blocks: any[];
+  /** Blocos no idioma ativo (para resolver fonte de dados do gráfico em qualquer região). */
+  allBlocks?: any[];
   state: any;
   documentData: any;
   pageId: string;
@@ -25,6 +38,7 @@ export function renderBlocksInContainer({
   requestRender: () => void;
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
 }) {
+  const blocksForChartResolve = allBlocks ?? blocks;
   function mountFloatingToolbar({ element, toolbar }) {
     toolbar.classList.add("block-toolbar-floating");
     document.body.append(toolbar);
@@ -143,6 +157,15 @@ export function renderBlocksInContainer({
 
     element.addEventListener("dblclick", async (event) => {
       event.stopPropagation();
+      if (block.type === "chart") {
+        state.activePageId = pageId;
+        state.activeRegion = region;
+        state.selectedBlockIds = [block.id];
+        state.editingBlockId = null;
+        openChartConfiguration(block);
+        requestRender();
+        return;
+      }
       if (block.type === "image") {
         const input = document.createElement("input");
         input.type = "file";
@@ -241,8 +264,55 @@ export function renderBlocksInContainer({
       block,
       gridSize: documentData.grid.size,
       snapEnabled: documentData.grid.snap,
+      onUpdate:
+        block.type === "chart"
+          ? () => {
+              resizeBlockChart(block.id);
+            }
+          : undefined,
     });
     interaction.setEnabled(!isEditing);
     state.interactions.push(interaction);
+
+    if (block.type === "chart" && isChartConfigured(block)) {
+      const canvas = element.querySelector("canvas.chart-block-canvas") as HTMLCanvasElement | null;
+      if (canvas) {
+        const content = getChartContent(block);
+        const resolved = resolveChartTableData(blocksForChartResolve, content);
+        let cfg = null;
+        if (resolved.ok) {
+          const v = validateChartConfiguration(content, resolved.data);
+          if (v.ok) {
+            cfg = buildChartJsConfiguration(content, resolved.data);
+          }
+        }
+        if (cfg) {
+          const mount = () => {
+            mountChartForBlock({
+              blockId: block.id,
+              canvas,
+              config: cfg,
+              onPreview: (url) => {
+                block.content = { ...block.content, previewDataUrl: url };
+              },
+            });
+          };
+          requestAnimationFrame(() => {
+            mount();
+          });
+          const ro = new ResizeObserver(() => {
+            resizeBlockChart(block.id);
+          });
+          ro.observe(element);
+          state.interactions.push({
+            destroy() {
+              ro.disconnect();
+              destroyBlockChart(block.id);
+            },
+            setEnabled() {},
+          });
+        }
+      }
+    }
   });
 }

@@ -133,6 +133,15 @@ export function renderAppTemplate(root) {
                 <i data-lucide="refresh-cw"></i>
               </button>
               <button
+                id="add-chart-block"
+                type="button"
+                class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
+                title="Novo bloco de grafico"
+                aria-label="Novo bloco de grafico"
+              >
+                <i data-lucide="line-chart"></i>
+              </button>
+              <button
                 id="add-image-block"
                 type="button"
                 class="icon-button rounded-md bg-slate-900 px-3 py-2 text-white"
@@ -272,6 +281,106 @@ export function renderAppTemplate(root) {
           <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
             <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Pagina ativa</span>
             <div id="page-meta"></div>
+          </div>
+        </div>
+      </div>
+      <div
+        id="chart-config-modal"
+        class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/40 px-4"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <div class="text-lg font-semibold text-slate-900">Configurar grafico</div>
+              <div class="text-xs text-slate-500">Fonte: tabela ou tabela linkada no documento</div>
+            </div>
+            <button
+              id="chart-config-close"
+              type="button"
+              class="rounded-md border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600"
+            >
+              Fechar
+            </button>
+          </div>
+          <div class="grid gap-4">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="chart-config-data-source">
+                Fonte de dados (bloco tabela)
+              </label>
+              <select
+                id="chart-config-data-source"
+                class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              ></select>
+            </div>
+            <label class="flex items-center gap-2 text-sm text-slate-700">
+              <input id="chart-config-first-row-header" type="checkbox" class="h-4 w-4" checked />
+              Primeira linha e cabecalho de colunas
+            </label>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="chart-config-base-type">
+                  Tipo de grafico
+                </label>
+                <select
+                  id="chart-config-base-type"
+                  class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                ></select>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="chart-config-chart-title">
+                  Titulo (opcional)
+                </label>
+                <input
+                  id="chart-config-chart-title"
+                  type="text"
+                  class="rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  placeholder="Titulo do grafico"
+                />
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-4">
+              <label class="flex items-center gap-2 text-xs text-slate-600">
+                <input id="chart-config-legend" type="checkbox" class="h-4 w-4" checked />
+                Mostrar legenda
+              </label>
+              <label class="flex items-center gap-2 text-xs text-slate-600">
+                <input id="chart-config-y-right" type="checkbox" class="h-4 w-4" />
+                Eixo Y a direita
+              </label>
+            </div>
+            <div>
+              <div class="mb-2 flex items-center justify-between">
+                <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Series</span>
+                <button
+                  id="chart-config-add-dataset"
+                  type="button"
+                  class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700"
+                >
+                  + Nova serie
+                </button>
+              </div>
+              <div id="chart-config-datasets" class="flex flex-col gap-2"></div>
+            </div>
+            <p id="chart-config-modal-error" class="min-h-[1.25rem] text-xs text-red-600"></p>
+          </div>
+          <div class="mt-6 flex justify-end gap-2">
+            <button
+              id="chart-config-cancel"
+              type="button"
+              class="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-600"
+            >
+              Cancelar
+            </button>
+            <button
+              id="chart-config-apply"
+              type="button"
+              class="rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
+            >
+              Aplicar
+            </button>
           </div>
         </div>
       </div>

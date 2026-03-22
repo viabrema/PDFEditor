@@ -3,6 +3,7 @@ import { getDefaultLanguageId } from "./translationFlow";
 import { renderCanvasView } from "./renderCanvas";
 import { syncStatusBar } from "./canvasZoom";
 import { setLastAction } from "./activityLog";
+import { destroyAllBlockCharts } from "../blocks/chartRuntime";
 
 export function createRenderer({
   documentData,
@@ -80,6 +81,7 @@ export function createRenderer({
   }
 
   function renderCanvas() {
+    destroyAllBlockCharts();
     refs.canvas.innerHTML = "";
     clearViews();
     clearInteractions();

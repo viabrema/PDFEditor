@@ -77,6 +77,59 @@ describe("export service (basic)", () => {
     expect(html).toContain("<table>");
   });
 
+  it("renders chart block with preview image", () => {
+    const html = renderDocumentToHtml({
+      title: "Chart",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "block-chart",
+              type: "chart",
+              position: { x: 0, y: 0 },
+              size: { width: 400, height: 260 },
+              content: {
+                previewDataUrl: "data:image/png;base64,AAAA",
+                configured: true,
+                dataSourceBlockId: "t1",
+                chart: { version: 1, baseType: "line", datasets: [] },
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(html).toContain("block-chart");
+    expect(html).toContain('<img src="data:image/png;base64,AAAA"');
+    expect(html).toContain('alt="Grafico"');
+  });
+
+  it("renders chart placeholder without preview", () => {
+    const html = renderDocumentToHtml({
+      title: "Chart",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "block-chart",
+              type: "chart",
+              position: { x: 0, y: 0 },
+              size: { width: 200, height: 120 },
+              content: { configured: false },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(html).toContain("Grafico nao configurado");
+  });
+
   it("renders header and footer blocks", () => {
     const html = renderDocumentToHtml({
       title: "Regions",

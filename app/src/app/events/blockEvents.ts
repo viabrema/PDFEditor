@@ -1,4 +1,5 @@
 import { createBlock, BLOCK_TYPES } from "../../blocks/blockModel";
+import { createChartBlock } from "../../blocks/chartBlock";
 import { createImageBlockFromFile } from "../../blocks/imageBlock";
 import { createTableBlockFromRows, createTableBlockFromText, parseTabularText } from "../../blocks/tableBlock";
 import { getBlockInsertionRegionContext } from "../blockInsertionContext";
@@ -53,6 +54,25 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
       })
     );
     setLastAction(state, "Bloco de titulo adicionado.");
+    renderer.renderCanvas();
+  });
+
+  refs.addChartButton?.addEventListener("click", () => {
+    const { region, isBody, blocksForRegion, regionSize } = getRegionContext();
+    const position = getNextBlockPosition({
+      blocksForPage: blocksForRegion,
+      blockSize: { width: 520, height: 320 },
+      pageSize: regionSize,
+    });
+    blocks.push(
+      createChartBlock({
+        pageId: isBody ? state.activePageId : null,
+        languageId: state.activeLanguageId,
+        position,
+        metadata: isBody ? {} : { region },
+      }),
+    );
+    setLastAction(state, "Grafico adicionado.");
     renderer.renderCanvas();
   });
 

@@ -88,6 +88,7 @@ export function renderCanvasView({
     renderBlocksInContainer({
       container: pageSurface,
       blocks: pageBlocks,
+      allBlocks: activeBlocks,
       state,
       documentData,
       pageId: page.id,
@@ -128,6 +129,7 @@ export function renderCanvasView({
       renderBlocksInContainer({
         container: headerRegion,
         blocks: headerBlocks,
+        allBlocks: activeBlocks,
         state,
         documentData,
         pageId: page.id,
@@ -180,6 +182,7 @@ export function renderCanvasView({
       renderBlocksInContainer({
         container: footerRegion,
         blocks: footerBlocks,
+        allBlocks: activeBlocks,
         state,
         documentData,
         pageId: page.id,

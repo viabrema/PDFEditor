@@ -1,0 +1,18 @@
+---
+description: Invariantes do bloco chart (Chart.js), modal, export PDF e refresh Excel.
+globs:
+  - app/src/blocks/chart*.ts
+  - app/src/blocks/chartJsRegister.ts
+  - app/src/app/chartModal.ts
+  - app/src/app/renderBlocks.ts
+  - app/src/services/export.ts
+---
+
+# Bloco Chart
+
+- **Conteúdo**: `block.content` segue `ChartBlockContent` em `chartBlockTypes.ts` (`configured`, `dataSourceBlockId`, `firstRowIsHeader`, `chart` com `version` e `baseType`, `previewDataUrl` opcional).
+- **Chart.js**: registo de controllers/plugins num único módulo (`chartJsRegister.ts`); não duplicar `Chart.register` noutros sítios.
+- **Runtime**: `chartRuntime.ts` gere instâncias por `blockId`; antes de limpar o canvas do documento chamar `destroyAllBlockCharts()` (ver `render.ts`).
+- **PDF / HTML**: export usa `<img src="previewDataUrl">` quando `previewDataUrl` é `data:image/...`; sem snapshot, mostrar placeholder textual.
+- **Modal**: validar com `validateChartConfiguration` + `resolveChartTableData` antes de gravar; falhas → mensagem ao utilizador (`alert` e/ou `#chart-config-modal-error`).
+- **Linked table**: após refresh Excel bem-sucedido, atualizar gráficos ligados com `refreshChartsUsingTableBlock(sourceId, blocks)` (ver `linkedTableEvents.ts`).

@@ -1,5 +1,6 @@
 import { getBlockTextStyle } from "./blockStyles";
 import { createTableElement, setTableEditable } from "./tableBlock";
+import { isChartConfigured } from "./chartBlock";
 
 export function createBlockElement(block, { selected = false, editing = false } = {}) {
   const element = document.createElement("div");
@@ -44,6 +45,26 @@ export function createBlockElement(block, { selected = false, editing = false } 
     host.className = "table-block-host h-full w-full";
     const table = createTableElement(block, { readOnly: !editing });
     host.append(table);
+    element.append(host);
+  } else if (block.type === "chart") {
+    element.classList.add("chart-block-shell");
+    const host = document.createElement("div");
+    host.className = "chart-block-host relative flex h-full min-h-[120px] w-full flex-col overflow-hidden bg-white";
+    const canvasWrap = document.createElement("div");
+    canvasWrap.className = "relative min-h-0 flex-1";
+    const canvas = document.createElement("canvas");
+    canvas.className = "chart-block-canvas block h-full w-full";
+    canvas.setAttribute("aria-label", "Grafico");
+    const hint = document.createElement("div");
+    hint.className =
+      "chart-block-hint pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-slate-400";
+    hint.textContent = "Duplo clique para configurar";
+    if (isChartConfigured(block)) {
+      canvasWrap.append(canvas);
+    } else {
+      canvasWrap.append(hint);
+    }
+    host.append(canvasWrap);
     element.append(host);
   } else {
     editorHost = document.createElement("div");

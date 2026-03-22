@@ -141,6 +141,38 @@ describe("block renderer", () => {
     expect(editorHost.style.fontSize).toBe("20px");
   });
 
+  it("creates chart block placeholder when not configured", () => {
+    const block = {
+      id: "block-chart",
+      type: "chart",
+      content: { configured: false, dataSourceBlockId: null, chart: { datasets: [] } },
+      position: { x: 0, y: 0 },
+      size: { width: 300, height: 200 },
+    };
+    const { element, editorHost } = createBlockElement(block);
+    expect(editorHost).toBeNull();
+    expect(element.querySelector(".chart-block-hint")).toBeTruthy();
+    expect(element.querySelector("canvas")).toBeNull();
+  });
+
+  it("creates chart block with canvas when configured", () => {
+    const block = {
+      id: "block-chart-2",
+      type: "chart",
+      content: {
+        configured: true,
+        dataSourceBlockId: "tbl-x",
+        firstRowIsHeader: true,
+        chart: { version: 1, baseType: "line", datasets: [] },
+      },
+      position: { x: 0, y: 0 },
+      size: { width: 300, height: 200 },
+    };
+    const { element, editorHost } = createBlockElement(block);
+    expect(editorHost).toBeNull();
+    expect(element.querySelector("canvas.chart-block-canvas")).toBeTruthy();
+  });
+
   it("applies heading class", () => {
     const headingBlock = {
       id: "block-6",
