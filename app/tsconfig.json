@@ -4,23 +4,22 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": ["ES2022", "DOM"],
-    "allowJs": true,
-    "checkJs": true,
-    "noEmit": true,
     "strict": false,
     "noImplicitAny": false,
+    "noEmit": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "useDefineForClassFields": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
-  "include": [
-    "src/blocks/**/*.js",
-    "src/editor/**/*.js",
-    "src/services/**/*.js",
-    "src/utils/**/*.js",
-    "src/ui/**/*.js",
-    "vitest.config.js",
-    "vitest.setup.js",
-    "src/vite-env.d.ts"
-  ],
-  "exclude": ["**/*.test.js", "**/*.spec.js", "node_modules", "dist", "coverage"]
+  "include": ["src/**/*.ts", "vitest.config.ts", "vitest.setup.ts", "vite.config.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

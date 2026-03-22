@@ -7,21 +7,21 @@ alwaysApply: true
 
 Antes de dar uma tarefa como concluída (e antes de commit quando aplicável), o agente deve correr as verificações abaixo e corrigir falhas até ficarem verdes.
 
-## `app/` (Vite + JS)
+## `app/` (Vite + TypeScript)
 
 Na pasta **`app/`**, em sequência:
 
-1. **`npm run typecheck`** — `tsc --noEmit` com `checkJs` sobre o conjunto definido em `tsconfig.json` (módulos em `blocks/`, `editor/`, `services/`, `utils/`, `ui/` + config Vitest). **Não inclui** `src/main.js` nem `src/app/**` (bootstrap / colagem de UI); ao alterar esses ficheiros, validar manualmente com `npm run dev` / Tauri.
-2. **`npm run lint`** — ESLint em `src/**/*.js`.
-3. **`npm run test:coverage`** — Vitest com limiares **100%** em statements, branches, functions e lines, sobre os ficheiros instrumentados (ver `vitest.config.js`: inclui `src/**/*.js` e exclui entrada da app, `src/app/**`, e pontes Tauri **`tauriHubFetch.js`** / **`tauriStorage.js`** — IPC/plugins difíceis de simular; cobertura real desses caminhos via smoke/E2E no desktop).
+1. **`npm run typecheck`** — `tsc --noEmit` sobre o conjunto definido em `tsconfig.json` (ex.: `src/**/*.ts` exceto `*.test.ts` / `*.spec.ts`, mais `vite.config.ts`, configs Vitest). Ficheiros de teste são cobertos por ESLint + Vitest. Alterações em bootstrap/UI: validar com `npm run dev` / Tauri.
+2. **`npm run lint`** — ESLint em `src/**/*.ts` (typescript-eslint).
+3. **`npm run test:coverage`** — Vitest com limiares **100%** em statements, branches, functions e lines, sobre os ficheiros instrumentados (ver `vitest.config.ts`: inclui `src/**/*.ts` e exclui entrada da app, `src/app/**`, e pontes Tauri **`tauriHubFetch.ts`** / **`tauriStorage.ts`** — IPC/plugins difíceis de simular; cobertura real desses caminhos via smoke/E2E no desktop).
 
 Atalho: **`npm run verify`** = typecheck + lint + test:coverage.
 
 ### Cobertura 100%
 
-- A meta de **100%** aplica-se ao **conjunto coberto pelo relatório** (não a linhas excluídas no `vitest.config.js`).
+- A meta de **100%** aplica-se ao **conjunto coberto pelo relatório** (não a linhas excluídas no `vitest.config.ts`).
 - Ao adicionar ficheiros novos em pastas instrumentadas, incluir testes até o relatório voltar a 100%.
-- Se integração Tauri no front precisar de testes unitários fortes, remover a exclusão em `vitest.config.js` e cobrir com mocks adequados.
+- Se integração Tauri no front precisar de testes unitários fortes, remover a exclusão em `vitest.config.ts` e cobrir com mocks adequados.
 
 ## `desktop/` (Rust + Tauri)
 

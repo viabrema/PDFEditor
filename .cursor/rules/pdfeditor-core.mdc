@@ -10,13 +10,13 @@ Editor estilo Notion para PDF no Windows (desktop) com UI web: blocos arrastáve
 
 ## Stack
 - Shell: Tauri 2 (Windows desktop), projeto em **`desktop/`** (ver regra `pdfeditor-desktop.mdc`)
-- UI: Vite + Vanilla JS (ESM) em `app/`
+- UI: Vite + **TypeScript** (ESM) em `app/` — código em `app/src/` em `.ts` (sem módulos de produção em `.js`).
 - Estilos: Tailwind CSS
 - Testes: Vitest (`app/`); Rust: `cargo test` / `cargo llvm-cov` no workspace `desktop/`
 - Editor: ProseMirror (ou núcleo Tiptap em modo vanilla, se aplicável)
 - Drag/resize: Interact.js (ou equivalente)
 - Persistência: JSON local via plugins Tauri (`fs`); cache IndexedDB opcional
-- PDF: HTML via `export.js`; ficheiro `.pdf` binário no desktop via **Chromium headless** empacotado + comando Rust
+- PDF: HTML via `export.ts`; ficheiro `.pdf` binário no desktop via **Chromium headless** empacotado + comando Rust
 
 ## Estrutura (`app/src/`)
 - `app/` — bootstrap, estado global, fluxos IA/tradução, render
@@ -27,7 +27,7 @@ Editor estilo Notion para PDF no Windows (desktop) com UI web: blocos arrastáve
 - `utils/` — helpers partilhados
 
 ## Regras de código
-- Apenas Vanilla JS (sem React/Vue/Svelte).
+- **TypeScript** em `app/src/` (sem React/Vue/Svelte); `tsc --noEmit` no conjunto do `tsconfig.json`.
 - Módulos pequenos com exports explícitos.
 - Evitar estado global; passar dependências quando possível.
 - Funções curtas e focadas.

@@ -1,6 +1,6 @@
 ---
 description: Modelo de documento, blocos e interação (grelha, páginas, idiomas)
-globs: app/src/blocks/**/*.js,app/src/editor/**/*.js,app/src/app/document*.js,app/src/app/state.js
+globs: app/src/blocks/**/*.ts,app/src/editor/**/*.ts,app/src/app/document*.ts,app/src/app/state.ts
 alwaysApply: false
 ---
 

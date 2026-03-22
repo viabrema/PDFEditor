@@ -1,6 +1,6 @@
 ---
 description: Exportação PDF — HTML no app, PDF binário no desktop
-globs: app/src/services/export.js,app/src/services/export*.test.js,app/src/app/events/fileEvents.js,app/src/services/tauriStorage.js,desktop/crates/pdf-export/**/*.rs,desktop/src-tauri/**/*.rs
+globs: app/src/services/export.ts,app/src/services/export*.test.ts,app/src/app/events/fileEvents.ts,app/src/services/tauriStorage.ts,desktop/crates/pdf-export/**/*.rs,desktop/src-tauri/**/*.rs
 alwaysApply: false
 ---
 
