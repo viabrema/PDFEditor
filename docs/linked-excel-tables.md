@@ -10,13 +10,14 @@ Funcionalidade para analistas que trabalham com **folhas Excel grandes** (vária
 ## Fluxo do utilizador
 
 1. **Inserir:** botão da folha (ícone de folha) → escolher ficheiro Excel → modal **Folha** + **Intervalo** (ex.: `A1:G5`) → confirmar → bloco `linkedTable` na página.
-2. **Atualizar links:** botão de atualizar (ícone refresh). Se um bloco `linkedTable` estiver **selecionado**, só esse bloco é atualizado; caso contrário, **todos** os blocos `linkedTable` do documento (todas as páginas e idiomas no array em memória).
-3. **Reconfigurar:** **duplo clique** no bloco → repete o fluxo ficheiro + modal; o conteúdo e `metadata.excelLink` são substituídos após confirmar.
+2. **Atualizar links:** botão de atualizar (ícone refresh). Se um bloco `linkedTable` estiver **selecionado**, só esse bloco é atualizado; caso contrário, **todos** os blocos `linkedTable` do documento (todas as páginas e idiomas no array em memória). O **tamanho e a posição** da caixa do bloco mantêm-se (só `content` e mesclagens são atualizados).
+3. **Reconfigurar:** **duplo clique** no bloco → repete o fluxo ficheiro + modal; o conteúdo e `metadata.excelLink` são substituídos após confirmar; **tamanho e posição** do bloco mantêm-se.
 
 ## Formato no JSON do documento
 
 - `type`: `"linkedTable"`.
-- `content.rows`: matriz de strings (último snapshot para UI e exportação PDF).
+- `content.rows`: matriz de strings (último snapshot para UI e exportação PDF). Células escravas de mesclagem no Excel ficam com string vazia; o valor aparece só na célula “mestre”.
+- `content.merges` (opcional): lista `{ r, c, rowspan, colspan }` em coordenadas **0-based** relativas ao canto superior esquerdo do intervalo. Só entram mesclagens **totalmente contidas** no intervalo escolhido (se o intervalo cortar uma mesclagem maior, essa mesclagem não é reproduzida).
 - `metadata.excelLink`:
   - `filePath`: caminho absoluto no Windows/macOS/Linux (no browser, `__browser__:nome.xlsx`).
   - `sheetName`: nome da folha (não só índice).

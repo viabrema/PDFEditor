@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+import ExcelJS, { ValueType } from "exceljs";
 
 /** .xlsx / .xlsm são ficheiros ZIP; assinatura local file header começa por "PK". */
 export function validateXlsxZipBytes(bytes: Uint8Array): void {
@@ -157,26 +157,96 @@ export function getSheetNames(workbook: ExcelJS.Workbook): string[] {
   return workbook.worksheets.map((ws) => ws.name);
 }
 
-export async function extractRangeToRows(
-  data: ArrayBuffer | Uint8Array,
-  sheetName: string,
-  range: string,
-): Promise<string[][]> {
-  const workbook = await loadExcelWorkbook(data);
-  const sheet = workbook.getWorksheet(sheetName);
-  if (!sheet) {
-    throw new Error(`Folha nao encontrada: "${sheetName}".`);
+/** Mesclagens relativas ao canto superior esquerdo do intervalo extraido (0-based). */
+export type ExcelTableMerge = {
+  r: number;
+  c: number;
+  rowspan: number;
+  colspan: number;
+};
+
+export type ExcelTableContent = {
+  rows: string[][];
+  merges: ExcelTableMerge[];
+};
+
+type SheetMergeRect = { top: number; left: number; bottom: number; right: number };
+
+function getWorksheetMergeRects(sheet: ExcelJS.Worksheet): SheetMergeRect[] {
+  const raw = sheet as unknown as { _merges?: Record<string, ExcelJS.Range> };
+  return Object.values(raw._merges || {})
+    .filter(Boolean)
+    .map((dim) => ({
+      top: dim.top,
+      left: dim.left,
+      bottom: dim.bottom,
+      right: dim.right,
+    }));
+}
+
+function mergeFullyInsideBounds(m: SheetMergeRect, b: A1Bounds): boolean {
+  return m.top >= b.top && m.bottom <= b.bottom && m.left >= b.left && m.right <= b.right;
+}
+
+function mergesForExtractedRange(sheet: ExcelJS.Worksheet, b: A1Bounds): ExcelTableMerge[] {
+  const out: ExcelTableMerge[] = [];
+  for (const m of getWorksheetMergeRects(sheet)) {
+    if (!mergeFullyInsideBounds(m, b)) {
+      continue;
+    }
+    out.push({
+      r: m.top - b.top,
+      c: m.left - b.left,
+      rowspan: m.bottom - m.top + 1,
+      colspan: m.right - m.left + 1,
+    });
   }
+  return out;
+}
+
+function cellPlainForTableGrid(cell: ExcelJS.Cell): string {
+  if (cell.type === ValueType.Merge) {
+    return "";
+  }
+  return excelCellToPlainString(cell.master);
+}
+
+/** Extrai linhas + mesclagens a partir de uma folha ja carregada (util para testes e reutilizacao). */
+export function extractTableContentFromWorksheet(sheet: ExcelJS.Worksheet, range: string): ExcelTableContent {
   const b = parseA1Range(range);
   const rows: string[][] = [];
   for (let r = b.top; r <= b.bottom; r++) {
     const row: string[] = [];
     for (let c = b.left; c <= b.right; c++) {
-      const cell = sheet.getCell(r, c);
-      row.push(excelCellToPlainString(cell));
+      row.push(cellPlainForTableGrid(sheet.getCell(r, c)));
     }
     rows.push(row);
   }
+  return {
+    rows,
+    merges: mergesForExtractedRange(sheet, b),
+  };
+}
+
+export async function extractRangeToTableContent(
+  data: ArrayBuffer | Uint8Array,
+  sheetName: string,
+  range: string,
+): Promise<ExcelTableContent> {
+  const workbook = await loadExcelWorkbook(data);
+  const sheet = workbook.getWorksheet(sheetName);
+  if (!sheet) {
+    throw new Error(`Folha nao encontrada: "${sheetName}".`);
+  }
+  return extractTableContentFromWorksheet(sheet, range);
+}
+
+export async function extractRangeToRows(
+  data: ArrayBuffer | Uint8Array,
+  sheetName: string,
+  range: string,
+): Promise<string[][]> {
+  const { rows } = await extractRangeToTableContent(data, sheetName, range);
   return rows;
 }
 

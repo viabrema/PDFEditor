@@ -1,9 +1,9 @@
-import { computeTableSize, createLinkedTableBlockFromRows } from "../../blocks/tableBlock";
-import { getLinkedTablesToRefresh, loadRowsForExcelLink } from "../../services/excelLink";
+import { createLinkedTableBlockFromRows } from "../../blocks/tableBlock";
+import { getLinkedTablesToRefresh, loadExcelLinkTableContent } from "../../services/excelLink";
 import { getTauriBackend } from "../../services/tauriStorage";
 import { getBlockInsertionRegionContext } from "../blockInsertionContext";
 import { runExcelLinkSetup, type ExcelLinkModalRefs } from "../linkedTableWizard";
-import { getNextBlockPosition, getPageSize } from "../textUtils";
+import { getNextBlockPosition } from "../textUtils";
 
 function getExcelModalRefs(refs: any): ExcelLinkModalRefs {
   return {
@@ -47,7 +47,7 @@ export function bindLinkedTableEvents({
     if (!result) {
       return;
     }
-    block.content = { ...(block.content || {}), rows: result.rows };
+    block.content = { ...(block.content || {}), rows: result.rows, merges: result.merges };
     block.metadata = {
       ...(block.metadata || {}),
       excelLink: {
@@ -56,8 +56,6 @@ export function bindLinkedTableEvents({
         range: result.range,
       },
     };
-    const pageSize = getPageSize(documentData.page.format, documentData.page.orientation);
-    block.size = computeTableSize(result.rows, pageSize);
     renderer.render();
   };
 
@@ -90,6 +88,7 @@ export function bindLinkedTableEvents({
         position,
         pageSize: ctx.regionSize,
         metadata: ctx.isBody ? {} : { region: ctx.region },
+        merges: result.merges,
       },
     );
     blocks.push(block);
@@ -110,10 +109,8 @@ export function bindLinkedTableEvents({
         continue;
       }
       try {
-        const rows = await loadRowsForExcelLink(link);
-        block.content = { ...(block.content || {}), rows };
-        const pageSize = getPageSize(documentData.page.format, documentData.page.orientation);
-        block.size = computeTableSize(rows, pageSize);
+        const { rows, merges } = await loadExcelLinkTableContent(link);
+        block.content = { ...(block.content || {}), rows, merges };
       } catch (e) {
         const msg =
           e instanceof Error

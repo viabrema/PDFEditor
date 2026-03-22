@@ -217,7 +217,7 @@ export async function translateBlockFromSource({
     );
     return createBlock({
       ...base,
-      content: { rows: translatedRows },
+      content: { ...(block.content || {}), rows: translatedRows },
     });
   }
 

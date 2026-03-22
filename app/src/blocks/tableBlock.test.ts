@@ -30,9 +30,9 @@ describe("table block", () => {
     expect(parseTabularText("   \n ")).toEqual([]);
   });
 
-  it("normalizes row lengths", () => {
-    const rows = normalizeRows([["a"], ["1", "2"]]);
-    expect(rows).toEqual([["a", ""], ["1", "2"]]);
+  it("normalizes row lengths and null input", () => {
+    expect(normalizeRows([["a"], ["1", "2"]])).toEqual([["a", ""], ["1", "2"]]);
+    expect(normalizeRows(null)).toEqual([]);
   });
 
   it("creates empty table", () => {
@@ -76,6 +76,38 @@ describe("table block", () => {
     expect(block.metadata.excelLink.sheetName).toBe("Folha1");
     expect(block.metadata.excelLink.range).toBe("A1:B1");
     expect(block.content.rows).toEqual([["a", "b"]]);
+    expect(block.content.merges).toEqual([]);
+  });
+
+  it("linked table stores merges in content", () => {
+    const block = createLinkedTableBlockFromRows(
+      [
+        ["a", "", "b"],
+        ["c", "d", "e"],
+      ],
+      { filePath: "p.xlsx", sheetName: "S", range: "A1:C2" },
+      { merges: [{ r: 0, c: 0, rowspan: 2, colspan: 1 }] },
+    );
+    expect(block.content.merges).toEqual([{ r: 0, c: 0, rowspan: 2, colspan: 1 }]);
+  });
+
+  it("linked table ignores invalid merges; updateTableBody colspan-only", () => {
+    const linked = createLinkedTableBlockFromRows([["a"]], { filePath: "p", sheetName: "s", range: "A1:A1" }, { merges: 42 as any });
+    expect(linked.content.merges).toEqual([]);
+    const w = new Window();
+    const prevW = globalThis.window;
+    const prevD = globalThis.document;
+    globalThis.window = w;
+    globalThis.document = w.document;
+    const table = w.document.createElement("table");
+    updateTableBody(table, [["a", ""]], [{ r: 0, c: 0, rowspan: 1, colspan: 2 }]);
+    expect(table.querySelector("td")?.colSpan).toBe(2);
+    updateTableBody(table, [["a"], [""]], [{ r: 0, c: 0, rowspan: 2, colspan: 1 }]);
+    const td = table.querySelector("td");
+    expect(td?.rowSpan).toBe(2);
+    expect(td?.colSpan).toBe(1);
+    globalThis.window = prevW;
+    globalThis.document = prevD;
   });
 
   it("creates read-only table element for linked block", () => {
@@ -237,10 +269,6 @@ describe("table block", () => {
     table.dispatchEvent(new window.Event("input"));
 
     expect(block.content.rows).toEqual([["a"]]);
-  });
-
-  it("normalizes invalid rows to empty", () => {
-    expect(normalizeRows(null)).toEqual([]);
   });
 
   it("creates table block fallback when rows are missing", () => {

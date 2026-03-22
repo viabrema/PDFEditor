@@ -83,11 +83,17 @@ describe("block renderer", () => {
     expect(element.querySelector("table")).toBeTruthy();
   });
 
-  it("creates linked table block shell", () => {
+  it("creates linked table block shell with merge attributes", () => {
     const block = {
       id: "block-linked",
       type: "linkedTable",
-      content: { rows: [["L"]] },
+      content: {
+        rows: [
+          ["L", ""],
+          ["", ""],
+        ],
+        merges: [{ r: 0, c: 0, rowspan: 2, colspan: 2 }],
+      },
       position: { x: 0, y: 0 },
       size: { width: 200, height: 100 },
     };
@@ -98,6 +104,8 @@ describe("block renderer", () => {
     expect(element.className).toContain("linked-table-shell");
     const td = element.querySelector("td");
     expect(td?.getAttribute("contenteditable")).toBe("false");
+    expect(td?.rowSpan).toBe(2);
+    expect(td?.colSpan).toBe(2);
   });
 
   it("applies text block styles", () => {

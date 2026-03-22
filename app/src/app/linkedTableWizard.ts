@@ -1,9 +1,10 @@
 import { toBrowserExcelPath } from "../services/excelLink";
 import {
-  extractRangeToRows,
+  extractRangeToTableContent,
   getSheetNamesFromExcelBytes,
   normalizeRangeString,
   parseA1Range,
+  type ExcelTableMerge,
 } from "../services/excelRange";
 import { pickExcelOpenPath } from "../services/tauriStorage";
 
@@ -127,7 +128,13 @@ export async function runExcelLinkSetup(options: {
   modalRefs: ExcelLinkModalRefs;
   fileInput: HTMLInputElement;
   defaults?: { sheetName?: string; range?: string };
-}): Promise<{ filePath: string; sheetName: string; range: string; rows: string[][] } | null> {
+}): Promise<{
+  filePath: string;
+  sheetName: string;
+  range: string;
+  rows: string[][];
+  merges: ExcelTableMerge[];
+} | null> {
   const picked = await pickExcelBytes({ tauri: options.tauri, fileInput: options.fileInput });
   if (!picked) {
     return null;
@@ -152,12 +159,13 @@ export async function runExcelLinkSetup(options: {
     return null;
   }
   try {
-    const rows = await extractRangeToRows(picked.bytes, cfg.sheetName, cfg.range);
+    const { rows, merges } = await extractRangeToTableContent(picked.bytes, cfg.sheetName, cfg.range);
     return {
       filePath: picked.filePath,
       sheetName: cfg.sheetName,
       range: cfg.range,
       rows,
+      merges,
     };
   } catch (e) {
     window.alert(e instanceof Error ? e.message : "Erro ao ler o intervalo no Excel.");

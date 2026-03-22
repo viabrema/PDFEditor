@@ -1,5 +1,5 @@
 import { BLOCK_TYPES } from "../blocks/blockModel";
-import { extractRangeToRows } from "./excelRange";
+import { extractRangeToTableContent, type ExcelTableContent } from "./excelRange";
 import { readBinaryFileFromPath } from "./tauriStorage";
 
 export const BROWSER_EXCEL_PATH_PREFIX = "__browser__:";
@@ -26,10 +26,10 @@ export function getLinkedTablesToRefresh(blocks: any[], selectedBlockId: string 
   return blocks.filter((b) => b.type === BLOCK_TYPES.LINKED_TABLE);
 }
 
-export async function loadRowsForExcelLink(
+export async function loadExcelLinkTableContent(
   link: ExcelLinkMeta,
   readFileFn: (path: string) => Promise<Uint8Array> = readBinaryFileFromPath,
-): Promise<string[][]> {
+): Promise<ExcelTableContent> {
   if (!link?.filePath || !link?.sheetName || !link?.range) {
     throw new Error("Link Excel incompleto (ficheiro, folha ou intervalo em falta).");
   }
@@ -39,5 +39,14 @@ export async function loadRowsForExcelLink(
     );
   }
   const bytes = await readFileFn(link.filePath);
-  return extractRangeToRows(bytes, link.sheetName, link.range);
+  return extractRangeToTableContent(bytes, link.sheetName, link.range);
+}
+
+/** Retorna apenas linhas; para mesclagens use `loadExcelLinkTableContent`. */
+export async function loadRowsForExcelLink(
+  link: ExcelLinkMeta,
+  readFileFn?: (path: string) => Promise<Uint8Array>,
+): Promise<string[][]> {
+  const { rows } = await loadExcelLinkTableContent(link, readFileFn);
+  return rows;
 }

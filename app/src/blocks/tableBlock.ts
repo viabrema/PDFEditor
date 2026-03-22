@@ -1,4 +1,5 @@
 import { createBlock, BLOCK_TYPES } from "./blockModel";
+import type { ExcelTableMerge } from "../services/excelRange";
 
 const DEFAULT_CELL_WIDTH = 120;
 const DEFAULT_CELL_HEIGHT = 36;
@@ -97,16 +98,18 @@ export function createLinkedTableBlockFromRows(
     position = { x: 32, y: 32 },
     pageSize,
     metadata,
+    merges = [],
   } = options;
 
   const normalized = normalizeRows(rows);
   const fallback = createEmptyTable();
   const safeRows = normalized.length > 0 ? normalized : fallback;
   const size = computeTableSize(safeRows, pageSize);
+  const safeMerges = Array.isArray(merges) ? merges : [];
 
   return createBlock({
     type: BLOCK_TYPES.LINKED_TABLE,
-    content: { rows: safeRows },
+    content: { rows: safeRows, merges: safeMerges },
     position,
     size,
     pageId,
@@ -129,16 +132,49 @@ export function readTableRows(table: HTMLTableElement) {
   );
 }
 
-export function updateTableBody(table, rows) {
+function buildMergedCellSkipSet(merges: ExcelTableMerge[]): Set<string> {
+  const skip = new Set<string>();
+  for (const m of merges) {
+    for (let dr = 0; dr < m.rowspan; dr++) {
+      for (let dc = 0; dc < m.colspan; dc++) {
+        if (dr === 0 && dc === 0) {
+          continue;
+        }
+        skip.add(`${m.r + dr},${m.c + dc}`);
+      }
+    }
+  }
+  return skip;
+}
+
+export function updateTableBody(table, rows, merges: ExcelTableMerge[] | null | undefined = null) {
   const tbody = table.querySelector("tbody") || table.appendChild(document.createElement("tbody"));
   tbody.innerHTML = "";
+  const list = Array.isArray(merges) ? merges : [];
+  const skip = buildMergedCellSkipSet(list);
+  const mergeAt = new Map<string, ExcelTableMerge>();
+  for (const m of list) {
+    mergeAt.set(`${m.r},${m.c}`, m);
+  }
 
-  rows.forEach((row) => {
+  rows.forEach((row, r) => {
     const tr = document.createElement("tr");
-    row.forEach((value) => {
+    row.forEach((value, c) => {
+      if (skip.has(`${r},${c}`)) {
+        return;
+      }
       const td = document.createElement("td");
       td.contentEditable = "true";
       td.textContent = value;
+      const m = mergeAt.get(`${r},${c}`);
+      if (m && (m.rowspan > 1 || m.colspan > 1)) {
+        if (m.rowspan > 1) {
+          td.rowSpan = m.rowspan;
+        }
+        if (m.colspan > 1) {
+          td.colSpan = m.colspan;
+        }
+      }
       tr.append(td);
     });
     tbody.append(tr);
@@ -184,7 +220,8 @@ export function createTableElement(block, options: { readOnly?: boolean } = {}) 
     table.classList.add("is-linked-table");
   }
   const rows = normalizeRows(block.content?.rows || createEmptyTable());
-  updateTableBody(table, rows);
+  const merges = Array.isArray(block.content?.merges) ? block.content.merges : [];
+  updateTableBody(table, rows, merges);
   setTableEditable(table, !readOnly);
   if (!readOnly) {
     attachTableHandlers({ table, block });

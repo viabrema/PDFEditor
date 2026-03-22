@@ -6,6 +6,8 @@ import {
   columnNumberToLetters,
   excelCellToPlainString,
   extractRangeToRows,
+  extractRangeToTableContent,
+  extractTableContentFromWorksheet,
   getSheetNames,
   getSheetNamesFromExcelBytes,
   loadExcelWorkbook,
@@ -244,5 +246,41 @@ describe("excelRange", () => {
       expect(rows[0][5]).toBe("Hi");
     });
 
+    it("extractRangeToTableContent includes merges fully inside range", async () => {
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet("M");
+      ws.getCell(1, 1).value = "merged";
+      ws.mergeCells(1, 1, 2, 2);
+      ws.getCell(1, 3).value = "x";
+      ws.getCell(2, 3).value = "y";
+      const buf = new Uint8Array(await wb.xlsx.writeBuffer());
+      const { rows, merges } = await extractRangeToTableContent(buf, "M", "A1:C2");
+      expect(merges).toEqual([{ r: 0, c: 0, rowspan: 2, colspan: 2 }]);
+      expect(rows[0][0]).toBe("merged");
+      expect(rows[0][1]).toBe("");
+      expect(rows[1][0]).toBe("");
+      expect(rows[1][1]).toBe("");
+      expect(rows[0][2]).toBe("x");
+      expect(rows[1][2]).toBe("y");
+    });
+
+    it("extractTableContentFromWorksheet handles sheet without _merges", async () => {
+      const bytes = await buildSampleBuffer();
+      const wb = await loadExcelWorkbook(bytes);
+      const sheet = wb.getWorksheet("Folha1")!;
+      delete (sheet as unknown as { _merges?: unknown })._merges;
+      const { merges } = extractTableContentFromWorksheet(sheet, "A1:B2");
+      expect(merges).toEqual([]);
+    });
+
+    it("extractRangeToTableContent omits merge not fully inside range", async () => {
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet("P");
+      ws.getCell(1, 1).value = "a";
+      ws.mergeCells(1, 1, 1, 3);
+      const buf = new Uint8Array(await wb.xlsx.writeBuffer());
+      const { merges } = await extractRangeToTableContent(buf, "P", "B1:C1");
+      expect(merges).toEqual([]);
+    });
   });
 });

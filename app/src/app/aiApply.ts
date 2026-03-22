@@ -175,7 +175,7 @@ export function applyAiResultToBlock({ block, resultText }) {
   if (block.type === "table" || block.type === "linkedTable") {
     const parsed = parseAiJson(resultText);
     if (Array.isArray(parsed)) {
-      block.content = { rows: parsed };
+      block.content = { ...(block.content || {}), rows: parsed };
       return true;
     }
     return false;
@@ -248,7 +248,7 @@ export function applyAiResultToPage({ resultText, blocks, state }) {
         if (target.type === "table" || target.type === "linkedTable") {
           const normalized = normalizeTableRows(action.tableRows);
           if (normalized) {
-            target.content = { rows: normalized };
+            target.content = { ...(target.content || {}), rows: normalized };
           }
           return;
         }

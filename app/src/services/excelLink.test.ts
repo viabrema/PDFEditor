@@ -4,6 +4,7 @@ import { BLOCK_TYPES } from "../blocks/blockModel";
 import {
   getLinkedTablesToRefresh,
   isBrowserOnlyExcelPath,
+  loadExcelLinkTableContent,
   loadRowsForExcelLink,
   toBrowserExcelPath,
 } from "./excelLink";
@@ -39,6 +40,22 @@ describe("excelLink", () => {
 
   it("getLinkedTablesToRefresh: empty when no linked blocks", () => {
     expect(getLinkedTablesToRefresh([{ id: "x", type: BLOCK_TYPES.TEXT }], null)).toEqual([]);
+  });
+
+  it("loadExcelLinkTableContent returns merges from workbook", async () => {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("S");
+    ws.getCell(1, 1).value = "a";
+    ws.mergeCells(1, 1, 1, 2);
+    ws.getCell(1, 3).value = "b";
+    const buf = new Uint8Array(await wb.xlsx.writeBuffer());
+    const readFileFn = async () => buf;
+    const { rows, merges } = await loadExcelLinkTableContent(
+      { filePath: "C:\\fake\\f.xlsx", sheetName: "S", range: "A1:C1" },
+      readFileFn,
+    );
+    expect(rows[0]).toEqual(["a", "", "b"]);
+    expect(merges).toEqual([{ r: 0, c: 0, rowspan: 1, colspan: 2 }]);
   });
 
   it("loadRowsForExcelLink uses readFileFn", async () => {

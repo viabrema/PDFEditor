@@ -1,3 +1,5 @@
+import { renderTableBlockMarkup } from "./exportTableMarkup";
+
 const PAGE_SIZES = {
   A4: { width: 794, height: 1123 },
   Letter: { width: 816, height: 1056 },
@@ -196,15 +198,7 @@ function renderImageBlock(block) {
 }
 
 function renderTableBlock(block) {
-  const rows = Array.isArray(block.content?.rows) ? block.content.rows : [];
-  const body = rows
-    .map((row) => {
-      const cells = row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("");
-      return `<tr>${cells}</tr>`;
-    })
-    .join("");
-
-  return `<div class="block table-block" data-block-id="${block.id}"><div class="table-block-export-clip"><table><tbody>${body}</tbody></table></div></div>`;
+  return renderTableBlockMarkup(block, escapeHtml);
 }
 
 function renderBlock(block, offset = { x: 0, y: 0 }) {
