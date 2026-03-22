@@ -241,13 +241,27 @@ function isTextualBlockType(type: string) {
   );
 }
 
-export function applyAiResultToPage({ resultText, blocks, state, documentData }) {
+export function applyAiResultToPage({
+  resultText,
+  blocks,
+  state,
+  documentData,
+  onBeforeMutations,
+}: {
+  resultText: string;
+  blocks: any[];
+  state: any;
+  documentData: any;
+  onBeforeMutations?: () => void;
+}) {
   const parsed = parseAiJson(resultText);
   try {
     const actions = Array.isArray(parsed?.actions) ? parsed.actions : [];
     if (actions.length === 0) {
       return false;
     }
+
+    onBeforeMutations?.();
 
     const byId = new Map(blocks.map((block) => [block.id, block]));
     actions.forEach((action) => {

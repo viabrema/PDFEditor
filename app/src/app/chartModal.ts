@@ -73,8 +73,9 @@ export function bindChartModal(options: {
   documentData: any;
   state: any;
   renderer: { renderCanvas: () => void };
+  documentHistory?: { checkpointBeforeChange: () => void };
 }) {
-  const { refs, blocks, renderer } = options;
+  const { refs, blocks, renderer, documentHistory } = options;
   const modal = refs.chartConfigModal as HTMLElement | null;
   if (!modal) {
     return;
@@ -476,6 +477,7 @@ export function bindChartModal(options: {
     if (el.error) {
       el.error.textContent = "";
     }
+    documentHistory?.checkpointBeforeChange();
     editingBlock.content = {
       ...next,
       configured: true,

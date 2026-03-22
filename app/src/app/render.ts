@@ -4,6 +4,7 @@ import { renderCanvasView } from "./renderCanvas";
 import { syncStatusBar } from "./canvasZoom";
 import { setLastAction } from "./activityLog";
 import { destroyAllBlockCharts } from "../blocks/chartRuntime";
+import type { DocumentHistory } from "./documentHistory";
 
 export function createRenderer({
   documentData,
@@ -14,6 +15,7 @@ export function createRenderer({
   aiFlow,
   linkedTableBridge,
   linkedChartBridge,
+  documentHistory,
 }: {
   documentData: any;
   state: any;
@@ -23,6 +25,7 @@ export function createRenderer({
   aiFlow: any;
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
   linkedChartBridge?: { reconfigure?: (block: any) => Promise<void> };
+  documentHistory?: DocumentHistory;
 }) {
   function clearViews() {
     state.views.forEach((view) => view.destroy());
@@ -96,6 +99,7 @@ export function createRenderer({
       requestRender: render,
       linkedTableBridge,
       linkedChartBridge,
+      documentHistory,
     });
     syncStatusBar(refs, state);
   }
@@ -129,6 +133,7 @@ export function createRenderer({
     button.disabled = state.translation.loading;
     button.addEventListener("click", () => {
       if (!state.translation.loading) {
+        documentHistory?.checkpointBeforeChange();
         translateFromDefaultLanguage(state.activeLanguageId);
       }
     });
@@ -261,6 +266,7 @@ export function createRenderer({
     renderLanguageActions();
     renderAiPanel();
     focusEditingBlock();
+    documentHistory?.syncUi(refs);
     createIcons({ icons });
   }
 

@@ -6,12 +6,13 @@ import { getBlockInsertionRegionContext } from "../blockInsertionContext";
 import { getNextBlockPosition } from "../textUtils";
 import { setLastAction } from "../activityLog";
 
-export function bindBlockEvents({ documentData, state, blocks, refs, renderer }) {
+export function bindBlockEvents({ documentData, state, blocks, refs, renderer, documentHistory }) {
   function getRegionContext() {
     return getBlockInsertionRegionContext({ documentData, state, blocks });
   }
 
   refs.addTextButton.addEventListener("click", () => {
+    documentHistory?.checkpointBeforeChange();
     const { region, isBody, blocksForRegion, regionSize } = getRegionContext();
     const blockSize = { width: 520, height: 220 };
     const position = getNextBlockPosition({
@@ -35,6 +36,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
   });
 
   refs.addHeadingButton.addEventListener("click", () => {
+    documentHistory?.checkpointBeforeChange();
     const { region, isBody, blocksForRegion, regionSize } = getRegionContext();
     const blockSize = { width: 520, height: 120 };
     const position = getNextBlockPosition({
@@ -58,6 +60,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
   });
 
   refs.addChartButton?.addEventListener("click", () => {
+    documentHistory?.checkpointBeforeChange();
     const { region, isBody, blocksForRegion, regionSize } = getRegionContext();
     const position = getNextBlockPosition({
       blocksForPage: blocksForRegion,
@@ -77,6 +80,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
   });
 
   refs.addTableButton.addEventListener("click", () => {
+    documentHistory?.checkpointBeforeChange();
     const { region, isBody, blocksForRegion, regionSize } = getRegionContext();
     const position = getNextBlockPosition({
       blocksForPage: blocksForRegion,
@@ -110,6 +114,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
       return;
     }
 
+    documentHistory?.checkpointBeforeChange();
     const { region, isBody, blocksForRegion, regionSize } = getRegionContext();
     const position = getNextBlockPosition({
       blocksForPage: blocksForRegion,
@@ -143,6 +148,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
 
       event.preventDefault();
 
+      documentHistory?.checkpointBeforeChange();
       const { region, isBody, blocksForRegion, regionSize } = getRegionContext();
       const position = getNextBlockPosition({
         blocksForPage: blocksForRegion,
@@ -171,6 +177,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
 
     event.preventDefault();
 
+    documentHistory?.checkpointBeforeChange();
     const { region, isBody, blocksForRegion, regionSize } = getRegionContext();
     const position = getNextBlockPosition({
       blocksForPage: blocksForRegion,

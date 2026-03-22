@@ -6,6 +6,7 @@ export function setupRegionResize({
   documentData,
   pageSize,
   onFinish,
+  onResizeStart,
   interactFactory = interact,
 }) {
   const isHeader = region === "header";
@@ -16,6 +17,9 @@ export function setupRegionResize({
     edges: { top: !isHeader, bottom: isHeader, left: false, right: false },
     allowFrom: ".region-resize-handle",
     listeners: {
+      start() {
+        onResizeStart?.();
+      },
       move(event) {
         const nextHeight = Math.max(
           minHeight,

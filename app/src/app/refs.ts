@@ -50,6 +50,8 @@ export function getDomRefs() {
     excelLinkCancel: document.querySelector("#excel-link-cancel"),
     addImageButton: document.querySelector("#add-image-block"),
     imageInput: document.querySelector("#image-input"),
+    undoButton: document.querySelector("#undo-doc"),
+    redoButton: document.querySelector("#redo-doc"),
     openDocButton: document.querySelector("#open-doc"),
     saveDocButton: document.querySelector("#save-doc"),
     exportPdfButton: document.querySelector("#export-pdf"),

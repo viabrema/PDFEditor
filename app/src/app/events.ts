@@ -1,6 +1,7 @@
 import { bindAiEvents } from "./events/aiEvents";
 import { bindBlockEvents } from "./events/blockEvents";
 import { bindFileEvents } from "./events/fileEvents";
+import { bindHistoryEvents } from "./events/historyEvents";
 import { bindLinkedTableEvents } from "./events/linkedTableEvents";
 import { bindMiscEvents } from "./events/miscEvents";
 import { bindPageEvents } from "./events/pageEvents";
@@ -19,11 +20,13 @@ export function bindEvents({
   aiService,
   linkedTableBridge,
   linkedChartBridge,
+  documentHistory,
 }) {
-  bindUiEvents({ documentData, state, refs, renderer });
-  bindPageEvents({ documentData, state, blocks, refs, renderer });
-  bindBlockEvents({ documentData, state, blocks, refs, renderer });
-  bindChartModal({ refs, blocks, documentData, state, renderer });
+  bindHistoryEvents({ refs, state, documentHistory, renderer });
+  bindUiEvents({ documentData, state, refs, renderer, documentHistory });
+  bindPageEvents({ documentData, state, blocks, refs, renderer, documentHistory });
+  bindBlockEvents({ documentData, state, blocks, refs, renderer, documentHistory });
+  bindChartModal({ refs, blocks, documentData, state, renderer, documentHistory });
   bindLinkedTableEvents({
     documentData,
     state,
@@ -32,9 +35,17 @@ export function bindEvents({
     renderer,
     linkedTableBridge,
     linkedChartBridge,
+    documentHistory,
   });
-  bindFileEvents({ documentData, state, blocks, refs, stateFile, renderer });
+  bindFileEvents({
+    documentData,
+    state,
+    blocks,
+    refs,
+    stateFile,
+    renderer,
+    documentHistory,
+  });
   bindAiEvents({ state, refs, renderer, aiFlow, aiService });
-  bindMiscEvents({ state, blocks, renderer });
-
+  bindMiscEvents({ state, blocks, renderer, documentHistory });
 }

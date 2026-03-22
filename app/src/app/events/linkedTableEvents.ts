@@ -27,6 +27,7 @@ export function bindLinkedTableEvents({
   renderer,
   linkedTableBridge,
   linkedChartBridge,
+  documentHistory,
 }: any) {
   if (
     !refs?.addLinkedTableButton ||
@@ -52,6 +53,7 @@ export function bindLinkedTableEvents({
       if (!result) {
         return;
       }
+      documentHistory?.checkpointBeforeChange();
       block.content = {
         ...(block.content || {}),
         dataSourceRows: result.rows,
@@ -84,6 +86,7 @@ export function bindLinkedTableEvents({
     if (!result) {
       return;
     }
+    documentHistory?.checkpointBeforeChange();
     block.content = { ...(block.content || {}), rows: result.rows, merges: result.merges };
     if (result.cellStyles) {
       block.content.cellStyles = result.cellStyles;
@@ -117,6 +120,7 @@ export function bindLinkedTableEvents({
     if (!result) {
       return;
     }
+    documentHistory?.checkpointBeforeChange();
     const ctx = getBlockInsertionRegionContext({ documentData, state, blocks });
     const position = getNextBlockPosition({
       blocksForPage: ctx.blocksForRegion,
@@ -156,6 +160,7 @@ export function bindLinkedTableEvents({
     if (!result) {
       return;
     }
+    documentHistory?.checkpointBeforeChange();
     const ctx = getBlockInsertionRegionContext({ documentData, state, blocks });
     const position = getNextBlockPosition({
       blocksForPage: ctx.blocksForRegion,
@@ -185,6 +190,7 @@ export function bindLinkedTableEvents({
       window.alert("Nao ha tabelas nem graficos linkados ao Excel para atualizar.");
       return;
     }
+    documentHistory?.checkpointBeforeChange();
     const errors: string[] = [];
     for (const block of targets) {
       const link = block.metadata?.excelLink;

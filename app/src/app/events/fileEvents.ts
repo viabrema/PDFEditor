@@ -8,106 +8,17 @@ import {
 import { renderDocumentToHtml } from "../../services/export";
 import { effectiveBlockLanguageId } from "../translationFlow";
 import { setLastAction } from "../activityLog";
+import { buildDocumentSnapshot, applyDocumentSnapshot } from "../documentSnapshot";
 
-export function bindFileEvents({ documentData, state, blocks, refs, stateFile, renderer }) {
-
-  function buildDocumentSnapshot() {
-    const pages = documentData.pages.map((page) => {
-      const pageBlocks = blocks.filter(
-        (block) =>
-          block.pageId === page.id &&
-          block.metadata?.region !== "header" &&
-          block.metadata?.region !== "footer"
-      );
-      return {
-        ...page,
-        blocks: pageBlocks,
-      };
-    });
-
-    const regions = {
-      header: {
-        ...(documentData.regions?.header || {}),
-        blocks: blocks.filter((block) => block.metadata?.region === "header"),
-      },
-      footer: {
-        ...(documentData.regions?.footer || {}),
-        blocks: blocks.filter((block) => block.metadata?.region === "footer"),
-      },
-    };
-
-    return {
-      ...documentData,
-      pages,
-      regions,
-      metadata: {
-        ...documentData.metadata,
-        updatedAt: new Date().toISOString(),
-      },
-    };
-  }
-
-  function applyDocumentSnapshot(snapshot) {
-    if (!snapshot) {
-      return;
-    }
-
-    Object.assign(documentData, snapshot);
-    const defaultRegions = {
-      header: { enabled: true, height: 96 },
-      footer: { enabled: true, height: 96 },
-    };
-    documentData.regions = {
-      header: {
-        ...defaultRegions.header,
-        ...(snapshot.regions?.header || {}),
-      },
-      footer: {
-        ...defaultRegions.footer,
-        ...(snapshot.regions?.footer || {}),
-      },
-    };
-    blocks.length = 0;
-
-    snapshot.pages?.forEach((page) => {
-      if (!Array.isArray(page.blocks)) {
-        return;
-      }
-      page.blocks.forEach((block) => {
-        blocks.push({
-          ...block,
-          pageId: block.pageId || page.id,
-          languageId: block.languageId || snapshot.activeLanguageId,
-        });
-      });
-    });
-
-    snapshot.regions?.header?.blocks?.forEach((block) => {
-      blocks.push({
-        ...block,
-        pageId: null,
-        languageId: block.languageId || snapshot.activeLanguageId,
-        metadata: { ...(block.metadata || {}), region: "header" },
-      });
-    });
-
-    snapshot.regions?.footer?.blocks?.forEach((block) => {
-      blocks.push({
-        ...block,
-        pageId: null,
-        languageId: block.languageId || snapshot.activeLanguageId,
-        metadata: { ...(block.metadata || {}), region: "footer" },
-      });
-    });
-
-    state.activePageId = documentData.pages[0]?.id || null;
-    state.activeLanguageId =
-      documentData.activeLanguageId || documentData.languages[0]?.id || null;
-    state.activeRegion = "body";
-    state.selectedBlockIds = [];
-    state.editingBlockId = null;
-    renderer.render();
-  }
+export function bindFileEvents({
+  documentData,
+  state,
+  blocks,
+  refs,
+  stateFile,
+  renderer,
+  documentHistory,
+}: any) {
 
   refs.openDocButton.addEventListener("click", async () => {
     const tauri = await getTauriBackend();
@@ -124,7 +35,15 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
     stateFile.path = result.path;
     refs.docStatus.textContent = result.path.split(/[\\/]/).pop();
     setLastAction(state, "Documento aberto.");
-    applyDocumentSnapshot(result.document);
+    documentHistory?.clear();
+    applyDocumentSnapshot({
+      documentData,
+      blocks,
+      state,
+      snapshot: result.document,
+      renderer,
+      preserveNavigation: false,
+    });
   });
 
   refs.saveDocButton.addEventListener("click", async () => {
@@ -134,7 +53,7 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
       return;
     }
 
-    const snapshot = buildDocumentSnapshot();
+    const snapshot = buildDocumentSnapshot(documentData, blocks);
     const path = await saveDocumentToFile(snapshot, {
       tauri,
       filePath: stateFile.path,
@@ -150,7 +69,7 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
   });
 
   refs.exportPdfButton.addEventListener("click", async () => {
-    const snapshot = buildDocumentSnapshot();
+    const snapshot = buildDocumentSnapshot(documentData, blocks);
     const activeLanguageId = state.activeLanguageId;
     if (activeLanguageId) {
       snapshot.pages = snapshot.pages.map((page) => ({

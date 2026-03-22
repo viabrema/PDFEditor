@@ -8,6 +8,7 @@ import { bindEvents } from "./app/events";
 import { createAiFlow } from "./app/aiFlow";
 import { createRenderer } from "./app/render";
 import { getDomRefs } from "./app/refs";
+import { createDocumentHistory } from "./app/documentHistory";
 import { createInitialBlocks, createInitialDocument, createInitialState, stateFile } from "./app/state";
 import { translateFromDefaultLanguage } from "./app/translationFlow";
 
@@ -32,7 +33,13 @@ const aiService = createAiService({
   fetcher: hubFetch || undefined,
 });
 
-const aiFlow = createAiFlow({ blocks, state, documentData });
+const documentHistory = createDocumentHistory({
+  documentData,
+  blocks,
+  state,
+});
+
+const aiFlow = createAiFlow({ blocks, state, documentData, documentHistory });
 
 const linkedTableBridge: { reconfigure?: (block: any) => Promise<void> } = {};
 const linkedChartBridge: { reconfigure?: (block: any) => Promise<void> } = {};
@@ -40,6 +47,7 @@ const linkedChartBridge: { reconfigure?: (block: any) => Promise<void> } = {};
 const renderContext: { renderer: ReturnType<typeof createRenderer> | null } = {
   renderer: null,
 };
+
 const translateHandler = (targetLanguageId) =>
   translateFromDefaultLanguage({
     translationService,
@@ -59,6 +67,7 @@ renderContext.renderer = createRenderer({
   aiFlow,
   linkedTableBridge,
   linkedChartBridge,
+  documentHistory,
 });
 
 bindEvents({
@@ -73,6 +82,7 @@ bindEvents({
   aiService,
   linkedTableBridge,
   linkedChartBridge,
+  documentHistory,
 });
 
 renderContext.renderer.render();

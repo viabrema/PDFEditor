@@ -2,7 +2,7 @@ import { normalizeGridSize } from "../../utils/grid";
 import { clampZoomPercent, syncStatusBar } from "../canvasZoom";
 import { setLastAction } from "../activityLog";
 
-export function bindUiEvents({ documentData, state, refs, renderer }) {
+export function bindUiEvents({ documentData, state, refs, renderer, documentHistory }) {
   function openSettings() {
     refs.pageSettingsModal.classList.remove("hidden");
     refs.pageSettingsModal.classList.add("flex");
@@ -30,12 +30,14 @@ export function bindUiEvents({ documentData, state, refs, renderer }) {
   });
 
   refs.formatSelect.addEventListener("change", (event) => {
+    documentHistory?.checkpointBeforeChange();
     documentData.page.format = event.target.value;
     setLastAction(state, `Formato: ${event.target.value}`);
     renderer.render();
   });
 
   refs.orientationSelect.addEventListener("change", (event) => {
+    documentHistory?.checkpointBeforeChange();
     documentData.page.orientation = event.target.value;
     setLastAction(
       state,
@@ -45,18 +47,21 @@ export function bindUiEvents({ documentData, state, refs, renderer }) {
   });
 
   refs.gridSizeInput.addEventListener("change", (event) => {
+    documentHistory?.checkpointBeforeChange();
     documentData.grid.size = normalizeGridSize(event.target.value, 8);
     setLastAction(state, `Grid: ${documentData.grid.size}px`);
     renderer.renderCanvas();
   });
 
   refs.snapToggle.addEventListener("change", (event) => {
+    documentHistory?.checkpointBeforeChange();
     documentData.grid.snap = event.target.checked;
     setLastAction(state, `Snap: ${event.target.checked ? "ligado" : "desligado"}`);
     renderer.renderCanvas();
   });
 
   refs.headerToggle.addEventListener("change", (event) => {
+    documentHistory?.checkpointBeforeChange();
     if (!documentData.regions) {
       documentData.regions = { header: { enabled: true }, footer: { enabled: true } };
     }
@@ -74,6 +79,7 @@ export function bindUiEvents({ documentData, state, refs, renderer }) {
   });
 
   refs.footerToggle.addEventListener("change", (event) => {
+    documentHistory?.checkpointBeforeChange();
     if (!documentData.regions) {
       documentData.regions = { header: { enabled: true }, footer: { enabled: true } };
     }

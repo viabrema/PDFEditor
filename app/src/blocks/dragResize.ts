@@ -90,6 +90,7 @@ export function setupDragResize({
   gridSize,
   snapEnabled,
   onUpdate,
+  onInteractionStart,
   interactFactory = interact,
 }: any) {
   if (!element || !block) {
@@ -126,6 +127,9 @@ export function setupDragResize({
     .draggable({
       deltaSource: "client",
       listeners: {
+        start() {
+          onInteractionStart?.();
+        },
         move(event) {
           const nextPosition = applyDrag({
             position: block.position,
@@ -163,6 +167,9 @@ export function setupDragResize({
       edges: { left: true, right: true, top: true, bottom: true },
       allowFrom: ".resize-handle",
       listeners: {
+        start() {
+          onInteractionStart?.();
+        },
         move(event) {
           const er = event.rect;
           let rect;

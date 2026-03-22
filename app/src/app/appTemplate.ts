@@ -9,6 +9,26 @@ export function renderAppTemplate(root) {
           </div>
           <div class="flex items-center gap-2">
             <button
+              id="undo-doc"
+              type="button"
+              class="icon-button rounded-md border border-slate-300 bg-white text-slate-700 disabled:opacity-40"
+              title="Desfazer (Ctrl+Z)"
+              aria-label="Desfazer"
+              disabled
+            >
+              <i data-lucide="undo-2"></i>
+            </button>
+            <button
+              id="redo-doc"
+              type="button"
+              class="icon-button rounded-md border border-slate-300 bg-white text-slate-700 disabled:opacity-40"
+              title="Refazer (Ctrl+Y)"
+              aria-label="Refazer"
+              disabled
+            >
+              <i data-lucide="redo-2"></i>
+            </button>
+            <button
               id="open-doc"
               type="button"
               class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"

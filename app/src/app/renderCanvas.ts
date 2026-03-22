@@ -2,6 +2,7 @@ import { getPageSize } from "./textUtils";
 import { effectiveBlockLanguageId } from "./translationFlow";
 import { renderBlocksInContainer } from "./renderBlocks";
 import { setupRegionResize } from "./regionResize";
+import type { DocumentHistory } from "./documentHistory";
 
 export function renderCanvasView({
   documentData,
@@ -11,6 +12,7 @@ export function renderCanvasView({
   requestRender,
   linkedTableBridge,
   linkedChartBridge,
+  documentHistory,
 }: {
   documentData: any;
   state: any;
@@ -19,6 +21,7 @@ export function renderCanvasView({
   requestRender: () => void;
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
   linkedChartBridge?: { reconfigure?: (block: any) => Promise<void> };
+  documentHistory?: DocumentHistory;
 }) {
   const activeBlocks = blocks.filter(
     (block) => effectiveBlockLanguageId(block, documentData) === state.activeLanguageId,
@@ -98,6 +101,7 @@ export function renderCanvasView({
       requestRender,
       linkedTableBridge,
       linkedChartBridge,
+      documentHistory,
     });
 
     if (documentData.regions?.header?.enabled) {
@@ -140,6 +144,7 @@ export function renderCanvasView({
         requestRender,
         linkedTableBridge,
         linkedChartBridge,
+        documentHistory,
       });
 
       pageSurface.append(headerRegion);
@@ -150,6 +155,7 @@ export function renderCanvasView({
           documentData,
           pageSize: { width, height },
           onFinish: requestRender,
+          onResizeStart: () => documentHistory?.checkpointBeforeChange(),
         })
       );
     }
@@ -194,6 +200,7 @@ export function renderCanvasView({
         requestRender,
         linkedTableBridge,
         linkedChartBridge,
+        documentHistory,
       });
 
       pageSurface.append(footerRegion);
@@ -204,6 +211,7 @@ export function renderCanvasView({
           documentData,
           pageSize: { width, height },
           onFinish: requestRender,
+          onResizeStart: () => documentHistory?.checkpointBeforeChange(),
         })
       );
     }

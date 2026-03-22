@@ -16,7 +16,7 @@ import {
 
 export const AI_DOCUMENT_CHAT_KEY = "ai:document";
 
-export function createAiFlow({ blocks, state, documentData }) {
+export function createAiFlow({ blocks, state, documentData, documentHistory }: any) {
   function getSelectedBlocksInOrder() {
     return state.selectedBlockIds
       .map((id) => blocks.find((block) => block.id === id))
@@ -111,7 +111,13 @@ export function createAiFlow({ blocks, state, documentData }) {
     getFocusedBlocksForPrompt,
     buildDocumentPrompt,
     applyAiResultToPage: ({ resultText }) =>
-      applyAiResultToPage({ resultText, blocks, state, documentData }),
+      applyAiResultToPage({
+        resultText,
+        blocks,
+        state,
+        documentData,
+        onBeforeMutations: () => documentHistory?.checkpointBeforeChange(),
+      }),
     getModeForInstruction,
     getChatKey: () => AI_DOCUMENT_CHAT_KEY,
   };

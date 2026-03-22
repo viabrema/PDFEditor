@@ -10,6 +10,7 @@ import { resizeBlockChart } from "../blocks/chartRuntime";
 import { scheduleChartJsMountIfConfigured } from "./mountBlockChart";
 import { openChartConfiguration } from "./chartModal";
 import { attachFloatingBlockToolbar } from "./renderFloatingToolbar";
+import type { DocumentHistory } from "./documentHistory";
 
 export function renderBlocksInContainer({
   container,
@@ -22,6 +23,7 @@ export function renderBlocksInContainer({
   requestRender,
   linkedTableBridge,
   linkedChartBridge,
+  documentHistory,
 }: {
   container: HTMLElement;
   blocks: any[];
@@ -34,6 +36,7 @@ export function renderBlocksInContainer({
   requestRender: () => void;
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
   linkedChartBridge?: { reconfigure?: (block: any) => Promise<void> };
+  documentHistory?: DocumentHistory;
 }) {
   const blocksForChartResolve = allBlocks ?? blocks;
 
@@ -63,6 +66,7 @@ export function renderBlocksInContainer({
         variant: "linkedTable",
         fontScaleValue: clampLinkedTableFontScale(block.metadata?.fontScale),
         onFontScaleChange: (scale: number) => {
+          documentHistory?.checkpointBeforeChange();
           block.metadata = { ...(block.metadata || {}), fontScale: scale };
           const shell = document.querySelector(
             `.block-shell[data-block-id="${block.id}"]`,
@@ -84,6 +88,7 @@ export function renderBlocksInContainer({
         variant: "linkedChart",
         fontScaleValue: clampLinkedTableFontScale(block.metadata?.fontScale),
         onFontScaleChange: (scale: number) => {
+          documentHistory?.checkpointBeforeChange();
           block.metadata = { ...(block.metadata || {}), fontScale: scale };
           requestRender();
         },
@@ -145,6 +150,7 @@ export function renderBlocksInContainer({
           }
           try {
             const src = await fileToDataUrl(file);
+            documentHistory?.checkpointBeforeChange();
             block.content = { ...(block.content || {}), src };
             requestRender();
           } catch (error) {
@@ -172,9 +178,12 @@ export function renderBlocksInContainer({
         editable: () => block.id === state.editingBlockId,
         onChange: (nextState) => {
           block.content = nextState.doc.toJSON();
+          documentHistory?.editorMutationDebounced();
         },
       });
       state.views.push(view);
+      editorHost.addEventListener("focusin", () => documentHistory?.editorFocusCapture());
+      editorHost.addEventListener("focusout", () => documentHistory?.editorBlurFlush());
 
       const applyBlockStyles = () => {
         const style = getBlockTextStyle(block);
@@ -198,21 +207,25 @@ export function renderBlocksInContainer({
           fontSizeValue: block.metadata?.fontSize || getBlockTextStyle(block).fontSize,
           headingLevelValue: Math.min(3, Math.max(1, headingLevel)),
           onAlignChange: (align) => {
+            documentHistory?.checkpointBeforeChange();
             block.metadata = { ...(block.metadata || {}), align };
             applyBlockStyles();
             requestRender();
           },
           onFontFamilyChange: (fontFamily) => {
+            documentHistory?.checkpointBeforeChange();
             block.metadata = { ...(block.metadata || {}), fontFamily };
             applyBlockStyles();
             requestRender();
           },
           onFontSizeChange: (fontSize) => {
+            documentHistory?.checkpointBeforeChange();
             block.metadata = { ...(block.metadata || {}), fontSize };
             applyBlockStyles();
             requestRender();
           },
           onHeadingLevelChange: (level) => {
+            documentHistory?.checkpointBeforeChange();
             block.metadata = { ...(block.metadata || {}), headingLevel: level };
             applyBlockStyles();
             requestRender();
@@ -227,6 +240,7 @@ export function renderBlocksInContainer({
       block,
       gridSize: documentData.grid.size,
       snapEnabled: documentData.grid.snap,
+      onInteractionStart: () => documentHistory?.checkpointBeforeChange(),
       onUpdate:
         block.type === "chart"
           ? () => {

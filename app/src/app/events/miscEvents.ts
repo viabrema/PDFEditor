@@ -1,6 +1,6 @@
 import { setLastAction } from "../activityLog";
 
-export function bindMiscEvents({ state, blocks, renderer }: any) {
+export function bindMiscEvents({ state, blocks, renderer, documentHistory }: any) {
   document.addEventListener("click", (event) => {
     const el = event.target as Element | null;
     if (el?.closest(".block-shell")) {
@@ -33,6 +33,7 @@ export function bindMiscEvents({ state, blocks, renderer }: any) {
       return;
     }
 
+    documentHistory?.checkpointBeforeChange();
     const toRemove = new Set(state.selectedBlockIds);
     for (let i = blocks.length - 1; i >= 0; i -= 1) {
       if (toRemove.has(blocks[i].id)) {
