@@ -3,6 +3,7 @@ import { createImageBlockFromFile } from "../../blocks/imageBlock";
 import { createTableBlockFromRows, createTableBlockFromText, parseTabularText } from "../../blocks/tableBlock";
 import { getBlockInsertionRegionContext } from "../blockInsertionContext";
 import { getNextBlockPosition } from "../textUtils";
+import { setLastAction } from "../activityLog";
 
 export function bindBlockEvents({ documentData, state, blocks, refs, renderer }) {
   function getRegionContext() {
@@ -28,6 +29,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
         metadata: isBody ? {} : { region },
       })
     );
+    setLastAction(state, "Bloco de texto adicionado.");
     renderer.renderCanvas();
   });
 
@@ -50,6 +52,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
         metadata: isBody ? { headingLevel: 1 } : { region, headingLevel: 1 },
       })
     );
+    setLastAction(state, "Bloco de titulo adicionado.");
     renderer.renderCanvas();
   });
 
@@ -73,6 +76,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
     });
 
     blocks.push(tableBlock);
+    setLastAction(state, "Tabela adicionada.");
     renderer.renderCanvas();
   });
 
@@ -102,6 +106,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
     });
 
     blocks.push(block);
+    setLastAction(state, "Imagem adicionada.");
     renderer.renderCanvas();
     refs.imageInput.value = "";
   });
@@ -134,6 +139,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
       });
 
       blocks.push(tableBlock);
+      setLastAction(state, "Tabela criada a partir da area de transferencia.");
       renderer.renderCanvas();
       return;
     }
@@ -161,6 +167,7 @@ export function bindBlockEvents({ documentData, state, blocks, refs, renderer })
     });
 
     blocks.push(block);
+    setLastAction(state, "Imagem colada.");
     renderer.renderCanvas();
   });
 }

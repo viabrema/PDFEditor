@@ -2,6 +2,7 @@ import { getPageSize } from "./textUtils";
 import { effectiveBlockLanguageId } from "./translationFlow";
 import { renderBlocksInContainer } from "./renderBlocks";
 import { setupRegionResize } from "./regionResize";
+import { getPointerScale } from "./canvasZoom";
 
 export function renderCanvasView({
   documentData,
@@ -18,6 +19,8 @@ export function renderCanvasView({
   requestRender: () => void;
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
 }) {
+  const pointerScale = getPointerScale(state);
+
   const activeBlocks = blocks.filter(
     (block) => effectiveBlockLanguageId(block, documentData) === state.activeLanguageId,
   );
@@ -133,6 +136,7 @@ export function renderCanvasView({
         region: "header",
         requestRender,
         linkedTableBridge,
+        coordinateScale: pointerScale,
       });
 
       pageSurface.append(headerRegion);
@@ -142,6 +146,7 @@ export function renderCanvasView({
           region: "header",
           documentData,
           pageSize: { width, height },
+          coordinateScale: pointerScale,
           onFinish: requestRender,
         })
       );
@@ -185,6 +190,7 @@ export function renderCanvasView({
         region: "footer",
         requestRender,
         linkedTableBridge,
+        coordinateScale: pointerScale,
       });
 
       pageSurface.append(footerRegion);
@@ -194,6 +200,7 @@ export function renderCanvasView({
           region: "footer",
           documentData,
           pageSize: { width, height },
+          coordinateScale: pointerScale,
           onFinish: requestRender,
         })
       );

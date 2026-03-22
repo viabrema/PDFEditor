@@ -1,4 +1,5 @@
 import { createBlock } from "../blocks/blockModel";
+import { setLastAction } from "./activityLog";
 import { buildTextDocFromString, extractTextFromNode } from "./textUtils";
 
 export function getDefaultLanguageId(documentData) {
@@ -317,8 +318,10 @@ export async function translateFromDefaultLanguage({
     const remaining = blocks.filter((block) => block.languageId !== targetLanguageId);
     blocks.length = 0;
     blocks.push(...remaining, ...translatedBlocks);
+    setLastAction(state, "Traducao concluida.");
   } catch (error) {
     state.translation.error = "Falha ao traduzir.";
+    setLastAction(state, "Traducao falhou.");
   } finally {
     state.translation.loading = false;
     render();

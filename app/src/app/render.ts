@@ -1,6 +1,8 @@
 import { createIcons, icons } from "lucide";
 import { getDefaultLanguageId } from "./translationFlow";
 import { renderCanvasView } from "./renderCanvas";
+import { syncStatusBar } from "./canvasZoom";
+import { setLastAction } from "./activityLog";
 
 export function createRenderer({
   documentData,
@@ -90,6 +92,7 @@ export function createRenderer({
       requestRender: render,
       linkedTableBridge,
     });
+    syncStatusBar(refs, state);
   }
 
   function renderMeta() {
@@ -171,6 +174,8 @@ export function createRenderer({
         state.activeLanguageId = id;
         state.selectedBlockId = null;
         state.editingBlockId = null;
+        const lang = documentData.languages.find((l: { id: string }) => l.id === id);
+        setLastAction(state, `Idioma: ${lang?.label ?? id}.`);
         render();
       }
     );

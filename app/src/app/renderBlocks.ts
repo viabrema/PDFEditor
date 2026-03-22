@@ -15,6 +15,7 @@ export function renderBlocksInContainer({
   region,
   requestRender,
   linkedTableBridge,
+  coordinateScale = 1,
 }: {
   container: HTMLElement;
   blocks: any[];
@@ -24,6 +25,7 @@ export function renderBlocksInContainer({
   region: string;
   requestRender: () => void;
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
+  coordinateScale?: number;
 }) {
   function mountFloatingToolbar({ element, toolbar }) {
     toolbar.classList.add("block-toolbar-floating");
@@ -232,6 +234,7 @@ export function renderBlocksInContainer({
       block,
       gridSize: documentData.grid.size,
       snapEnabled: documentData.grid.snap,
+      coordinateScale,
     });
     interaction.setEnabled(!isEditing);
     state.interactions.push(interaction);

@@ -299,4 +299,139 @@ describe("dragResize", () => {
   it("throws when missing element", () => {
     expect(() => setupDragResize({})).toThrow(/element/);
   });
+
+  it("divide deltas pelo coordinateScale (zoom)", () => {
+    const window = new Window();
+    const element = window.document.createElement("div");
+    const block = {
+      position: { x: 0, y: 0 },
+      size: { width: 100, height: 100 },
+    };
+
+    const api = {
+      draggable: vi.fn(function (options) {
+        api.dragOptions = options;
+        return api;
+      }),
+      resizable: vi.fn(function (options) {
+        api.resizeOptions = options;
+        return api;
+      }),
+      unset: vi.fn(),
+    };
+    const interactFactory = vi.fn(() => api);
+
+    const interaction = setupDragResize({
+      element,
+      block,
+      gridSize: 10,
+      snapEnabled: false,
+      coordinateScale: 2,
+      interactFactory,
+    });
+
+    api.dragOptions.listeners.move({ dx: 10, dy: 6 });
+    expect(block.position).toEqual({ x: 5, y: 3 });
+
+    api.resizeOptions.listeners.move({
+      rect: { width: 200, height: 100 },
+      deltaRect: { left: 0, top: 0 },
+    });
+    expect(block.size).toEqual({ width: 100, height: 50 });
+
+    interaction.destroy();
+  });
+
+  it("resize incremental com deltaRect alinha com zoom (dois passos)", () => {
+    const window = new Window();
+    const element = window.document.createElement("div");
+    const block = {
+      position: { x: 10, y: 20 },
+      size: { width: 100, height: 80 },
+    };
+
+    const api = {
+      draggable: vi.fn(function (options) {
+        api.dragOptions = options;
+        return api;
+      }),
+      resizable: vi.fn(function (options) {
+        api.resizeOptions = options;
+        return api;
+      }),
+      unset: vi.fn(),
+    };
+    const interactFactory = vi.fn(() => api);
+
+    const interaction = setupDragResize({
+      element,
+      block,
+      gridSize: 10,
+      snapEnabled: false,
+      coordinateScale: 2,
+      interactFactory,
+    });
+
+    api.resizeOptions.listeners.move({
+      deltaRect: { left: 0, top: 0, right: 20, bottom: 0, width: 20, height: 0 },
+    });
+    expect(block.size).toEqual({ width: 110, height: 80 });
+
+    api.resizeOptions.listeners.move({
+      deltaRect: { left: 0, top: 0, right: 0, bottom: 20, width: 0, height: 20 },
+    });
+    expect(block.size).toEqual({ width: 110, height: 90 });
+
+    interaction.destroy();
+  });
+
+  it("resize com rect completo: delta em cliente / escala sem salto inicial", () => {
+    const window = new Window();
+    const element = window.document.createElement("div");
+    const block = {
+      position: { x: 10, y: 20 },
+      size: { width: 100, height: 80 },
+    };
+
+    const api = {
+      draggable: vi.fn(function (options) {
+        api.dragOptions = options;
+        return api;
+      }),
+      resizable: vi.fn(function (options) {
+        api.resizeOptions = options;
+        return api;
+      }),
+      unset: vi.fn(),
+    };
+    const interactFactory = vi.fn(() => api);
+
+    const interaction = setupDragResize({
+      element,
+      block,
+      gridSize: 10,
+      snapEnabled: false,
+      coordinateScale: 2,
+      interactFactory,
+    });
+
+    api.resizeOptions.listeners.move({
+      rect: { left: 100, top: 200, width: 100, height: 80 },
+    });
+    expect(block.position).toEqual({ x: 10, y: 20 });
+    expect(block.size).toEqual({ width: 100, height: 80 });
+
+    api.resizeOptions.listeners.move({
+      rect: { left: 100, top: 200, width: 120, height: 80 },
+    });
+    expect(block.size.width).toBe(110);
+
+    api.resizeOptions.listeners.move({
+      rect: { left: 110, top: 200, width: 110, height: 80 },
+    });
+    expect(block.position.x).toBe(15);
+    expect(block.size.width).toBe(105);
+
+    interaction.destroy();
+  });
 });

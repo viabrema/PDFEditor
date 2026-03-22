@@ -1,6 +1,13 @@
 export function getDomRefs() {
   return {
+    canvasScroll: document.querySelector("#canvas-scroll"),
+    canvasScaleOuter: document.querySelector("#canvas-scale-outer"),
+    canvasScaleRoot: document.querySelector("#canvas-scale-root"),
     canvas: document.querySelector("#canvas"),
+    statusLastAction: document.querySelector("#status-last-action"),
+    zoomOutButton: document.querySelector("#zoom-out"),
+    zoomInButton: document.querySelector("#zoom-in"),
+    zoomInput: document.querySelector("#zoom-input"),
     languageTabsHost: document.querySelector("#language-tabs"),
     languageActionsHost: document.querySelector("#language-actions"),
     translationStatus: document.querySelector("#translation-status"),

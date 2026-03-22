@@ -4,6 +4,7 @@ import { getTauriBackend } from "../../services/tauriStorage";
 import { getBlockInsertionRegionContext } from "../blockInsertionContext";
 import { runExcelLinkSetup, type ExcelLinkModalRefs } from "../linkedTableWizard";
 import { getNextBlockPosition } from "../textUtils";
+import { setLastAction } from "../activityLog";
 
 function getExcelModalRefs(refs: any): ExcelLinkModalRefs {
   return {
@@ -66,6 +67,7 @@ export function bindLinkedTableEvents({
         range: result.range,
       },
     };
+    setLastAction(state, "Tabela linkada reconfigurada.");
     renderer.render();
   };
 
@@ -104,6 +106,7 @@ export function bindLinkedTableEvents({
       },
     );
     blocks.push(block);
+    setLastAction(state, "Tabela linkada ao Excel inserida.");
     renderer.renderCanvas();
   });
 
@@ -142,6 +145,12 @@ export function bindLinkedTableEvents({
       }
     }
     renderer.renderCanvas();
+    setLastAction(
+      state,
+      errors.length > 0
+        ? "Atualizacao Excel concluida com erros."
+        : "Tabelas linkadas atualizadas.",
+    );
     if (errors.length > 0) {
       window.alert(errors.join("\n\n"));
     }

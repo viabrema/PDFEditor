@@ -7,6 +7,7 @@ import {
 } from "../../services/tauriStorage";
 import { renderDocumentToHtml } from "../../services/export";
 import { effectiveBlockLanguageId } from "../translationFlow";
+import { setLastAction } from "../activityLog";
 
 export function bindFileEvents({ documentData, state, blocks, refs, stateFile, renderer }) {
 
@@ -122,6 +123,7 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
 
     stateFile.path = result.path;
     refs.docStatus.textContent = result.path.split(/[\\/]/).pop();
+    setLastAction(state, "Documento aberto.");
     applyDocumentSnapshot(result.document);
   });
 
@@ -144,6 +146,7 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
 
     stateFile.path = path;
     refs.docStatus.textContent = path.split(/[\\/]/).pop();
+    setLastAction(state, "Documento guardado.");
   });
 
   refs.exportPdfButton.addEventListener("click", async () => {
@@ -180,9 +183,11 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
           input: { html, outputPath },
         });
         refs.docStatus.textContent = outputPath.split(/[\\/]/).pop();
+        setLastAction(state, "PDF exportado.");
       } catch (err) {
         console.error(err);
         refs.docStatus.textContent = "Falha ao exportar PDF";
+        setLastAction(state, "Falha ao exportar PDF.");
       }
       return;
     }
@@ -200,5 +205,6 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
       preview.print();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
+    setLastAction(state, "Pre-visualizacao de impressao aberta.");
   });
 }

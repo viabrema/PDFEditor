@@ -38,6 +38,10 @@ export function createInitialState(documentData) {
       response: "",
       chatByBlockId: {},
     },
+    ui: {
+      zoomPercent: 100,
+      lastAction: "Pronto.",
+    },
   };
 }
 

@@ -1,3 +1,5 @@
+import { setLastAction } from "../activityLog";
+
 export function bindMiscEvents({ state, blocks, renderer }: any) {
   document.addEventListener("click", (event) => {
     const el = event.target as Element | null;
@@ -39,6 +41,7 @@ export function bindMiscEvents({ state, blocks, renderer }: any) {
     blocks.splice(index, 1);
     state.selectedBlockId = null;
     state.editingBlockId = null;
+    setLastAction(state, "Bloco removido.");
     renderer.render();
   });
 }

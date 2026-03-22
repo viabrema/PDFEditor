@@ -1,7 +1,7 @@
 export function renderAppTemplate(root) {
   root.innerHTML = `
-    <main class="min-h-screen bg-slate-50 text-slate-900">
-      <header class="border-b border-slate-200 bg-white">
+    <main class="flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 text-slate-900">
+      <header class="shrink-0 border-b border-slate-200 bg-white">
         <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div>
             <h1 class="text-2xl font-semibold">PDF Editor</h1>
@@ -57,7 +57,7 @@ export function renderAppTemplate(root) {
           </div>
         </div>
       </header>
-      <section class="w-full px-6 py-6">
+      <section class="flex min-h-0 w-full flex-1 flex-col px-6 py-6">
         <div class="sticky top-0 z-30 -mx-6 mb-4 border-b border-slate-200 bg-slate-50/95 px-6 py-3 backdrop-blur">
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-3">
@@ -126,13 +126,55 @@ export function renderAppTemplate(root) {
             </div>
           </div>
         </div>
-        <div class="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-6">
+        <div class="flex min-h-0 flex-1 flex-col rounded-2xl border border-dashed border-slate-300 bg-white/70 p-2">
           <div
-            id="canvas"
-            class="flex w-full flex-col gap-6 rounded-xl bg-slate-50 p-6"
-          ></div>
+            id="canvas-scroll"
+            class="min-h-0 flex-1 overflow-auto rounded-xl bg-slate-50"
+          >
+            <div class="flex min-h-full w-full flex-col items-center p-6">
+              <div id="canvas-scale-outer" class="inline-block align-top">
+                <div id="canvas-scale-root" class="inline-block align-top">
+                  <div id="canvas" class="flex w-full flex-col gap-6"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
+      <footer
+        class="flex h-[30px] shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 text-xs text-slate-600"
+        aria-label="Estado e zoom"
+      >
+        <span id="status-last-action" class="min-w-0 flex-1 truncate">Pronto.</span>
+        <div class="flex shrink-0 items-center gap-1">
+          <button
+            id="zoom-out"
+            type="button"
+            class="flex h-6 w-6 items-center justify-center rounded border border-slate-300 bg-white font-semibold text-slate-700"
+            title="Diminuir zoom"
+            aria-label="Diminuir zoom"
+          >
+            −
+          </button>
+          <input
+            id="zoom-input"
+            type="text"
+            inputmode="numeric"
+            class="h-6 w-[3.25rem] rounded border border-slate-300 bg-white px-1 text-center text-xs"
+            value="100%"
+            aria-label="Nivel de zoom em percentagem"
+          />
+          <button
+            id="zoom-in"
+            type="button"
+            class="flex h-6 w-6 items-center justify-center rounded border border-slate-300 bg-white font-semibold text-slate-700"
+            title="Aumentar zoom"
+            aria-label="Aumentar zoom"
+          >
+            +
+          </button>
+        </div>
+      </footer>
       <div
         id="page-settings-modal"
         class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/40 px-4"

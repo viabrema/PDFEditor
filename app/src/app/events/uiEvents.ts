@@ -1,4 +1,6 @@
 import { normalizeGridSize } from "../../utils/grid";
+import { clampZoomPercent, syncStatusBar } from "../canvasZoom";
+import { setLastAction } from "../activityLog";
 
 export function bindUiEvents({ documentData, state, refs, renderer }) {
   function openSettings() {
@@ -29,21 +31,28 @@ export function bindUiEvents({ documentData, state, refs, renderer }) {
 
   refs.formatSelect.addEventListener("change", (event) => {
     documentData.page.format = event.target.value;
+    setLastAction(state, `Formato: ${event.target.value}`);
     renderer.render();
   });
 
   refs.orientationSelect.addEventListener("change", (event) => {
     documentData.page.orientation = event.target.value;
+    setLastAction(
+      state,
+      `Orientacao: ${event.target.value === "landscape" ? "paisagem" : "retrato"}`,
+    );
     renderer.render();
   });
 
   refs.gridSizeInput.addEventListener("change", (event) => {
     documentData.grid.size = normalizeGridSize(event.target.value, 8);
+    setLastAction(state, `Grid: ${documentData.grid.size}px`);
     renderer.renderCanvas();
   });
 
   refs.snapToggle.addEventListener("change", (event) => {
     documentData.grid.snap = event.target.checked;
+    setLastAction(state, `Snap: ${event.target.checked ? "ligado" : "desligado"}`);
     renderer.renderCanvas();
   });
 
@@ -60,6 +69,7 @@ export function bindUiEvents({ documentData, state, refs, renderer }) {
       state.selectedBlockId = null;
       state.editingBlockId = null;
     }
+    setLastAction(state, `Cabecalho: ${event.target.checked ? "visivel" : "oculto"}`);
     renderer.render();
   });
 
@@ -76,6 +86,7 @@ export function bindUiEvents({ documentData, state, refs, renderer }) {
       state.selectedBlockId = null;
       state.editingBlockId = null;
     }
+    setLastAction(state, `Rodape de pagina: ${event.target.checked ? "visivel" : "oculto"}`);
     renderer.render();
   });
 
@@ -87,5 +98,36 @@ export function bindUiEvents({ documentData, state, refs, renderer }) {
   refs.aiPanelClose.addEventListener("click", () => {
     state.ai.open = false;
     renderer.renderAiPanel();
+  });
+
+  function bumpZoom(delta: number) {
+    state.ui = state.ui || { zoomPercent: 100, lastAction: "" };
+    state.ui.zoomPercent = clampZoomPercent((state.ui.zoomPercent ?? 100) + delta);
+    setLastAction(state, `Zoom: ${state.ui.zoomPercent}%`);
+    syncStatusBar(refs, state);
+  }
+
+  function commitZoomFromInput() {
+    const raw = String(refs.zoomInput?.value ?? "").replace(/%/g, "").trim();
+    const n = Number.parseInt(raw, 10);
+    state.ui = state.ui || { zoomPercent: 100, lastAction: "" };
+    state.ui.zoomPercent = clampZoomPercent(Number.isFinite(n) ? n : state.ui.zoomPercent);
+    setLastAction(state, `Zoom: ${state.ui.zoomPercent}%`);
+    syncStatusBar(refs, state);
+  }
+
+  refs.zoomOutButton?.addEventListener("click", () => bumpZoom(-10));
+  refs.zoomInButton?.addEventListener("click", () => bumpZoom(10));
+
+  refs.zoomInput?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      commitZoomFromInput();
+      (refs.zoomInput as HTMLInputElement)?.blur();
+    }
+  });
+
+  refs.zoomInput?.addEventListener("blur", () => {
+    commitZoomFromInput();
   });
 }

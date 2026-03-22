@@ -1,3 +1,5 @@
+import { setLastAction } from "../activityLog";
+
 export function bindAiEvents({ state, refs, renderer, aiFlow, aiService }) {
   refs.aiSend.addEventListener("click", async () => {
     const selectedBlock = aiFlow.getSelectedBlock();
@@ -22,6 +24,7 @@ export function bindAiEvents({ state, refs, renderer, aiFlow, aiService }) {
       if (!result.ok) {
         state.ai.error = "Falha ao gerar resposta.";
         state.ai.loading = false;
+        setLastAction(state, "AI: falha na resposta.");
         renderer.renderAiPanel();
         return;
       }
@@ -32,6 +35,7 @@ export function bindAiEvents({ state, refs, renderer, aiFlow, aiService }) {
       state.ai.response = result.text || "";
 
       if (mode === "analysis") {
+        setLastAction(state, "AI: analise recebida.");
         renderer.renderAiPanel();
         return;
       }
@@ -44,10 +48,14 @@ export function bindAiEvents({ state, refs, renderer, aiFlow, aiService }) {
         : aiFlow.applyAiResultToPage({ resultText: result.text || "" });
       if (!applied) {
         state.ai.error = "Resposta invalida para o tipo de bloco.";
+        setLastAction(state, "AI: resposta nao aplicada.");
+      } else {
+        setLastAction(state, "AI: alteracoes aplicadas.");
       }
       renderer.render();
     } catch (error) {
       state.ai.error = "Falha ao gerar resposta.";
+      setLastAction(state, "AI: erro.");
     } finally {
       state.ai.loading = false;
       renderer.renderAiPanel();
