@@ -32,9 +32,12 @@ export function createBlockElement(block, { selected = false, editing = false } 
     img.src = block.content?.src || "";
     element.append(img);
   } else if (block.type === "table") {
+    const host = document.createElement("div");
+    host.className = "table-block-host h-full w-full";
     const table = createTableElement(block);
     setTableEditable(table, editing);
-    element.append(table);
+    host.append(table);
+    element.append(host);
   } else {
     editorHost = document.createElement("div");
     editorHost.className = "prose-editor h-full w-full p-3";

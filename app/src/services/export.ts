@@ -204,7 +204,7 @@ function renderTableBlock(block) {
     })
     .join("");
 
-  return `<div class="block table-block" data-block-id="${block.id}"><table><tbody>${body}</tbody></table></div>`;
+  return `<div class="block table-block" data-block-id="${block.id}"><div class="table-block-export-clip"><table><tbody>${body}</tbody></table></div></div>`;
 }
 
 function renderBlock(block, offset = { x: 0, y: 0 }) {
@@ -281,8 +281,18 @@ export function renderDocumentToHtml(document?: any) {
     .text-block ol { margin: 0; padding-left: 20px; list-style-position: outside; }
     .text-block hr { border: none; border-top: 1px solid #0f172a; margin: 10px 0; }
     .image-block img { width: 100%; height: 100%; object-fit: cover; }
-    .table-block table { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }
-    .table-block td { border: 1px solid #e2e8f0; padding: 6px 8px; font-size: 14px; }
+    .table-block { overflow: hidden; }
+    .table-block-export-clip { width: 100%; height: 100%; overflow: hidden; }
+    .table-block table { width: 100%; height: auto; border-collapse: collapse; table-layout: fixed; }
+    .table-block td {
+      border: 1px solid #e2e8f0;
+      padding: 6px 8px;
+      font-size: 14px;
+      vertical-align: top;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
     @media print {
       body { margin: 0; }
       .document { padding: 0; gap: 0; }
