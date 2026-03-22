@@ -1,0 +1,22 @@
+---
+description: Cliente de tradução/IA, payload da API e comportamento das abas EN/ES
+globs: app/src/services/translation.js,app/src/services/ai.js,app/src/app/translationFlow.js,app/src/app/config.js
+alwaysApply: false
+---
+
+# Tradução e API
+
+## Cliente
+- Centralizar o cliente em `app/src/services/translation.js` (e serviços relacionados em `services/`).
+- Suportar tradução de seleção, bloco ou documento completo, conforme a UI expuser.
+- UI deve expor estados de **carregamento** e **erro** de forma clara.
+
+## Configuração (sem secrets nas regras)
+- Endpoint e chave de API: usar `app/src/app/config.js`, variáveis de ambiente Vite (`VITE_*`) ou configuração local **não commitada** — **não** colocar chaves em ficheiros versionados nem em regras `.mdc`.
+- Payload típico (ajustar ao backend real): `{ "prompt": "...", "provider": "gemini", "model": "gemini-2.5-flash-lite" }`.
+
+## Idiomas e abas
+- Idiomas iniciais: português (padrão), inglês e espanhol.
+- Nas abas EN/ES: botão **Atualizar** para repor/reaplicar tradução.
+- O fluxo clona o estado em PT, traduz e recria conteúdo, posição e tamanho dos blocos.
+- Após traduzir, o utilizador pode editar; novo clique em **Atualizar** volta ao estado traduzido atual (re-sincroniza a partir do fluxo definido no código).

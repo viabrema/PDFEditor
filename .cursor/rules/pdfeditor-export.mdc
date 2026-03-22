@@ -1,0 +1,11 @@
+---
+description: Exportação PDF — HTML, estilos de impressão e output determinístico
+globs: app/src/services/export.js,app/src/services/export*.test.js
+alwaysApply: false
+---
+
+# Exportação PDF
+
+- Renderizar o documento para HTML com estilos adequados a **print**.
+- Garantir que imagens e fontes estão disponíveis ou incorporadas no momento da exportação.
+- Preferir output **determinístico** (layout estável entre exportações).

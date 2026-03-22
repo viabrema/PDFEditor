@@ -1,0 +1,21 @@
+---
+description: Testes Vitest, cobertura, lint, commits e todo.md
+alwaysApply: true
+---
+
+# Testes e fluxo de trabalho
+
+## Testes
+- Usar Vitest para testes unitários.
+- Cobrir: serialização de schema, comandos de blocos, matemática de snap à grelha, serviço de tradução (com API mockada).
+- Testes rápidos e isolados: **sem chamadas de rede reais**; mock do cliente HTTP.
+
+## Antes de considerar uma feature concluída
+- Atualizar `todo.md` e ir marcando itens conforme a implementação avança.
+- Correr testes **com coverage** e garantir que passam antes de marcar como concluído.
+- Manter **cobertura de testes em 100%** (meta do projeto).
+- Correr **lint** e corrigir avisos antes de marcar como concluído.
+
+## Commits
+- Alterações pequenas e incrementais.
+- Ao mudar comportamento do editor, atualizar testes correspondentes.

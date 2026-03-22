@@ -1,0 +1,22 @@
+---
+description: Modelo de documento, blocos e interação (grelha, páginas, idiomas)
+globs: app/src/blocks/**/*.js,app/src/editor/**/*.js,app/src/app/document*.js,app/src/app/state.js
+alwaysApply: false
+---
+
+# Documento e blocos
+
+## Modelo de documento
+- Documento em JSON com schema estável e versionamento para migrações futuras.
+- Cada bloco: `id`, `type`, `content`, `position`, `size`, `metadata` (e associação a página/idioma conforme o modelo atual).
+
+## Interação com blocos
+- Blocos suportam arrastar e redimensionar.
+- Snap à grelha opcional e configurável por documento.
+- Tamanho da grelha configurável (ex.: default 8 ou 10).
+- Com snap desligado, movimento e redimensionamento livres.
+
+## Requisitos de layout
+- Formato de página configurável (A4, Letter, etc.) e orientação retrato/paisagem.
+- Várias páginas no mesmo documento; blocos organizados por página.
+- Abas de idiomas por documento (PT padrão, EN, ES conforme produto).

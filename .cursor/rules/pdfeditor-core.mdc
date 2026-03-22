@@ -1,0 +1,43 @@
+---
+description: PDFEditor — objetivo, stack, arquitetura, regras de código e UX
+alwaysApply: true
+---
+
+# PDFEditor — núcleo do projeto
+
+## Objetivo
+Editor estilo Notion para PDF no Windows (desktop) com UI web: blocos arrastáveis e redimensionáveis, texto rico, imagens/gráficos, tradução via API própria, exportação PDF. Projeto leve, sem UI pesada em frameworks.
+
+## Stack
+- Shell: Tauri (Windows desktop)
+- UI: Vite + Vanilla JS (ESM) em `app/`
+- Estilos: Tailwind CSS
+- Testes: Vitest
+- Editor: ProseMirror (ou núcleo Tiptap em modo vanilla, se aplicável)
+- Drag/resize: Interact.js (ou equivalente)
+- Persistência: JSON local via FS Tauri; cache IndexedDB opcional
+- PDF: HTML + pipeline print/PDF
+
+## Estrutura (`app/src/`)
+- `app/` — bootstrap, estado global, fluxos IA/tradução, render
+- `editor/` — schema ProseMirror, comandos, estado do editor
+- `blocks/` — modelos, renderers, drag/resize
+- `services/` — clientes API (tradução, IA), storage, export
+- `ui/` — toolbar, painéis
+- `utils/` — helpers partilhados
+
+## Regras de código
+- Apenas Vanilla JS (sem React/Vue/Svelte).
+- Módulos pequenos com exports explícitos.
+- Evitar estado global; passar dependências quando possível.
+- Funções curtas e focadas.
+- ASCII no código-fonte salvo quando Unicode não for requisito funcional.
+- Ao adicionar formatação nova (alinhamento, título/subtítulo, listas, etc.), atualizar prompts/fluxo de IA para reconhecer e aplicar.
+
+## UX
+- Toolbar: negrito, itálico, listas, inserir imagem, traduzir.
+- Handles visíveis para arrastar e redimensionar.
+- Toggle de snap à grelha óbvio e fácil de alterar.
+
+## Idioma
+- Respostas e explicações ao utilizador em **português**.
