@@ -188,6 +188,12 @@ export function applyAiResultToBlock({ block, resultText }) {
   return true;
 }
 
+/** Aceita `tableRows` ou `content` (modelos frequentes da IA). */
+export function tableRowsFromAiAction(action: { tableRows?: unknown; content?: unknown }) {
+  const raw = action.tableRows !== undefined && action.tableRows !== null ? action.tableRows : action.content;
+  return normalizeTableRows(raw);
+}
+
 export function normalizeTableRows(tableRows) {
   if (!Array.isArray(tableRows)) {
     return null;
@@ -206,7 +212,31 @@ export function normalizeTableRows(tableRows) {
   return null;
 }
 
-export function applyAiResultToPage({ resultText, blocks, state }) {
+function resolvePageIdForAi(actionPageId: unknown, documentData: any, state: any) {
+  const pages = documentData?.pages;
+  if (Array.isArray(pages) && typeof actionPageId === "string" && pages.some((p) => p.id === actionPageId)) {
+    return actionPageId;
+  }
+  return state.activePageId;
+}
+
+function regionMetadataForCreate(region: unknown) {
+  if (region === "header" || region === "footer") {
+    return { region };
+  }
+  return {};
+}
+
+function isTextualBlockType(type: string) {
+  return (
+    type === "text" ||
+    type === "heading" ||
+    type === "title" ||
+    type === "subtitle"
+  );
+}
+
+export function applyAiResultToPage({ resultText, blocks, state, documentData }) {
   const parsed = parseAiJson(resultText);
   try {
     const actions = Array.isArray(parsed?.actions) ? parsed.actions : [];
@@ -223,6 +253,7 @@ export function applyAiResultToPage({ resultText, blocks, state }) {
         const index = blocks.findIndex((block) => block.id === action.id);
         if (index >= 0) {
           blocks.splice(index, 1);
+          byId.delete(action.id);
         }
         return;
       }
@@ -245,38 +276,102 @@ export function applyAiResultToPage({ resultText, blocks, state }) {
             height: nextSize.height,
           };
         }
+        const nextPageId = resolvePageIdForAi(action.pageId, documentData, state);
+        if (typeof action.pageId === "string" && nextPageId === action.pageId) {
+          target.pageId = nextPageId;
+        }
+
         if (target.type === "table" || target.type === "linkedTable") {
-          const normalized = normalizeTableRows(action.tableRows);
+          const normalized = tableRowsFromAiAction(action);
           if (normalized) {
             target.content = { ...(target.content || {}), rows: normalized };
           }
           return;
         }
-        if (target.type !== "table" && typeof action.contentText === "string") {
-          target.content = looksLikeMarkdownList(action.contentText)
-            ? buildTextDocFromMarkdown(action.contentText)
-            : buildTextDocFromString(action.contentText);
+
+        if (target.type === "image") {
+          if (typeof action.imageSrc === "string") {
+            target.content = { ...(target.content || {}), src: action.imageSrc };
+          }
+          return;
+        }
+
+        if (isTextualBlockType(target.type)) {
+          if (typeof action.contentText === "string") {
+            target.content = looksLikeMarkdownList(action.contentText)
+              ? buildTextDocFromMarkdown(action.contentText)
+              : buildTextDocFromString(action.contentText);
+          }
+          if (action.textStyle && typeof action.textStyle === "object") {
+            const ts = action.textStyle as Record<string, unknown>;
+            if (ts.fontFamily) {
+              target.metadata = { ...(target.metadata || {}), fontFamily: String(ts.fontFamily) };
+            }
+            if (ts.fontSize) {
+              target.metadata = { ...(target.metadata || {}), fontSize: String(ts.fontSize) };
+            }
+            const inlineStyle = {
+              bold: ts.bold,
+              italic: ts.italic,
+            };
+            target.content = applyTextStyleToDoc(target.content, inlineStyle);
+          }
+          if (action.blockFormat && typeof action.blockFormat === "object") {
+            const bf = action.blockFormat as Record<string, unknown>;
+            if (typeof bf.textAlign === "string") {
+              target.metadata = { ...(target.metadata || {}), align: bf.textAlign };
+            }
+            const format = { ...bf };
+            if (format.textAlign) {
+              delete format.textAlign;
+            }
+            target.content = applyBlockFormatToDoc(target.content, format);
+          }
         }
         return;
       }
       if (action.type === "create" && action.blockType) {
+        const pageId = resolvePageIdForAi(action.pageId, documentData, state);
+        const meta = regionMetadataForCreate(action.region);
+
         if (action.blockType === "table") {
-          const normalized = normalizeTableRows(action.tableRows);
+          const normalized = tableRowsFromAiAction(action);
           if (!normalized) {
             return;
           }
-          blocks.push(
-            createBlock({
-              type: "table",
-              content: { rows: normalized },
-              position: normalizePosition(action.position) || { x: 32, y: 32 },
-              size: normalizeSize(action.size) || { width: 320, height: 200 },
-              pageId: state.activePageId,
-              languageId: state.activeLanguageId,
-            })
-          );
+          const newBlock = createBlock({
+            type: "table",
+            content: { rows: normalized },
+            position: normalizePosition(action.position) || { x: 32, y: 32 },
+            size: normalizeSize(action.size) || { width: 320, height: 200 },
+            pageId,
+            languageId: state.activeLanguageId,
+            metadata: meta,
+          });
+          blocks.push(newBlock);
+          byId.set(newBlock.id, newBlock);
           return;
         }
+
+        if (action.blockType === "image") {
+          const src = typeof action.imageSrc === "string" ? action.imageSrc : "";
+          if (!src.trim()) {
+            return;
+          }
+          const newBlock = createBlock({
+            type: "image",
+            content: { src },
+            position: normalizePosition(action.position) || { x: 32, y: 32 },
+            size: normalizeSize(action.size) || { width: 240, height: 180 },
+            pageId,
+            languageId: state.activeLanguageId,
+            metadata: meta,
+          });
+          blocks.push(newBlock);
+          byId.set(newBlock.id, newBlock);
+          return;
+        }
+
         if (
           (action.blockType === "text" ||
             action.blockType === "heading" ||
@@ -286,22 +381,22 @@ export function applyAiResultToPage({ resultText, blocks, state }) {
         ) {
           const headingLevel = Number(action.headingLevel) || 1;
           const type = action.blockType === "heading" ? "heading" : action.blockType;
-          blocks.push(
-            createBlock({
-              type,
-              content: looksLikeMarkdownList(action.contentText)
-                ? buildTextDocFromMarkdown(action.contentText)
-                : buildTextDocFromString(action.contentText),
-              position: normalizePosition(action.position) || { x: 32, y: 32 },
-              size: normalizeSize(action.size) || { width: 320, height: 160 },
-              pageId: state.activePageId,
-              languageId: state.activeLanguageId,
-              metadata:
-                type === "heading"
-                  ? { headingLevel: Math.min(3, Math.max(1, headingLevel)) }
-                  : {},
-            })
-          );
+          const newBlock = createBlock({
+            type,
+            content: looksLikeMarkdownList(action.contentText)
+              ? buildTextDocFromMarkdown(action.contentText)
+              : buildTextDocFromString(action.contentText),
+            position: normalizePosition(action.position) || { x: 32, y: 32 },
+            size: normalizeSize(action.size) || { width: 320, height: 160 },
+            pageId,
+            languageId: state.activeLanguageId,
+            metadata:
+              type === "heading"
+                ? { ...meta, headingLevel: Math.min(3, Math.max(1, headingLevel)) }
+                : { ...meta },
+          });
+          blocks.push(newBlock);
+          byId.set(newBlock.id, newBlock);
         }
       }
     });

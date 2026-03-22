@@ -332,9 +332,61 @@ body {
 .ai-panel-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   padding: 16px;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ai-selection-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 0;
+}
+
+.ai-selection-chips.is-empty {
+  display: none;
+}
+
+.ai-selection-chip {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f1f5f9;
+  padding: 2px 4px 2px 10px;
+  font-size: 11px;
+  color: #334155;
+}
+
+.ai-selection-chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-selection-chip-remove {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  line-height: 1;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.ai-selection-chip-remove:hover {
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 .ai-panel-input {
@@ -347,7 +399,7 @@ body {
 }
 
 .ai-panel-send {
-  align-self: flex-start;
+  align-self: flex-end;
   border-radius: 8px;
   background: #0f172a;
   color: #ffffff;
@@ -356,14 +408,63 @@ body {
   font-weight: 600;
 }
 
-.ai-panel-response {
+.ai-panel-history {
   flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 10px;
   background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ai-history-msg {
+  border-radius: 8px;
+  padding: 8px 10px;
   font-size: 12px;
+  line-height: 1.45;
   color: #0f172a;
+}
+
+.ai-history-msg-user {
+  background: #e2e8f0;
+  align-self: flex-end;
+  max-width: 95%;
+}
+
+.ai-history-msg-assistant {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  align-self: stretch;
+}
+
+.ai-history-msg-pending {
+  opacity: 0.85;
+}
+
+.ai-history-msg-role {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.ai-history-msg-body {
   white-space: pre-wrap;
-  overflow: auto;
+  word-break: break-word;
+}
+
+.ai-panel-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-top: 4px;
+  border-top: 1px solid #e2e8f0;
 }

@@ -111,7 +111,7 @@ export function bindLinkedTableEvents({
   });
 
   refs.refreshLinkedTablesButton.addEventListener("click", async () => {
-    const targets = getLinkedTablesToRefresh(blocks, state.selectedBlockId);
+    const targets = getLinkedTablesToRefresh(blocks, state.selectedBlockIds);
     if (targets.length === 0) {
       window.alert("Nao ha tabelas linkadas para atualizar.");
       return;

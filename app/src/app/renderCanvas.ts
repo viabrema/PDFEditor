@@ -60,7 +60,7 @@ export function renderCanvasView({
     pageWrapper.append(pageSurface);
 
     pageSurface.addEventListener("click", () => {
-      const shouldClear = state.editingBlockId || state.selectedBlockId;
+      const shouldClear = state.editingBlockId || state.selectedBlockIds.length > 0;
       const shouldRender =
         shouldClear ||
         state.activePageId !== page.id ||
@@ -69,7 +69,7 @@ export function renderCanvasView({
       state.activeRegion = "body";
       if (shouldClear) {
         state.editingBlockId = null;
-        state.selectedBlockId = null;
+        state.selectedBlockIds = [];
       }
       if (shouldRender) {
         requestRender();
@@ -105,7 +105,7 @@ export function renderCanvasView({
       headerRegion.style.height = `${documentData.regions.header.height}px`;
       headerRegion.addEventListener("click", (event) => {
         event.stopPropagation();
-        const shouldClear = state.editingBlockId || state.selectedBlockId;
+        const shouldClear = state.editingBlockId || state.selectedBlockIds.length > 0;
         const shouldRender =
           shouldClear ||
           state.activePageId !== page.id ||
@@ -114,7 +114,7 @@ export function renderCanvasView({
         state.activeRegion = "header";
         if (shouldClear) {
           state.editingBlockId = null;
-          state.selectedBlockId = null;
+          state.selectedBlockIds = [];
         }
         if (shouldRender) {
           requestRender();
@@ -157,7 +157,7 @@ export function renderCanvasView({
       footerRegion.style.height = `${documentData.regions.footer.height}px`;
       footerRegion.addEventListener("click", (event) => {
         event.stopPropagation();
-        const shouldClear = state.editingBlockId || state.selectedBlockId;
+        const shouldClear = state.editingBlockId || state.selectedBlockIds.length > 0;
         const shouldRender =
           shouldClear ||
           state.activePageId !== page.id ||
@@ -166,7 +166,7 @@ export function renderCanvasView({
         state.activeRegion = "footer";
         if (shouldClear) {
           state.editingBlockId = null;
-          state.selectedBlockId = null;
+          state.selectedBlockIds = [];
         }
         if (shouldRender) {
           requestRender();

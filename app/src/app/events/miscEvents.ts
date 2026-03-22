@@ -8,9 +8,9 @@ export function bindMiscEvents({ state, blocks, renderer }: any) {
     }
 
     if (el?.closest(".page-surface")) {
-      if (state.editingBlockId || state.selectedBlockId) {
+      if (state.editingBlockId || state.selectedBlockIds.length > 0) {
         state.editingBlockId = null;
-        state.selectedBlockId = null;
+        state.selectedBlockIds = [];
         renderer.render();
       }
     }
@@ -29,17 +29,17 @@ export function bindMiscEvents({ state, blocks, renderer }: any) {
       return;
     }
 
-    if (!state.selectedBlockId || state.editingBlockId) {
+    if (state.selectedBlockIds.length === 0 || state.editingBlockId) {
       return;
     }
 
-    const index = blocks.findIndex((block) => block.id === state.selectedBlockId);
-    if (index === -1) {
-      return;
+    const toRemove = new Set(state.selectedBlockIds);
+    for (let i = blocks.length - 1; i >= 0; i -= 1) {
+      if (toRemove.has(blocks[i].id)) {
+        blocks.splice(i, 1);
+      }
     }
-
-    blocks.splice(index, 1);
-    state.selectedBlockId = null;
+    state.selectedBlockIds = [];
     state.editingBlockId = null;
     setLastAction(state, "Bloco removido.");
     renderer.render();

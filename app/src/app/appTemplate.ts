@@ -315,16 +315,28 @@ export function renderAppTemplate(root) {
           <button id="ai-panel-close" type="button" class="ai-panel-close">Fechar</button>
         </div>
         <div class="ai-panel-body">
-          <div id="ai-target" class="text-xs text-slate-500">Selecione um bloco</div>
-          <textarea
-            id="ai-input"
-            class="ai-panel-input"
-            rows="6"
-            placeholder="Descreva o que deseja mudar..."
-          ></textarea>
-          <button id="ai-send" type="button" class="ai-panel-send">Enviar</button>
+          <div id="ai-target" class="text-xs text-slate-500">Contexto do documento</div>
+          <div
+            id="ai-selection-chips"
+            class="ai-selection-chips"
+            aria-label="Blocos selecionados como referencia para a IA"
+          ></div>
+          <div
+            id="ai-history"
+            class="ai-panel-history"
+            role="log"
+            aria-label="Historico da conversa com a IA"
+          ></div>
           <div id="ai-status" class="text-xs text-slate-500"></div>
-          <pre id="ai-response" class="ai-panel-response"></pre>
+          <div class="ai-panel-compose">
+            <textarea
+              id="ai-input"
+              class="ai-panel-input"
+              rows="5"
+              placeholder="Descreva o que deseja mudar..."
+            ></textarea>
+            <button id="ai-send" type="button" class="ai-panel-send">Enviar</button>
+          </div>
         </div>
       </aside>
     </main>

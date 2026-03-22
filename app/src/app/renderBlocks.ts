@@ -69,7 +69,7 @@ export function renderBlocksInContainer({
       };
       block.type = "heading";
     }
-    const isSelected = block.id === state.selectedBlockId;
+    const isSelected = state.selectedBlockIds.includes(block.id);
     const isEditing = block.id === state.editingBlockId;
     const { element, editorHost } = createBlockElement(block, {
       selected: isSelected,
@@ -117,15 +117,24 @@ export function renderBlocksInContainer({
       event.stopPropagation();
       state.activePageId = pageId;
       state.activeRegion = region;
-      const nextSelected = block.id;
+      const toggleMulti = event.ctrlKey || event.metaKey;
+      let nextIds = state.selectedBlockIds;
+      if (toggleMulti) {
+        nextIds = state.selectedBlockIds.includes(block.id)
+          ? state.selectedBlockIds.filter((id) => id !== block.id)
+          : [...state.selectedBlockIds, block.id];
+      } else {
+        nextIds = [block.id];
+      }
       const nextEditing =
         state.editingBlockId && state.editingBlockId !== block.id
           ? null
           : state.editingBlockId;
-      const shouldRender =
-        state.selectedBlockId !== nextSelected ||
-        state.editingBlockId !== nextEditing;
-      state.selectedBlockId = nextSelected;
+      const sameSelection =
+        nextIds.length === state.selectedBlockIds.length &&
+        nextIds.every((id, i) => id === state.selectedBlockIds[i]);
+      const shouldRender = !sameSelection || state.editingBlockId !== nextEditing;
+      state.selectedBlockIds = nextIds;
       state.editingBlockId = nextEditing;
       if (shouldRender) {
         requestRender();
@@ -157,8 +166,8 @@ export function renderBlocksInContainer({
       state.activePageId = pageId;
       state.activeRegion = region;
       const shouldRender =
-        state.editingBlockId !== block.id || state.selectedBlockId !== block.id;
-      state.selectedBlockId = block.id;
+        state.editingBlockId !== block.id || !state.selectedBlockIds.includes(block.id);
+      state.selectedBlockIds = [block.id];
       state.editingBlockId = block.id;
       if (shouldRender) {
         requestRender();

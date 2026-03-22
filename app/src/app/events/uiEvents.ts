@@ -66,7 +66,7 @@ export function bindUiEvents({ documentData, state, refs, renderer }) {
     };
     if (!event.target.checked && state.activeRegion === "header") {
       state.activeRegion = "body";
-      state.selectedBlockId = null;
+      state.selectedBlockIds = [];
       state.editingBlockId = null;
     }
     setLastAction(state, `Cabecalho: ${event.target.checked ? "visivel" : "oculto"}`);
@@ -83,7 +83,7 @@ export function bindUiEvents({ documentData, state, refs, renderer }) {
     };
     if (!event.target.checked && state.activeRegion === "footer") {
       state.activeRegion = "body";
-      state.selectedBlockId = null;
+      state.selectedBlockIds = [];
       state.editingBlockId = null;
     }
     setLastAction(state, `Rodape de pagina: ${event.target.checked ? "visivel" : "oculto"}`);

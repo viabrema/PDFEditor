@@ -18,10 +18,12 @@ export type ExcelLinkMeta = {
   range: string;
 };
 
-export function getLinkedTablesToRefresh(blocks: any[], selectedBlockId: string | null) {
-  const selected = selectedBlockId ? blocks.find((b) => b.id === selectedBlockId) : null;
-  if (selected?.type === BLOCK_TYPES.LINKED_TABLE) {
-    return [selected];
+export function getLinkedTablesToRefresh(blocks: any[], selectedBlockIds: string[]) {
+  const selectedLinked = (selectedBlockIds || [])
+    .map((id) => blocks.find((b) => b.id === id))
+    .filter((b) => b?.type === BLOCK_TYPES.LINKED_TABLE);
+  if (selectedLinked.length > 0) {
+    return selectedLinked;
   }
   return blocks.filter((b) => b.type === BLOCK_TYPES.LINKED_TABLE);
 }

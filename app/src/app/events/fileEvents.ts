@@ -104,7 +104,7 @@ export function bindFileEvents({ documentData, state, blocks, refs, stateFile, r
     state.activeLanguageId =
       documentData.activeLanguageId || documentData.languages[0]?.id || null;
     state.activeRegion = "body";
-    state.selectedBlockId = null;
+    state.selectedBlockIds = [];
     state.editingBlockId = null;
     renderer.render();
   }

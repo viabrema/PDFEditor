@@ -42,9 +42,10 @@ export function getDomRefs() {
     aiPanel: document.querySelector("#ai-panel"),
     aiPanelClose: document.querySelector("#ai-panel-close"),
     aiTarget: document.querySelector("#ai-target"),
+    aiSelectionChips: document.querySelector("#ai-selection-chips"),
     aiInput: document.querySelector("#ai-input"),
     aiSend: document.querySelector("#ai-send"),
     aiStatus: document.querySelector("#ai-status"),
-    aiResponse: document.querySelector("#ai-response"),
+    aiHistory: document.querySelector("#ai-history"),
   };
 }

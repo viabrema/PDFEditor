@@ -24,7 +24,7 @@ export function createInitialState(documentData) {
     activeLanguageId: documentData.activeLanguageId,
     views: [],
     interactions: [],
-    selectedBlockId: null,
+    selectedBlockIds: [],
     editingBlockId: null,
     activeRegion: "body",
     translation: {
@@ -35,7 +35,7 @@ export function createInitialState(documentData) {
       open: false,
       loading: false,
       error: null,
-      response: "",
+      history: [],
       chatByBlockId: {},
     },
     ui: {

@@ -1,53 +1,95 @@
 import {
-  buildAiPrompt,
-  buildPageAiPrompt,
+  buildDocumentAiPrompt,
   isAnalysisInstruction,
   isFormattingInstruction,
+  type DocumentLayoutEntry,
+  type FocusedBlockEntry,
 } from "./aiPrompts";
-import { applyAiResultToBlock, applyAiResultToPage } from "./aiApply";
+import { applyAiResultToPage } from "./aiApply";
 import { getPageSize } from "./textUtils";
-import { effectiveBlockLanguageId } from "./translationFlow";
+import { effectiveBlockLanguageId, getLanguagePromptLabel } from "./translationFlow";
+import {
+  blockRegion,
+  serializeBlockForAi,
+  summarizeBlockForLayout,
+} from "./aiBlockSerialize";
+
+export const AI_DOCUMENT_CHAT_KEY = "ai:document";
 
 export function createAiFlow({ blocks, state, documentData }) {
-  function getSelectedBlock() {
-    return blocks.find((block) => block.id === state.selectedBlockId) || null;
+  function getSelectedBlocksInOrder() {
+    return state.selectedBlockIds
+      .map((id) => blocks.find((block) => block.id === id))
+      .filter((b): b is NonNullable<typeof b> => Boolean(b));
   }
 
-  function getActivePageBlocks() {
+  /** Ultimo bloco clicado na selecao (compat com fluxos que esperam um “principal”). */
+  function getPrimarySelectedBlock() {
+    const ids = state.selectedBlockIds;
+    if (ids.length === 0) {
+      return null;
+    }
+    return blocks.find((block) => block.id === ids[ids.length - 1]) || null;
+  }
+
+  function getBlocksForActiveLanguage() {
     return blocks.filter(
-      (block) =>
-        block.pageId === state.activePageId &&
-        effectiveBlockLanguageId(block, documentData) === state.activeLanguageId,
+      (block) => effectiveBlockLanguageId(block, documentData) === state.activeLanguageId,
     );
   }
 
-  function getPageBlockSnapshot() {
-    return getActivePageBlocks().map((block) => {
-      if (block.type === "table" || block.type === "linkedTable") {
-        return {
-          id: block.id,
-          type: block.type,
-          position: block.position,
-          size: block.size,
-          content: block.content?.rows || [],
-        };
-      }
-      if (block.type === "image") {
-        return {
-          id: block.id,
-          type: block.type,
-          position: block.position,
-          size: block.size,
-          content: { src: block.content?.src || "" },
-        };
-      }
+  function getDocumentLayoutSnapshot(): DocumentLayoutEntry[] {
+    const pages = documentData.pages || [];
+    const pageMeta = new Map(
+      pages.map((page: { id: string; name?: string }, index: number) => [
+        page.id,
+        { index, name: page.name || page.id },
+      ]),
+    );
+    return getBlocksForActiveLanguage().map((block) => {
+      const meta = pageMeta.get(block.pageId) || { index: 0, name: block.pageId || "?" };
       return {
         id: block.id,
+        pageId: block.pageId,
+        pageIndex: meta.index + 1,
+        pageName: meta.name,
+        region: blockRegion(block),
         type: block.type,
         position: block.position,
         size: block.size,
-        content: block.content,
+        summary: summarizeBlockForLayout(block),
       };
+    });
+  }
+
+  function getFocusedBlocksForPrompt(): FocusedBlockEntry[] {
+    return state.selectedBlockIds
+      .map((id, index) => {
+        const block = blocks.find((b) => b.id === id);
+        if (!block) {
+          return null;
+        }
+        if (effectiveBlockLanguageId(block, documentData) !== state.activeLanguageId) {
+          return null;
+        }
+        return {
+          focusOrder: index + 1,
+          snapshot: serializeBlockForAi(block) as Record<string, unknown>,
+        };
+      })
+      .filter(Boolean) as FocusedBlockEntry[];
+  }
+
+  function buildDocumentPrompt({ instruction, mode }) {
+    const activeLanguageLabel = getLanguagePromptLabel(documentData, state.activeLanguageId);
+    return buildDocumentAiPrompt({
+      activeLanguageLabel,
+      documentLayout: getDocumentLayoutSnapshot(),
+      focusedBlocks: getFocusedBlocksForPrompt(),
+      instruction,
+      mode,
+      pageSize: getPageSize(documentData?.page?.format, documentData?.page?.orientation),
+      gridSize: documentData?.grid?.size,
     });
   }
 
@@ -61,29 +103,16 @@ export function createAiFlow({ blocks, state, documentData }) {
     return "edit";
   }
 
-  function getChatKey(selectedBlock) {
-    return selectedBlock ? selectedBlock.id : `page:${state.activePageId}`;
-  }
-
   return {
-    getSelectedBlock,
-    getActivePageBlocks,
-    buildAiPrompt,
-    buildPageAiPrompt: ({ instruction, mode }) =>
-      buildPageAiPrompt({
-        pageBlocks: getPageBlockSnapshot(),
-        instruction,
-        mode,
-        pageSize: getPageSize(
-          documentData?.page?.format,
-          documentData?.page?.orientation
-        ),
-        gridSize: documentData?.grid?.size,
-      }),
-    applyAiResultToBlock,
+    getSelectedBlocksInOrder,
+    getPrimarySelectedBlock,
+    getBlocksForActiveLanguage,
+    getDocumentLayoutSnapshot,
+    getFocusedBlocksForPrompt,
+    buildDocumentPrompt,
     applyAiResultToPage: ({ resultText }) =>
-      applyAiResultToPage({ resultText, blocks, state }),
+      applyAiResultToPage({ resultText, blocks, state, documentData }),
     getModeForInstruction,
-    getChatKey,
+    getChatKey: () => AI_DOCUMENT_CHAT_KEY,
   };
 }

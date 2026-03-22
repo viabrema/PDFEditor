@@ -21,7 +21,7 @@ describe("excelLink", () => {
       { id: "b", type: BLOCK_TYPES.TABLE },
       { id: "c", type: BLOCK_TYPES.LINKED_TABLE },
     ];
-    expect(getLinkedTablesToRefresh(blocks, "a")).toEqual([blocks[0]]);
+    expect(getLinkedTablesToRefresh(blocks, ["a"])).toEqual([blocks[0]]);
   });
 
   it("getLinkedTablesToRefresh: all linked when selection is not linked", () => {
@@ -30,16 +30,24 @@ describe("excelLink", () => {
       { id: "b", type: BLOCK_TYPES.TEXT },
       { id: "c", type: BLOCK_TYPES.LINKED_TABLE },
     ];
-    expect(getLinkedTablesToRefresh(blocks, "b")).toEqual([blocks[0], blocks[2]]);
+    expect(getLinkedTablesToRefresh(blocks, ["b"])).toEqual([blocks[0], blocks[2]]);
   });
 
   it("getLinkedTablesToRefresh: all linked when none selected", () => {
     const blocks = [{ id: "a", type: BLOCK_TYPES.LINKED_TABLE }];
-    expect(getLinkedTablesToRefresh(blocks, null)).toEqual([blocks[0]]);
+    expect(getLinkedTablesToRefresh(blocks, [])).toEqual([blocks[0]]);
+  });
+
+  it("getLinkedTablesToRefresh: multiple linked selection returns those", () => {
+    const blocks = [
+      { id: "a", type: BLOCK_TYPES.LINKED_TABLE },
+      { id: "c", type: BLOCK_TYPES.LINKED_TABLE },
+    ];
+    expect(getLinkedTablesToRefresh(blocks, ["a", "c"])).toEqual([blocks[0], blocks[1]]);
   });
 
   it("getLinkedTablesToRefresh: empty when no linked blocks", () => {
-    expect(getLinkedTablesToRefresh([{ id: "x", type: BLOCK_TYPES.TEXT }], null)).toEqual([]);
+    expect(getLinkedTablesToRefresh([{ id: "x", type: BLOCK_TYPES.TEXT }], [])).toEqual([]);
   });
 
   it("loadExcelLinkTableContent returns cellStyles when workbook has styled cell", async () => {
