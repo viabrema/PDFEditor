@@ -38,6 +38,13 @@ export function createBlockElement(block, { selected = false, editing = false } 
     setTableEditable(table, editing);
     host.append(table);
     element.append(host);
+  } else if (block.type === "linkedTable") {
+    element.classList.add("linked-table-shell");
+    const host = document.createElement("div");
+    host.className = "table-block-host h-full w-full";
+    const table = createTableElement(block, { readOnly: true });
+    host.append(table);
+    element.append(host);
   } else {
     editorHost = document.createElement("div");
     editorHost.className = "prose-editor h-full w-full p-3";

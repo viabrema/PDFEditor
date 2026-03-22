@@ -13,7 +13,7 @@ export function isFormattingInstruction(instruction) {
 }
 
 export function buildAiPrompt({ block, instruction, mode }) {
-  if (block.type === "table") {
+  if (block.type === "table" || block.type === "linkedTable") {
     const rows = Array.isArray(block.content?.rows) ? block.content.rows : [];
     if (mode === "analysis") {
       return [
@@ -88,7 +88,7 @@ export function buildPageAiPrompt({ pageBlocks, instruction, mode, pageSize, gri
     "Formato: {\"actions\":[...]}.",
     "Tipos suportados: update, create, delete.",
     "update: {type:'update', id, contentText?, tableRows?, position?, size?}",
-    "create: {type:'create', blockType:'text'|'heading'|'table', headingLevel?:1|2|3, contentText?, tableRows?, position?, size?}",
+    "create: {type:'create', blockType:'text'|'heading'|'table'|'linkedTable', headingLevel?:1|2|3, contentText?, tableRows?, position?, size?}",
     "tableRows deve ser array de arrays (linhas com celulas).",
     "position e size devem usar numeros em pixels. Nao use porcentagem ou 'auto'.",
     "Use inteiros quando possivel.",

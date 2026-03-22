@@ -86,6 +86,42 @@ export function createTableBlockFromText(text, options: any = {}) {
   return createTableBlockFromRows(rows, options);
 }
 
+export function createLinkedTableBlockFromRows(
+  rows,
+  excelLink: { filePath: string; sheetName: string; range: string },
+  options: any = {},
+) {
+  const {
+    pageId,
+    languageId,
+    position = { x: 32, y: 32 },
+    pageSize,
+    metadata,
+  } = options;
+
+  const normalized = normalizeRows(rows);
+  const fallback = createEmptyTable();
+  const safeRows = normalized.length > 0 ? normalized : fallback;
+  const size = computeTableSize(safeRows, pageSize);
+
+  return createBlock({
+    type: BLOCK_TYPES.LINKED_TABLE,
+    content: { rows: safeRows },
+    position,
+    size,
+    pageId,
+    languageId,
+    metadata: {
+      ...(metadata || {}),
+      excelLink: {
+        filePath: excelLink.filePath,
+        sheetName: excelLink.sheetName,
+        range: excelLink.range,
+      },
+    },
+  });
+}
+
 export function readTableRows(table: HTMLTableElement) {
   const rows = Array.from(table.querySelectorAll("tbody tr"));
   return rows.map((row) =>
@@ -140,12 +176,18 @@ export function attachTableHandlers({ table, block }) {
   });
 }
 
-export function createTableElement(block) {
+export function createTableElement(block, options: { readOnly?: boolean } = {}) {
+  const readOnly = Boolean(options.readOnly);
   const table = document.createElement("table");
   table.className = "table-block";
+  if (readOnly) {
+    table.classList.add("is-linked-table");
+  }
   const rows = normalizeRows(block.content?.rows || createEmptyTable());
   updateTableBody(table, rows);
-  setTableEditable(table, true);
-  attachTableHandlers({ table, block });
+  setTableEditable(table, !readOnly);
+  if (!readOnly) {
+    attachTableHandlers({ table, block });
+  }
   return table;
 }

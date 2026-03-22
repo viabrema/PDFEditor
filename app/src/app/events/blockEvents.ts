@@ -1,32 +1,12 @@
 import { createBlock, BLOCK_TYPES } from "../../blocks/blockModel";
 import { createImageBlockFromFile } from "../../blocks/imageBlock";
 import { createTableBlockFromRows, createTableBlockFromText, parseTabularText } from "../../blocks/tableBlock";
-import { getNextBlockPosition, getPageSize, getRegionSize } from "../textUtils";
+import { getBlockInsertionRegionContext } from "../blockInsertionContext";
+import { getNextBlockPosition } from "../textUtils";
 
 export function bindBlockEvents({ documentData, state, blocks, refs, renderer }) {
   function getRegionContext() {
-    const region = state.activeRegion || "body";
-    const isBody = region === "body";
-    const blocksForRegion = blocks.filter((block) => {
-      const matchesLanguage = block.languageId === state.activeLanguageId;
-      if (!matchesLanguage) {
-        return false;
-      }
-      if (isBody) {
-        return (
-          block.pageId === state.activePageId &&
-          block.metadata?.region !== "header" &&
-          block.metadata?.region !== "footer"
-        );
-      }
-      return block.metadata?.region === region;
-    });
-
-    const regionSize = isBody
-      ? getPageSize(documentData.page.format, documentData.page.orientation)
-      : getRegionSize({ documentData, region });
-
-    return { region, isBody, blocksForRegion, regionSize };
+    return getBlockInsertionRegionContext({ documentData, state, blocks });
   }
 
   refs.addTextButton.addEventListener("click", () => {

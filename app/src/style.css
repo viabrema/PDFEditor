@@ -64,6 +64,10 @@ body {
   cursor: text;
 }
 
+.linked-table-shell {
+  border-left: 3px solid #0ea5e9;
+}
+
 .block-toolbar {
   position: absolute;
   top: -44px;

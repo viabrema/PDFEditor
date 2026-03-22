@@ -172,7 +172,7 @@ export function applyAiResultToBlock({ block, resultText }) {
     }
   }
 
-  if (block.type === "table") {
+  if (block.type === "table" || block.type === "linkedTable") {
     const parsed = parseAiJson(resultText);
     if (Array.isArray(parsed)) {
       block.content = { rows: parsed };
@@ -245,7 +245,7 @@ export function applyAiResultToPage({ resultText, blocks, state }) {
             height: nextSize.height,
           };
         }
-        if (target.type === "table") {
+        if (target.type === "table" || target.type === "linkedTable") {
           const normalized = normalizeTableRows(action.tableRows);
           if (normalized) {
             target.content = { rows: normalized };

@@ -1,9 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
 import { Window } from "happy-dom";
+import { describe, expect, it, vi } from "vitest";
+import { BLOCK_TYPES } from "./blockModel";
 import {
   attachTableHandlers,
   computeTableSize,
   createEmptyTable,
+  createLinkedTableBlockFromRows,
   createTableBlockFromRows,
   createTableBlockFromText,
   createTableElement,
@@ -52,6 +54,48 @@ describe("table block", () => {
   it("computes size for empty rows", () => {
     const size = computeTableSize([], { width: 300, height: 200 });
     expect(size).toEqual({ width: 120, height: 36 });
+  });
+
+  it("linked table uses fallback rows when rows array is empty", () => {
+    const block = createLinkedTableBlockFromRows(
+      [],
+      { filePath: "p", sheetName: "s", range: "A1:A1" },
+      {},
+    );
+    expect(block.content.rows.length).toBeGreaterThan(0);
+  });
+
+  it("creates linked table block with excel link metadata", () => {
+    const block = createLinkedTableBlockFromRows(
+      [["a", "b"]],
+      { filePath: "C:\\dados\\book.xlsx", sheetName: "Folha1", range: "A1:B1" },
+      { pageSize: { width: 900, height: 1200 } },
+    );
+    expect(block.type).toBe(BLOCK_TYPES.LINKED_TABLE);
+    expect(block.metadata.excelLink.filePath).toBe("C:\\dados\\book.xlsx");
+    expect(block.metadata.excelLink.sheetName).toBe("Folha1");
+    expect(block.metadata.excelLink.range).toBe("A1:B1");
+    expect(block.content.rows).toEqual([["a", "b"]]);
+  });
+
+  it("creates read-only table element for linked block", () => {
+    const window = new Window();
+    const prevWindow = globalThis.window;
+    const prevDoc = globalThis.document;
+    globalThis.window = window;
+    globalThis.document = window.document;
+    const block = createLinkedTableBlockFromRows(
+      [["x"]],
+      { filePath: "p", sheetName: "S", range: "A1:A1" },
+      {},
+    );
+    const table = createTableElement(block, { readOnly: true });
+    expect(table.classList.contains("is-linked-table")).toBe(true);
+    expect(table.classList.contains("is-readonly")).toBe(true);
+    const td = table.querySelector("td");
+    expect(td?.getAttribute("contenteditable")).toBe("false");
+    globalThis.window = prevWindow;
+    globalThis.document = prevDoc;
   });
 
   it("creates table block from rows", () => {

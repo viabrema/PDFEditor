@@ -9,6 +9,15 @@ export function createRenderer({
   refs,
   translateFromDefaultLanguage,
   aiFlow,
+  linkedTableBridge,
+}: {
+  documentData: any;
+  state: any;
+  blocks: any[];
+  refs: any;
+  translateFromDefaultLanguage: (id: string) => void;
+  aiFlow: any;
+  linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
 }) {
   function clearViews() {
     state.views.forEach((view) => view.destroy());
@@ -79,6 +88,7 @@ export function createRenderer({
       blocks,
       refs,
       requestRender: render,
+      linkedTableBridge,
     });
   }
 

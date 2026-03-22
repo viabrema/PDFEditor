@@ -7,6 +7,10 @@
     "dialog:default",
     "fs:default",
     "fs:read-files",
-    "fs:write-files"
+    "fs:write-files",
+    {
+      "identifier": "fs:allow-read-file",
+      "allow": [{ "path": "**" }]
+    }
   ]
 }

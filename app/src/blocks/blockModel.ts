@@ -7,6 +7,7 @@ export const BLOCK_TYPES = {
   SUBTITLE: "subtitle",
   IMAGE: "image",
   TABLE: "table",
+  LINKED_TABLE: "linkedTable",
   CHART: "chart",
 } as const;
 

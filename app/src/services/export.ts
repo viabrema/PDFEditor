@@ -217,7 +217,7 @@ function renderBlock(block, offset = { x: 0, y: 0 }) {
   if (block.type === "image") {
     return `<div class="block-wrapper" style="${style}">${renderImageBlock(block)}</div>`;
   }
-  if (block.type === "table") {
+  if (block.type === "table" || block.type === "linkedTable") {
     return `<div class="block-wrapper" style="${style}">${renderTableBlock(block)}</div>`;
   }
   return `<div class="block-wrapper" style="${style}">${renderTextBlock(block)}</div>`;

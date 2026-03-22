@@ -22,7 +22,7 @@ export function createAiFlow({ blocks, state, documentData }) {
 
   function getPageBlockSnapshot() {
     return getActivePageBlocks().map((block) => {
-      if (block.type === "table") {
+      if (block.type === "table" || block.type === "linkedTable") {
         return {
           id: block.id,
           type: block.type,

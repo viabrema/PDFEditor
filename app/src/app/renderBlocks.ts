@@ -13,6 +13,16 @@ export function renderBlocksInContainer({
   pageId,
   region,
   requestRender,
+  linkedTableBridge,
+}: {
+  container: HTMLElement;
+  blocks: any[];
+  state: any;
+  documentData: any;
+  pageId: string;
+  region: string;
+  requestRender: () => void;
+  linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
 }) {
   function mountFloatingToolbar({ element, toolbar }) {
     toolbar.classList.add("block-toolbar-floating");
@@ -95,8 +105,12 @@ export function renderBlocksInContainer({
       }
     });
 
-    element.addEventListener("dblclick", (event) => {
+    element.addEventListener("dblclick", async (event) => {
       event.stopPropagation();
+      if (block.type === "linkedTable" && linkedTableBridge?.reconfigure) {
+        await linkedTableBridge.reconfigure(block);
+        return;
+      }
       if (block.type === "image") {
         const input = document.createElement("input");
         input.type = "file";

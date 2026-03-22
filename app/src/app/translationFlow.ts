@@ -197,7 +197,7 @@ export async function translateBlockFromSource({
     });
   }
 
-  if (block.type === "table") {
+  if (block.type === "table" || block.type === "linkedTable") {
     const rows = Array.isArray(block.content?.rows) ? block.content.rows : [];
     const flatCells = rows.flatMap((row) => row.map((cell) => String(cell || "")));
     const translatedCells = await translateTextBatch({

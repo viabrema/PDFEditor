@@ -83,6 +83,23 @@ describe("block renderer", () => {
     expect(element.querySelector("table")).toBeTruthy();
   });
 
+  it("creates linked table block shell", () => {
+    const block = {
+      id: "block-linked",
+      type: "linkedTable",
+      content: { rows: [["L"]] },
+      position: { x: 0, y: 0 },
+      size: { width: 200, height: 100 },
+    };
+
+    const { element, editorHost } = createBlockElement(block);
+
+    expect(editorHost).toBeNull();
+    expect(element.className).toContain("linked-table-shell");
+    const td = element.querySelector("td");
+    expect(td?.getAttribute("contenteditable")).toBe("false");
+  });
+
   it("applies text block styles", () => {
     const block = {
       id: "block-5",

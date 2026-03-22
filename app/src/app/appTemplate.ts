@@ -95,6 +95,24 @@ export function renderAppTemplate(root) {
                 <i data-lucide="table"></i>
               </button>
               <button
+                id="add-linked-table-block"
+                type="button"
+                class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
+                title="Tabela linkada ao Excel"
+                aria-label="Tabela linkada ao Excel"
+              >
+                <i data-lucide="sheet"></i>
+              </button>
+              <button
+                id="refresh-linked-tables"
+                type="button"
+                class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
+                title="Atualizar links Excel das tabelas linkadas"
+                aria-label="Atualizar links Excel"
+              >
+                <i data-lucide="refresh-cw"></i>
+              </button>
+              <button
                 id="add-image-block"
                 type="button"
                 class="icon-button rounded-md bg-slate-900 px-3 py-2 text-white"
@@ -104,6 +122,7 @@ export function renderAppTemplate(root) {
                 <i data-lucide="image"></i>
               </button>
               <input id="image-input" type="file" accept="image/*" class="hidden" />
+              <input id="excel-link-file-input" type="file" accept=".xlsx,.xls,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" />
             </div>
           </div>
         </div>
@@ -193,6 +212,60 @@ export function renderAppTemplate(root) {
           <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
             <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Pagina ativa</span>
             <div id="page-meta"></div>
+          </div>
+        </div>
+      </div>
+      <div
+        id="excel-link-modal"
+        class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/40 px-4"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+          <div class="mb-4">
+            <div class="text-lg font-semibold text-slate-900">Intervalo Excel</div>
+            <div class="text-xs text-slate-500">Escolha a folha e o quadrado (ex.: A1:G5)</div>
+          </div>
+          <div class="grid gap-3">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="excel-link-sheet">
+                Folha
+              </label>
+              <select
+                id="excel-link-sheet"
+                class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              ></select>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="excel-link-range">
+                Intervalo
+              </label>
+              <input
+                id="excel-link-range"
+                type="text"
+                placeholder="A1:G5"
+                class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-mono"
+                autocomplete="off"
+              />
+            </div>
+            <p id="excel-link-modal-error" class="min-h-[1.25rem] text-xs text-red-600"></p>
+          </div>
+          <div class="mt-6 flex justify-end gap-2">
+            <button
+              id="excel-link-cancel"
+              type="button"
+              class="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-600"
+            >
+              Cancelar
+            </button>
+            <button
+              id="excel-link-confirm"
+              type="button"
+              class="rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
+            >
+              Confirmar
+            </button>
           </div>
         </div>
       </div>

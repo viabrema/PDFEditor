@@ -2,7 +2,21 @@ import { getPageSize } from "./textUtils";
 import { renderBlocksInContainer } from "./renderBlocks";
 import { setupRegionResize } from "./regionResize";
 
-export function renderCanvasView({ documentData, state, blocks, refs, requestRender }) {
+export function renderCanvasView({
+  documentData,
+  state,
+  blocks,
+  refs,
+  requestRender,
+  linkedTableBridge,
+}: {
+  documentData: any;
+  state: any;
+  blocks: any[];
+  refs: any;
+  requestRender: () => void;
+  linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
+}) {
   const activeBlocks = blocks.filter(
     (block) => block.languageId === state.activeLanguageId
   );
@@ -117,6 +131,7 @@ export function renderCanvasView({ documentData, state, blocks, refs, requestRen
         pageId: page.id,
         region: "header",
         requestRender,
+        linkedTableBridge,
       });
 
       pageSurface.append(headerRegion);
@@ -168,6 +183,7 @@ export function renderCanvasView({ documentData, state, blocks, refs, requestRen
         pageId: page.id,
         region: "footer",
         requestRender,
+        linkedTableBridge,
       });
 
       pageSurface.append(footerRegion);

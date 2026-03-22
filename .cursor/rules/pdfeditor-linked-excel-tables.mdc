@@ -1,0 +1,28 @@
+---
+description: Tabelas linkadas a Excel — bloco linkedTable, Tauri, JSON, atualização e PDF
+globs: app/src/services/excelRange.ts,app/src/services/excelLink.ts,app/src/app/linkedTableWizard.ts,app/src/app/events/linkedTableEvents.ts,app/src/blocks/tableBlock.ts,app/src/blocks/blockRenderer.ts,app/src/services/export.ts,app/src/services/tauriStorage.ts,desktop/src-tauri/capabilities/*.json,docs/linked-excel-tables.md
+alwaysApply: false
+---
+
+# Tabelas linkadas (Excel)
+
+## Invariantes
+
+- Tipo de bloco: `linkedTable` (`BLOCK_TYPES.LINKED_TABLE` em `blockModel.ts`).
+- `content.rows`: snapshot em `string[][]` para canvas e PDF.
+- `metadata.excelLink`: `{ filePath, sheetName, range }` — `range` normalizado (maiúsculas) via `normalizeRangeString`.
+- **Atualizar links:** se `selectedBlockId` for um `linkedTable`, só esse bloco; senão, todos os `linkedTable` em `blocks` (ver `getLinkedTablesToRefresh` em `excelLink.ts`).
+- **Erro ao ler ficheiro** (movido, apagado, permissão): não alterar `content.rows`; acumular mensagens e `alert` ao fim (`linkedTableEvents.ts`).
+- **Browser:** paths `__browser__:*` — `loadRowsForExcelLink` rejeita atualização; documentar em `docs/linked-excel-tables.md`.
+- **Duplo clique:** `renderBlocks.ts` chama `linkedTableBridge.reconfigure` antes do fluxo de edição de outros blocos.
+- **PDF:** `export.ts` trata `linkedTable` como `table` (mesmo HTML/CSS de `.table-block`).
+
+## Ao alterar este subsistema
+
+- Manter **100%** cobertura nos ficheiros instrumentados pelo Vitest (não excluir `excelRange` / `excelLink` sem testes).
+- Alinhar com [`pdfeditor-export.mdc`](pdfeditor-export.mdc) e [`pdfeditor-desktop.mdc`](pdfeditor-desktop.mdc) se mudar diálogo, `readFile` ou capabilities Tauri.
+- Narrativa longa e riscos: [`docs/linked-excel-tables.md`](docs/linked-excel-tables.md).
+
+## Dependência
+
+- **exceljs** para `.xlsx` em memória; não assumir suporte pleno a `.xls` binário antigo.

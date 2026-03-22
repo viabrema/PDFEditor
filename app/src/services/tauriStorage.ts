@@ -9,12 +9,12 @@ export async function getTauriBackend() {
     return null;
   }
   try {
-    const [{ open, save }, { readTextFile, writeTextFile }] = await Promise.all([
+    const [{ open, save }, { readTextFile, writeTextFile, readFile }] = await Promise.all([
       import("@tauri-apps/plugin-dialog"),
       import("@tauri-apps/plugin-fs"),
     ]);
     return {
-      fs: { readTextFile, writeTextFile },
+      fs: { readTextFile, writeTextFile, readFile },
       dialog: { open, save },
     };
   } catch {
@@ -56,6 +56,27 @@ export async function pickOpenPath({ dialog }) {
     multiple: false,
     filters: [{ name: "JSON", extensions: ["json"] }],
   });
+}
+
+export async function pickExcelOpenPath({ dialog }: { dialog: { open: (opts?: unknown) => Promise<unknown> } }) {
+  if (!dialog?.open) {
+    throw new Error("Tauri dialog API is required.");
+  }
+
+  const path = await dialog.open({
+    multiple: false,
+    filters: [{ name: "Excel", extensions: ["xlsx", "xls", "xlsm"] }],
+  });
+  if (path == null) {
+    return null;
+  }
+  return Array.isArray(path) ? path[0] : path;
+}
+
+/** Leitura binaria (ex.: Excel). Requer Tauri com permissao fs:allow-read-file no path. */
+export async function readBinaryFileFromPath(filePath: string): Promise<Uint8Array> {
+  const { readFile } = await import("@tauri-apps/plugin-fs");
+  return readFile(filePath);
 }
 
 export async function pickPdfSavePath({ dialog }) {
