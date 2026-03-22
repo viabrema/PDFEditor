@@ -22,6 +22,7 @@ describe("excelTableStyle", () => {
   it("scaleExcelCellStyleFontSize scales pt and px font sizes", () => {
     expect(scaleExcelCellStyleFontSize({ fontSize: "10pt" }, 2).fontSize).toBe("20pt");
     expect(scaleExcelCellStyleFontSize({ fontSize: "12px" }, 0.5).fontSize).toBe("6px");
+    expect(scaleExcelCellStyleFontSize({ fontSize: "2em" }, 2)).toEqual({ fontSize: "2em" });
     expect(scaleExcelCellStyleFontSize({ fontWeight: "bold" }, 2).fontSize).toBeUndefined();
   });
 
@@ -87,6 +88,16 @@ describe("excelTableStyle", () => {
         defaultClr,
       ),
     ).toBe("#AAAAAA");
+    expect(
+      fillToBackgroundColor(
+        {
+          type: "pattern",
+          pattern: "lightDown",
+          fgColor: { indexed: 64 },
+        },
+        defaultClr,
+      ),
+    ).toBeUndefined();
     expect(
       fillToBackgroundColor(
         {

@@ -40,7 +40,7 @@ export function createAiFlow({ blocks, state, documentData }) {
 
   function getDocumentLayoutSnapshot(): DocumentLayoutEntry[] {
     const pages = documentData.pages || [];
-    const pageMeta = new Map(
+    const pageMeta = new Map<string, { index: number; name: string }>(
       pages.map((page: { id: string; name?: string }, index: number) => [
         page.id,
         { index, name: page.name || page.id },

@@ -248,4 +248,45 @@ describe("table block", () => {
     expect(b.content.cellStyles?.["0,0"]?.fontWeight).toBe("bold");
     expect(b.content.rowHeights).toBeUndefined();
   });
+
+  it("updateTableBody clears table font size when font scale is 1", () => {
+    const table = document.createElement("table");
+    table.style.fontSize = "40px";
+    updateTableBody(table, [["x"]], [], null, null, { fontScale: 1 });
+    expect(table.style.fontSize).toBe("");
+  });
+
+  it("updateTableBody applies base table font size when font scale is not 1", () => {
+    const table = document.createElement("table");
+    updateTableBody(table, [["x"]], [], null, null, { fontScale: 2 });
+    expect(table.style.fontSize).toBe("28px");
+  });
+
+  it("updateTableBody scales per-cell font when font scale is not 1", () => {
+    const table = document.createElement("table");
+    updateTableBody(
+      table,
+      [["x"]],
+      [],
+      { "0,0": { fontSize: "10pt" } },
+      null,
+      { fontScale: 2 },
+    );
+    const td = table.querySelector("td");
+    expect(td?.getAttribute("style")).toContain("20pt");
+  });
+
+  it("updateTableBody leaves cell font unscaled when font scale is 1", () => {
+    const table = document.createElement("table");
+    updateTableBody(
+      table,
+      [["x"]],
+      [],
+      { "0,0": { fontSize: "10pt" } },
+      null,
+      { fontScale: 1 },
+    );
+    const td = table.querySelector("td");
+    expect(td?.getAttribute("style")).toContain("10pt");
+  });
 });

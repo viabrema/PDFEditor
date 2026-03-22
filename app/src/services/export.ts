@@ -247,7 +247,7 @@ export function isExcludedFromPdfExport(block) {
   return block?.metadata?.excludeFromPdfExport === true;
 }
 
-function filterBlocksForPdfExport(blocks) {
+export function filterBlocksForPdfExport(blocks) {
   if (!Array.isArray(blocks)) {
     return [];
   }

@@ -8,6 +8,8 @@ export function createToolbar(commands: any, options: any = {}) {
     onHeadingLevelChange,
     onFontScaleChange,
     onLinkedTableExcelConfigure,
+    onLinkedChartExcelConfigure,
+    onLinkedChartDesignConfigure,
     alignValue = "left",
     fontFamilyValue = "Segoe UI",
     fontSizeValue = "16px",
@@ -17,7 +19,7 @@ export function createToolbar(commands: any, options: any = {}) {
   const container = document.createElement("div");
   container.className = "flex flex-wrap items-center gap-2";
 
-  if (variant === "linkedTable") {
+  if (variant === "linkedTable" || variant === "linkedChart") {
     const label = document.createElement("span");
     label.className = "text-xs font-medium text-slate-600";
     label.textContent = "Escala";
@@ -44,16 +46,30 @@ export function createToolbar(commands: any, options: any = {}) {
 
     container.append(label, range, valueEl);
 
-    if (onLinkedTableExcelConfigure) {
+    const onExcel =
+      variant === "linkedTable" ? onLinkedTableExcelConfigure : onLinkedChartExcelConfigure;
+    if (onExcel) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className =
         "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
-      btn.title = "Alterar ficheiro ou intervalo Excel";
-      btn.setAttribute("aria-label", "Alterar ficheiro ou intervalo Excel");
+      btn.title = "Alterar ficheiro, folha ou intervalo Excel";
+      btn.setAttribute("aria-label", "Alterar ficheiro, folha ou intervalo Excel");
       btn.innerHTML = `<i data-lucide="file-spreadsheet"></i>`;
-      btn.addEventListener("click", () => onLinkedTableExcelConfigure());
+      btn.addEventListener("click", () => onExcel());
       container.append(btn);
+    }
+
+    if (variant === "linkedChart" && onLinkedChartDesignConfigure) {
+      const designBtn = document.createElement("button");
+      designBtn.type = "button";
+      designBtn.className =
+        "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
+      designBtn.title = "Configurar tipo de grafico e series";
+      designBtn.setAttribute("aria-label", "Configurar tipo de grafico e series");
+      designBtn.innerHTML = `<i data-lucide="sliders-horizontal"></i>`;
+      designBtn.addEventListener("click", () => onLinkedChartDesignConfigure());
+      container.append(designBtn);
     }
 
     return container;

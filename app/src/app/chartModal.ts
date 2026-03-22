@@ -2,6 +2,7 @@ import type {
   ChartBlockContent,
   ChartDatasetSpec,
   ChartBaseType,
+  ChartSpec,
 } from "../blocks/chartBlockTypes";
 import { defaultChartSpec, emptyChartContent } from "../blocks/chartBlockTypes";
 import { CHART_PALETTE_HEX } from "../blocks/chartPalette";
@@ -41,7 +42,7 @@ function cloneChartContent(raw: unknown): ChartBlockContent {
   const c = raw as ChartBlockContent;
   try {
     const d0 = defaultChartSpec();
-    const ch = c.chart || {};
+    const ch = (c.chart || {}) as Partial<ChartSpec>;
     const datasets =
       Array.isArray(ch.datasets) && ch.datasets.length > 0 ? ch.datasets : d0.datasets;
     const merged = JSON.parse(
@@ -457,7 +458,7 @@ export function bindChartModal(options: {
     }
     const next = readWorkingFromForm();
     const resolved = resolveChartTableData(blocks, next);
-    if (!resolved.ok) {
+    if (resolved.ok === false) {
       if (el.error) {
         el.error.textContent = resolved.message;
       }
@@ -465,7 +466,7 @@ export function bindChartModal(options: {
       return;
     }
     const v = validateChartConfiguration(next, resolved.data);
-    if (!v.ok) {
+    if (v.ok === false) {
       if (el.error) {
         el.error.textContent = v.message;
       }

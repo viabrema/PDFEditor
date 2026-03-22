@@ -127,7 +127,7 @@ export function renderAppTemplate(root) {
                 id="refresh-linked-tables"
                 type="button"
                 class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
-                title="Atualizar links Excel das tabelas linkadas"
+                title="Atualizar dados Excel (tabelas e graficos linkados)"
                 aria-label="Atualizar links Excel"
               >
                 <i data-lucide="refresh-cw"></i>
@@ -140,6 +140,15 @@ export function renderAppTemplate(root) {
                 aria-label="Novo bloco de grafico"
               >
                 <i data-lucide="line-chart"></i>
+              </button>
+              <button
+                id="add-linked-chart-block"
+                type="button"
+                class="icon-button rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700"
+                title="Grafico com dados do Excel"
+                aria-label="Grafico linkado ao Excel"
+              >
+                <i data-lucide="chart-column"></i>
               </button>
               <button
                 id="add-image-block"

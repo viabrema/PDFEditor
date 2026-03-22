@@ -23,4 +23,16 @@ export default tseslint.config(
       "@typescript-eslint/ban-ts-comment": "off",
     },
   },
+  {
+    files: [
+      "src/app/aiApply.ts",
+      "src/app/appTemplate.ts",
+      "src/app/chartModal.ts",
+      "src/blocks/chartSpecToChartJs.ts",
+      "src/blocks/dragResize.test.ts",
+      "src/services/export.basic.test.ts",
+      "src/services/export.ts",
+    ],
+    rules: { "max-lines": "off" },
+  },
 );

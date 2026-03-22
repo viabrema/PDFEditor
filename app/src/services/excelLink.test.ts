@@ -2,6 +2,8 @@ import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { BLOCK_TYPES } from "../blocks/blockModel";
 import {
+  blockHasExcelLink,
+  getLinkedExcelBlocksToRefresh,
   getLinkedTablesToRefresh,
   isBrowserOnlyExcelPath,
   loadExcelLinkTableContent,
@@ -10,6 +12,34 @@ import {
 } from "./excelLink";
 
 describe("excelLink", () => {
+  it("blockHasExcelLink is false for undefined block", () => {
+    expect(blockHasExcelLink(undefined)).toBe(false);
+  });
+
+  it("blockHasExcelLink is false when link fields are incomplete", () => {
+    expect(
+      blockHasExcelLink({
+        metadata: { excelLink: { filePath: null, sheetName: "S", range: "A1" } as any },
+      }),
+    ).toBe(false);
+    expect(
+      blockHasExcelLink({
+        metadata: { excelLink: { sheetName: "S", range: "A1" } as any },
+      }),
+    ).toBe(false);
+    expect(blockHasExcelLink({ metadata: { excelLink: {} as any } })).toBe(false);
+    expect(
+      blockHasExcelLink({
+        metadata: { excelLink: { filePath: "C:\\a.xlsx", sheetName: "", range: "A1" } },
+      }),
+    ).toBe(false);
+    expect(
+      blockHasExcelLink({
+        metadata: { excelLink: { filePath: "C:\\a.xlsx", sheetName: "S", range: null as any } },
+      }),
+    ).toBe(false);
+  });
+
   it("detects browser-only path", () => {
     expect(isBrowserOnlyExcelPath(toBrowserExcelPath("book.xlsx"))).toBe(true);
     expect(isBrowserOnlyExcelPath("C:\\data\\book.xlsx")).toBe(false);
@@ -48,6 +78,60 @@ describe("excelLink", () => {
 
   it("getLinkedTablesToRefresh: empty when no linked blocks", () => {
     expect(getLinkedTablesToRefresh([{ id: "x", type: BLOCK_TYPES.TEXT }], [])).toEqual([]);
+  });
+
+  const excelLink = { filePath: "C:\\a.xlsx", sheetName: "S1", range: "A1:B2" };
+
+  it("getLinkedExcelBlocksToRefresh: selected linked chart", () => {
+    const blocks = [
+      { id: "a", type: BLOCK_TYPES.CHART, metadata: { excelLink } },
+      { id: "b", type: BLOCK_TYPES.TEXT },
+    ];
+    expect(getLinkedExcelBlocksToRefresh(blocks, ["a"])).toEqual([blocks[0]]);
+  });
+
+  it("getLinkedExcelBlocksToRefresh: selection without excel link falls back to all linked", () => {
+    const blocks = [
+      { id: "a", type: BLOCK_TYPES.CHART, metadata: {} },
+      { id: "b", type: BLOCK_TYPES.LINKED_TABLE, metadata: { excelLink } },
+    ];
+    expect(getLinkedExcelBlocksToRefresh(blocks, ["a"])).toEqual([blocks[1]]);
+    expect(getLinkedExcelBlocksToRefresh(blocks, [])).toEqual([blocks[1]]);
+  });
+
+  it("getLinkedExcelBlocksToRefresh: merges linked table and linked chart when none selected", () => {
+    const blocks = [
+      { id: "t", type: BLOCK_TYPES.LINKED_TABLE, metadata: { excelLink } },
+      { id: "c", type: BLOCK_TYPES.CHART, metadata: { excelLink } },
+    ];
+    expect(getLinkedExcelBlocksToRefresh(blocks, [])).toEqual(blocks);
+  });
+
+  it("getLinkedTablesToRefresh treats null selectedBlockIds as empty", () => {
+    const blocks = [{ id: "a", type: BLOCK_TYPES.LINKED_TABLE }];
+    expect(getLinkedTablesToRefresh(blocks, null as any)).toEqual([blocks[0]]);
+  });
+
+  it("getLinkedExcelBlocksToRefresh treats undefined selectedBlockIds as empty", () => {
+    const blocks = [{ id: "t", type: BLOCK_TYPES.LINKED_TABLE, metadata: { excelLink } }];
+    expect(getLinkedExcelBlocksToRefresh(blocks, undefined as any)).toEqual([blocks[0]]);
+  });
+
+  it("getLinkedExcelBlocksToRefresh ignores unknown selected ids", () => {
+    const blocks = [{ id: "t", type: BLOCK_TYPES.LINKED_TABLE, metadata: { excelLink } }];
+    expect(getLinkedExcelBlocksToRefresh(blocks, ["missing"])).toEqual([blocks[0]]);
+  });
+
+  it("getLinkedExcelBlocksToRefresh ignores chart with incomplete excel link in selection", () => {
+    const blocks = [
+      {
+        id: "c",
+        type: BLOCK_TYPES.CHART,
+        metadata: { excelLink: { filePath: "", sheetName: "S", range: "A1" } },
+      },
+      { id: "t", type: BLOCK_TYPES.LINKED_TABLE, metadata: { excelLink } },
+    ];
+    expect(getLinkedExcelBlocksToRefresh(blocks, ["c"])).toEqual([blocks[1]]);
   });
 
   it("loadExcelLinkTableContent returns cellStyles when workbook has styled cell", async () => {

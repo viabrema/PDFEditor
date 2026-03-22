@@ -10,6 +10,7 @@ export function renderCanvasView({
   refs,
   requestRender,
   linkedTableBridge,
+  linkedChartBridge,
 }: {
   documentData: any;
   state: any;
@@ -17,6 +18,7 @@ export function renderCanvasView({
   refs: any;
   requestRender: () => void;
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
+  linkedChartBridge?: { reconfigure?: (block: any) => Promise<void> };
 }) {
   const activeBlocks = blocks.filter(
     (block) => effectiveBlockLanguageId(block, documentData) === state.activeLanguageId,
@@ -95,6 +97,7 @@ export function renderCanvasView({
       region: "body",
       requestRender,
       linkedTableBridge,
+      linkedChartBridge,
     });
 
     if (documentData.regions?.header?.enabled) {
@@ -136,6 +139,7 @@ export function renderCanvasView({
         region: "header",
         requestRender,
         linkedTableBridge,
+        linkedChartBridge,
       });
 
       pageSurface.append(headerRegion);
@@ -189,6 +193,7 @@ export function renderCanvasView({
         region: "footer",
         requestRender,
         linkedTableBridge,
+        linkedChartBridge,
       });
 
       pageSurface.append(footerRegion);

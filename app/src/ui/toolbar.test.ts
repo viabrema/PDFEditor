@@ -110,6 +110,15 @@ describe("toolbar", () => {
     expect(clicked).toBe(7);
   });
 
+  it("renders linked table toolbar without excel button when hook is missing", () => {
+    const toolbar = createToolbar(null, {
+      variant: "linkedTable",
+      fontScaleValue: 1,
+      onFontScaleChange: () => {},
+    });
+    expect(toolbar.querySelectorAll("button").length).toBe(0);
+  });
+
   it("renders linked table toolbar with scale slider and excel button", () => {
     let scale = 0;
     let excel = 0;
@@ -134,6 +143,37 @@ describe("toolbar", () => {
     expect(btn).toBeTruthy();
     btn?.click();
     expect(excel).toBe(1);
+  });
+
+  it("renders linked chart toolbar with scale, excel and design buttons", () => {
+    let scale = 0;
+    let excel = 0;
+    let design = 0;
+    const toolbar = createToolbar(null, {
+      variant: "linkedChart",
+      fontScaleValue: 1,
+      onFontScaleChange: (v: number) => {
+        scale = v;
+      },
+      onLinkedChartExcelConfigure: () => {
+        excel += 1;
+      },
+      onLinkedChartDesignConfigure: () => {
+        design += 1;
+      },
+    });
+
+    const range = toolbar.querySelector('input[type="range"]') as HTMLInputElement;
+    range.value = "1.25";
+    range.dispatchEvent(new window.Event("input", { bubbles: true }));
+    expect(scale).toBe(1.25);
+
+    const buttons = toolbar.querySelectorAll("button");
+    expect(buttons.length).toBe(2);
+    buttons[0].click();
+    buttons[1].click();
+    expect(excel).toBe(1);
+    expect(design).toBe(1);
   });
 
   it("renders disabled toolbar", () => {

@@ -1,6 +1,6 @@
 import { getBlockTextStyle } from "./blockStyles";
 import { createTableElement, setTableEditable } from "./tableBlock";
-import { isChartConfigured } from "./chartBlock";
+import { chartBlockHasExcelLink, isChartConfigured } from "./chartBlock";
 
 export function createBlockElement(block, { selected = false, editing = false } = {}) {
   const element = document.createElement("div");
@@ -58,7 +58,9 @@ export function createBlockElement(block, { selected = false, editing = false } 
     const hint = document.createElement("div");
     hint.className =
       "chart-block-hint pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-slate-400";
-    hint.textContent = "Duplo clique para configurar";
+    hint.textContent = chartBlockHasExcelLink(block)
+      ? "Duplo clique para ferramentas"
+      : "Duplo clique para configurar";
     if (isChartConfigured(block)) {
       canvasWrap.append(canvas);
     } else {

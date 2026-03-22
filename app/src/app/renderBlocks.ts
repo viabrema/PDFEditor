@@ -5,16 +5,11 @@ import { setupDragResize } from "../blocks/dragResize";
 import { clampLinkedTableFontScale, syncTableElementWithBlock } from "../blocks/tableBlock";
 import { fileToDataUrl } from "../blocks/imageBlock";
 import { getBlockTextStyle } from "../blocks/blockStyles";
-import { getChartContent, isChartConfigured } from "../blocks/chartBlock";
-import { resolveChartTableData } from "../blocks/chartDataFromTableBlock";
-import { buildChartJsConfiguration } from "../blocks/chartSpecToChartJs";
-import { validateChartConfiguration } from "../blocks/chartValidation";
-import {
-  destroyBlockChart,
-  mountChartForBlock,
-  resizeBlockChart,
-} from "../blocks/chartRuntime";
+import { chartBlockHasExcelLink } from "../blocks/chartBlock";
+import { resizeBlockChart } from "../blocks/chartRuntime";
+import { scheduleChartJsMountIfConfigured } from "./mountBlockChart";
 import { openChartConfiguration } from "./chartModal";
+import { attachFloatingBlockToolbar } from "./renderFloatingToolbar";
 
 export function renderBlocksInContainer({
   container,
@@ -26,6 +21,7 @@ export function renderBlocksInContainer({
   region,
   requestRender,
   linkedTableBridge,
+  linkedChartBridge,
 }: {
   container: HTMLElement;
   blocks: any[];
@@ -37,43 +33,9 @@ export function renderBlocksInContainer({
   region: string;
   requestRender: () => void;
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
+  linkedChartBridge?: { reconfigure?: (block: any) => Promise<void> };
 }) {
   const blocksForChartResolve = allBlocks ?? blocks;
-  function mountFloatingToolbar({ element, toolbar }) {
-    toolbar.classList.add("block-toolbar-floating");
-    document.body.append(toolbar);
-
-    const positionToolbar = () => {
-      const rect = element.getBoundingClientRect();
-      const toolbarRect = toolbar.getBoundingClientRect();
-      const offset = 8;
-      let top = rect.top - toolbarRect.height - offset;
-      if (top < offset) {
-        top = rect.bottom + offset;
-      }
-      let left = rect.left + 12;
-      if (left + toolbarRect.width > window.innerWidth - offset) {
-        left = Math.max(offset, window.innerWidth - toolbarRect.width - offset);
-      }
-      toolbar.style.top = `${top}px`;
-      toolbar.style.left = `${left}px`;
-    };
-
-    positionToolbar();
-    const frame = window.requestAnimationFrame(positionToolbar);
-    window.addEventListener("scroll", positionToolbar, true);
-    window.addEventListener("resize", positionToolbar);
-
-    return {
-      destroy() {
-        window.cancelAnimationFrame(frame);
-        window.removeEventListener("scroll", positionToolbar, true);
-        window.removeEventListener("resize", positionToolbar);
-        toolbar.remove();
-      },
-      setEnabled() {},
-    };
-  }
 
   blocks.forEach((block) => {
     if (block.type === "title" || block.type === "subtitle") {
@@ -93,12 +55,7 @@ export function renderBlocksInContainer({
 
     if (isEditing && block.type === "table") {
       const toolbar = createToolbar(null, { disabled: true, variant: "table" });
-      state.interactions.push(
-        mountFloatingToolbar({
-          element,
-          toolbar,
-        })
-      );
+      state.interactions.push(attachFloatingBlockToolbar(element, toolbar));
     }
 
     if (isEditing && block.type === "linkedTable") {
@@ -119,12 +76,23 @@ export function renderBlocksInContainer({
           ? () => linkedTableBridge.reconfigure!(block)
           : undefined,
       });
-      state.interactions.push(
-        mountFloatingToolbar({
-          element,
-          toolbar,
-        })
-      );
+      state.interactions.push(attachFloatingBlockToolbar(element, toolbar));
+    }
+
+    if (isEditing && block.type === "chart" && chartBlockHasExcelLink(block)) {
+      const toolbar = createToolbar(null, {
+        variant: "linkedChart",
+        fontScaleValue: clampLinkedTableFontScale(block.metadata?.fontScale),
+        onFontScaleChange: (scale: number) => {
+          block.metadata = { ...(block.metadata || {}), fontScale: scale };
+          requestRender();
+        },
+        onLinkedChartExcelConfigure: linkedChartBridge?.reconfigure
+          ? () => linkedChartBridge.reconfigure!(block)
+          : undefined,
+        onLinkedChartDesignConfigure: () => openChartConfiguration(block),
+      });
+      state.interactions.push(attachFloatingBlockToolbar(element, toolbar));
     }
 
     element.addEventListener("click", (event) => {
@@ -157,7 +125,7 @@ export function renderBlocksInContainer({
 
     element.addEventListener("dblclick", async (event) => {
       event.stopPropagation();
-      if (block.type === "chart") {
+      if (block.type === "chart" && !chartBlockHasExcelLink(block)) {
         state.activePageId = pageId;
         state.activeRegion = region;
         state.selectedBlockIds = [block.id];
@@ -250,12 +218,7 @@ export function renderBlocksInContainer({
             requestRender();
           },
         });
-        state.interactions.push(
-          mountFloatingToolbar({
-            element,
-            toolbar,
-          })
-        );
+        state.interactions.push(attachFloatingBlockToolbar(element, toolbar));
       }
     }
 
@@ -274,45 +237,11 @@ export function renderBlocksInContainer({
     interaction.setEnabled(!isEditing);
     state.interactions.push(interaction);
 
-    if (block.type === "chart" && isChartConfigured(block)) {
-      const canvas = element.querySelector("canvas.chart-block-canvas") as HTMLCanvasElement | null;
-      if (canvas) {
-        const content = getChartContent(block);
-        const resolved = resolveChartTableData(blocksForChartResolve, content);
-        let cfg = null;
-        if (resolved.ok) {
-          const v = validateChartConfiguration(content, resolved.data);
-          if (v.ok) {
-            cfg = buildChartJsConfiguration(content, resolved.data);
-          }
-        }
-        if (cfg) {
-          const mount = () => {
-            mountChartForBlock({
-              blockId: block.id,
-              canvas,
-              config: cfg,
-              onPreview: (url) => {
-                block.content = { ...block.content, previewDataUrl: url };
-              },
-            });
-          };
-          requestAnimationFrame(() => {
-            mount();
-          });
-          const ro = new ResizeObserver(() => {
-            resizeBlockChart(block.id);
-          });
-          ro.observe(element);
-          state.interactions.push({
-            destroy() {
-              ro.disconnect();
-              destroyBlockChart(block.id);
-            },
-            setEnabled() {},
-          });
-        }
-      }
-    }
+    scheduleChartJsMountIfConfigured({
+      block,
+      element,
+      blocksForChartResolve,
+      pushInteraction: (h) => state.interactions.push(h),
+    });
   });
 }

@@ -1,5 +1,7 @@
 import { createLinkedTableBlockFromRows } from "../../blocks/tableBlock";
-import { getLinkedTablesToRefresh, loadExcelLinkTableContent } from "../../services/excelLink";
+import { createLinkedChartBlockFromExcel } from "../../blocks/chartBlock";
+import { BLOCK_TYPES } from "../../blocks/blockModel";
+import { getLinkedExcelBlocksToRefresh, loadExcelLinkTableContent } from "../../services/excelLink";
 import { getTauriBackend } from "../../services/tauriStorage";
 import { getBlockInsertionRegionContext } from "../blockInsertionContext";
 import { runExcelLinkSetup, type ExcelLinkModalRefs } from "../linkedTableWizard";
@@ -24,6 +26,7 @@ export function bindLinkedTableEvents({
   refs,
   renderer,
   linkedTableBridge,
+  linkedChartBridge,
 }: any) {
   if (
     !refs?.addLinkedTableButton ||
@@ -32,6 +35,39 @@ export function bindLinkedTableEvents({
     !refs?.excelLinkModal
   ) {
     return;
+  }
+
+  if (linkedChartBridge) {
+    linkedChartBridge.reconfigure = async (block: any) => {
+      const tauri = await getTauriBackend();
+      const link = block.metadata?.excelLink;
+      const result = await runExcelLinkSetup({
+        tauri,
+        modalRefs: getExcelModalRefs(refs),
+        fileInput: refs.excelLinkFileInput,
+        defaults: link
+          ? { sheetName: link.sheetName, range: link.range }
+          : undefined,
+      });
+      if (!result) {
+        return;
+      }
+      block.content = {
+        ...(block.content || {}),
+        dataSourceRows: result.rows,
+        configured: true,
+      };
+      block.metadata = {
+        ...(block.metadata || {}),
+        excelLink: {
+          filePath: result.filePath,
+          sheetName: result.sheetName,
+          range: result.range,
+        },
+      };
+      setLastAction(state, "Grafico linkado reconfigurado.");
+      renderer.render();
+    };
   }
 
   linkedTableBridge.reconfigure = async (block: any) => {
@@ -110,10 +146,43 @@ export function bindLinkedTableEvents({
     renderer.renderCanvas();
   });
 
+  refs.addLinkedChartButton?.addEventListener("click", async () => {
+    const tauri = await getTauriBackend();
+    const result = await runExcelLinkSetup({
+      tauri,
+      modalRefs: getExcelModalRefs(refs),
+      fileInput: refs.excelLinkFileInput,
+    });
+    if (!result) {
+      return;
+    }
+    const ctx = getBlockInsertionRegionContext({ documentData, state, blocks });
+    const position = getNextBlockPosition({
+      blocksForPage: ctx.blocksForRegion,
+      blockSize: { width: 520, height: 320 },
+      pageSize: ctx.regionSize,
+    });
+    const block = createLinkedChartBlockFromExcel({
+      rows: result.rows,
+      excelLink: {
+        filePath: result.filePath,
+        sheetName: result.sheetName,
+        range: result.range,
+      },
+      position,
+      pageId: ctx.isBody ? state.activePageId : null,
+      languageId: state.activeLanguageId,
+      metadata: ctx.isBody ? {} : { region: ctx.region },
+    });
+    blocks.push(block);
+    setLastAction(state, "Grafico linkado ao Excel inserido.");
+    renderer.renderCanvas();
+  });
+
   refs.refreshLinkedTablesButton.addEventListener("click", async () => {
-    const targets = getLinkedTablesToRefresh(blocks, state.selectedBlockIds);
+    const targets = getLinkedExcelBlocksToRefresh(blocks, state.selectedBlockIds);
     if (targets.length === 0) {
-      window.alert("Nao ha tabelas linkadas para atualizar.");
+      window.alert("Nao ha tabelas nem graficos linkados ao Excel para atualizar.");
       return;
     }
     const errors: string[] = [];
@@ -125,16 +194,24 @@ export function bindLinkedTableEvents({
       }
       try {
         const data = await loadExcelLinkTableContent(link);
-        block.content = { ...(block.content || {}), rows: data.rows, merges: data.merges };
-        if (data.cellStyles) {
-          block.content.cellStyles = data.cellStyles;
+        if (block.type === BLOCK_TYPES.CHART) {
+          block.content = {
+            ...(block.content || {}),
+            dataSourceRows: data.rows,
+            configured: true,
+          };
         } else {
-          delete block.content.cellStyles;
-        }
-        if (data.rowHeights) {
-          block.content.rowHeights = data.rowHeights;
-        } else {
-          delete block.content.rowHeights;
+          block.content = { ...(block.content || {}), rows: data.rows, merges: data.merges };
+          if (data.cellStyles) {
+            block.content.cellStyles = data.cellStyles;
+          } else {
+            delete block.content.cellStyles;
+          }
+          if (data.rowHeights) {
+            block.content.rowHeights = data.rowHeights;
+          } else {
+            delete block.content.rowHeights;
+          }
         }
       } catch (e) {
         const msg =
@@ -149,7 +226,7 @@ export function bindLinkedTableEvents({
       state,
       errors.length > 0
         ? "Atualizacao Excel concluida com erros."
-        : "Tabelas linkadas atualizadas.",
+        : "Links Excel atualizados.",
     );
     if (errors.length > 0) {
       window.alert(errors.join("\n\n"));

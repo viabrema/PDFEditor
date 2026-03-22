@@ -122,4 +122,5 @@ describe("chartSpecToChartJs", () => {
     const xScale = (cfg?.options as { scales?: { x?: { type?: string } } })?.scales?.x;
     expect(xScale?.type).toBe("linear");
   });
+
 });

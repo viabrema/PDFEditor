@@ -3,6 +3,8 @@ import type { ChartBlockContent, ChartDatasetSpec } from "./chartBlockTypes";
 import type { ResolvedTableData } from "./chartDataFromTableBlock";
 import { parseCellNumber } from "./chartDataFromTableBlock";
 
+export { applyChartFontScale } from "./chartFontScale";
+
 function cell(rows: string[][], row: number, col: number): string {
   const r = rows[row];
   if (!r || col < 0 || col >= r.length) {

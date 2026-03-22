@@ -13,6 +13,7 @@ export function createRenderer({
   translateFromDefaultLanguage,
   aiFlow,
   linkedTableBridge,
+  linkedChartBridge,
 }: {
   documentData: any;
   state: any;
@@ -21,6 +22,7 @@ export function createRenderer({
   translateFromDefaultLanguage: (id: string) => void;
   aiFlow: any;
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
+  linkedChartBridge?: { reconfigure?: (block: any) => Promise<void> };
 }) {
   function clearViews() {
     state.views.forEach((view) => view.destroy());
@@ -93,6 +95,7 @@ export function createRenderer({
       refs,
       requestRender: render,
       linkedTableBridge,
+      linkedChartBridge,
     });
     syncStatusBar(refs, state);
   }

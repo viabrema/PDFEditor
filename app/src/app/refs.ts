@@ -19,6 +19,7 @@ export function getDomRefs() {
     addLinkedTableButton: document.querySelector("#add-linked-table-block"),
     refreshLinkedTablesButton: document.querySelector("#refresh-linked-tables"),
     addChartButton: document.querySelector("#add-chart-block"),
+    addLinkedChartButton: document.querySelector("#add-linked-chart-block"),
     chartConfigModal: document.querySelector("#chart-config-modal"),
     chartConfigClose: document.querySelector("#chart-config-close"),
     chartConfigCancel: document.querySelector("#chart-config-cancel"),

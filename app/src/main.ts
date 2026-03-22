@@ -35,6 +35,7 @@ const aiService = createAiService({
 const aiFlow = createAiFlow({ blocks, state, documentData });
 
 const linkedTableBridge: { reconfigure?: (block: any) => Promise<void> } = {};
+const linkedChartBridge: { reconfigure?: (block: any) => Promise<void> } = {};
 
 const renderContext: { renderer: ReturnType<typeof createRenderer> | null } = {
   renderer: null,
@@ -57,6 +58,7 @@ renderContext.renderer = createRenderer({
   translateFromDefaultLanguage: translateHandler,
   aiFlow,
   linkedTableBridge,
+  linkedChartBridge,
 });
 
 bindEvents({
@@ -70,6 +72,7 @@ bindEvents({
   translationService,
   aiService,
   linkedTableBridge,
+  linkedChartBridge,
 });
 
 renderContext.renderer.render();

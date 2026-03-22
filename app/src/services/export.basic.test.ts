@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { isExcludedFromPdfExport, renderDocumentToHtml } from "./export";
+import { filterBlocksForPdfExport, isExcludedFromPdfExport, renderDocumentToHtml } from "./export";
 
 describe("export service (basic)", () => {
+  it("filterBlocksForPdfExport returns empty array for non-array input", () => {
+    expect(filterBlocksForPdfExport(null as any)).toEqual([]);
+  });
+
   it("renders basic HTML", () => {
     const document = {
       title: "Demo",

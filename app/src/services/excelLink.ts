@@ -28,6 +28,30 @@ export function getLinkedTablesToRefresh(blocks: any[], selectedBlockIds: string
   return blocks.filter((b) => b.type === BLOCK_TYPES.LINKED_TABLE);
 }
 
+export function blockHasExcelLink(block: any): boolean {
+  const link = block?.metadata?.excelLink;
+  return Boolean(
+    link && String(link.filePath || "").trim() && link.sheetName && String(link.range || "").trim(),
+  );
+}
+
+/** Tabelas linkadas e gráficos com `metadata.excelLink` (mesmo intervalo Excel). */
+export function getLinkedExcelBlocksToRefresh(blocks: any[], selectedBlockIds: string[]) {
+  const selected = (selectedBlockIds || [])
+    .map((id) => blocks.find((b) => b.id === id))
+    .filter(
+      (b) =>
+        b?.type === BLOCK_TYPES.LINKED_TABLE ||
+        (b?.type === BLOCK_TYPES.CHART && blockHasExcelLink(b)),
+    );
+  if (selected.length > 0) {
+    return selected;
+  }
+  return blocks.filter(
+    (b) => b.type === BLOCK_TYPES.LINKED_TABLE || (b.type === BLOCK_TYPES.CHART && blockHasExcelLink(b)),
+  );
+}
+
 export async function loadExcelLinkTableContent(
   link: ExcelLinkMeta,
   readFileFn: (path: string) => Promise<Uint8Array> = readBinaryFileFromPath,

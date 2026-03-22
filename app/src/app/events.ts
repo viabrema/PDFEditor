@@ -18,6 +18,7 @@ export function bindEvents({
   translationService,
   aiService,
   linkedTableBridge,
+  linkedChartBridge,
 }) {
   bindUiEvents({ documentData, state, refs, renderer });
   bindPageEvents({ documentData, state, blocks, refs, renderer });
@@ -30,6 +31,7 @@ export function bindEvents({
     refs,
     renderer,
     linkedTableBridge,
+    linkedChartBridge,
   });
   bindFileEvents({ documentData, state, blocks, refs, stateFile, renderer });
   bindAiEvents({ state, refs, renderer, aiFlow, aiService });

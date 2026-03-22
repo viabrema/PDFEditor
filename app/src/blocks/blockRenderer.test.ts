@@ -176,6 +176,22 @@ describe("block renderer", () => {
     expect(element.querySelector("canvas.chart-block-canvas")).toBeTruthy();
   });
 
+  it("chart linked to Excel shows toolbar hint text", () => {
+    const block = {
+      id: "block-chart-linked",
+      type: "chart",
+      content: { configured: false, dataSourceRows: [], chart: { datasets: [] } },
+      position: { x: 0, y: 0 },
+      size: { width: 300, height: 200 },
+      metadata: {
+        excelLink: { filePath: "C:\\a.xlsx", sheetName: "S", range: "A1:B2" },
+      },
+    };
+    const { element } = createBlockElement(block);
+    const hint = element.querySelector(".chart-block-hint");
+    expect(hint?.textContent).toContain("ferramentas");
+  });
+
   it("applies heading class", () => {
     const headingBlock = {
       id: "block-6",
