@@ -74,10 +74,13 @@ export type ChartSpec = {
 
 export type ChartBlockContent = {
   configured: boolean;
-  dataSourceBlockId: string | null;
+  /** Grelha editável no modal (fonte de dados do gráfico; não usa blocos na área de trabalho). */
+  dataSourceRows: string[][];
   firstRowIsHeader: boolean;
   chart: ChartSpec;
   previewDataUrl?: string;
+  /** Legado: documentos antigos; `resolveChartTableData` pode ler da tabela até migrar. */
+  dataSourceBlockId?: string | null;
 };
 
 export function defaultChartSpec(): ChartSpec {
@@ -107,7 +110,10 @@ export function defaultChartSpec(): ChartSpec {
 export function emptyChartContent(): ChartBlockContent {
   return {
     configured: false,
-    dataSourceBlockId: null,
+    dataSourceRows: [
+      ["A", "B"],
+      ["", ""],
+    ],
     firstRowIsHeader: true,
     chart: defaultChartSpec(),
   };

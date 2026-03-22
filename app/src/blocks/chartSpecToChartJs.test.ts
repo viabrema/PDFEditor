@@ -17,7 +17,11 @@ describe("chartSpecToChartJs", () => {
   it("builds line chart with labels from X column", () => {
     const content: ChartBlockContent = {
       configured: true,
-      dataSourceBlockId: "t1",
+      dataSourceRows: [
+        ["Mes", "Val"],
+        ["Jan", "10"],
+        ["Feb", "20"],
+      ],
       firstRowIsHeader: true,
       chart: {
         version: 1,
@@ -50,7 +54,11 @@ describe("chartSpecToChartJs", () => {
   it("uses bar as root type when mixing bar and line", () => {
     const content: ChartBlockContent = {
       configured: true,
-      dataSourceBlockId: "t1",
+      dataSourceRows: [
+        ["Mes", "Val"],
+        ["Jan", "10"],
+        ["Feb", "20"],
+      ],
       firstRowIsHeader: true,
       chart: {
         version: 1,
@@ -71,5 +79,47 @@ describe("chartSpecToChartJs", () => {
     };
     const cfg = buildChartJsConfiguration(content, resolved);
     expect(cfg?.type).toBe("bar");
+  });
+
+  it("candlestick uses linear x scale (no date adapter)", () => {
+    const content: ChartBlockContent = {
+      configured: true,
+      dataSourceRows: [
+        ["C", "O", "H", "L", "C"],
+        ["Mar/26", "1", "3", "0.5", "2"],
+      ],
+      firstRowIsHeader: true,
+      chart: {
+        version: 1,
+        baseType: "candlestick",
+        title: { text: "T" },
+        legendDisplay: false,
+        legendPosition: "top",
+        yAxisRight: false,
+        datasets: [
+          {
+            id: "d1",
+            label: "P",
+            mapping: {
+              xColumnIndex: 0,
+              openColumnIndex: 1,
+              highColumnIndex: 2,
+              lowColumnIndex: 3,
+              closeColumnIndex: 4,
+            },
+          },
+        ],
+      },
+    };
+    const ohlcResolved: ResolvedTableData = {
+      columnCount: 5,
+      columnLabels: ["C", "O", "H", "L", "C"],
+      dataRows: [["Mar/26", "1", "3", "0.5", "2"]],
+      rawRows: [],
+    };
+    const cfg = buildChartJsConfiguration(content, ohlcResolved);
+    expect(cfg?.type).toBe("candlestick");
+    const xScale = (cfg?.options as { scales?: { x?: { type?: string } } })?.scales?.x;
+    expect(xScale?.type).toBe("linear");
   });
 });

@@ -16,7 +16,11 @@ const table: ResolvedTableData = {
 function makeContent(chart: ChartSpec): ChartBlockContent {
   return {
     configured: true,
-    dataSourceBlockId: "t1",
+    dataSourceRows: [
+      ["A", "B", "C"],
+      ["1", "10", "100"],
+      ["2", "20", "200"],
+    ],
     firstRowIsHeader: true,
     chart,
   };

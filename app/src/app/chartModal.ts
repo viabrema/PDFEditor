@@ -1,4 +1,3 @@
-import { effectiveBlockLanguageId } from "./translationFlow";
 import type {
   ChartBlockContent,
   ChartDatasetSpec,
@@ -6,7 +5,7 @@ import type {
 } from "../blocks/chartBlockTypes";
 import { defaultChartSpec, emptyChartContent } from "../blocks/chartBlockTypes";
 import { CHART_PALETTE_HEX } from "../blocks/chartPalette";
-import { resolveChartTableData } from "../blocks/chartDataFromTableBlock";
+import { normalizeChartDataSourceRows, resolveChartTableData } from "../blocks/chartDataFromTableBlock";
 import { validateChartConfiguration } from "../blocks/chartValidation";
 import { createId } from "../utils/id";
 
@@ -55,21 +54,16 @@ function cloneChartContent(raw: unknown): ChartBlockContent {
           datasets,
         },
       }),
-    );
+    ) as ChartBlockContent;
+    let rows = normalizeChartDataSourceRows(merged.dataSourceRows);
+    if (rows.length === 0) {
+      rows = base.dataSourceRows;
+    }
+    merged.dataSourceRows = rows;
     return merged;
   } catch {
     return base;
   }
-}
-
-function labelForSourceBlock(
-  b: any,
-  documentData: { pages?: { id: string; name?: string }[] },
-): string {
-  const page = documentData.pages?.find((p) => p.id === b.pageId);
-  const pageLabel = page?.name || b.pageId || "?";
-  const kind = b.type === "linkedTable" ? "Tabela linkada" : "Tabela";
-  return `${kind} · ${pageLabel} · …${String(b.id).slice(-6)}`;
 }
 
 export function bindChartModal(options: {
@@ -79,7 +73,7 @@ export function bindChartModal(options: {
   state: any;
   renderer: { renderCanvas: () => void };
 }) {
-  const { refs, blocks, documentData, state, renderer } = options;
+  const { refs, blocks, renderer } = options;
   const modal = refs.chartConfigModal as HTMLElement | null;
   if (!modal) {
     return;
@@ -95,8 +89,13 @@ export function bindChartModal(options: {
     });
   }
 
+  const tabData = refs.chartConfigTabData as HTMLButtonElement | null;
+  const tabInterface = refs.chartConfigTabInterface as HTMLButtonElement | null;
+  const panelData = refs.chartConfigPanelData as HTMLElement | null;
+  const panelInterface = refs.chartConfigPanelInterface as HTMLElement | null;
+  const dataGridHost = refs.chartConfigDataGrid as HTMLElement | null;
+
   const el = {
-    dataSource: refs.chartConfigDataSource as HTMLSelectElement | null,
     firstRow: refs.chartConfigFirstRowHeader as HTMLInputElement | null,
     baseType: refs.chartConfigBaseType as HTMLSelectElement | null,
     chartTitle: refs.chartConfigChartTitle as HTMLInputElement | null,
@@ -109,6 +108,7 @@ export function bindChartModal(options: {
 
   let editingBlock: any = null;
   let working: ChartBlockContent = emptyChartContent();
+  let activeTab: "data" | "interface" = "data";
 
   function show() {
     modal.classList.remove("hidden");
@@ -126,30 +126,62 @@ export function bindChartModal(options: {
     }
   }
 
-  function fillDataSourceSelect() {
-    if (!el.dataSource || !editingBlock) {
+  function setTab(tab: "data" | "interface") {
+    activeTab = tab;
+    const on = "rounded-md px-3 py-1.5 text-sm font-semibold text-slate-900 bg-slate-100";
+    const off = "rounded-md px-3 py-1.5 text-sm font-semibold text-slate-500";
+    if (tabData) {
+      tabData.className = `chart-config-tab ${tab === "data" ? on : off}`;
+    }
+    if (tabInterface) {
+      tabInterface.className = `chart-config-tab ${tab === "interface" ? on : off}`;
+    }
+    if (panelData) {
+      panelData.classList.toggle("hidden", tab !== "data");
+    }
+    if (panelInterface) {
+      panelInterface.classList.toggle("hidden", tab !== "interface");
+    }
+  }
+
+  function readDataGridFromDom(): string[][] {
+    if (!dataGridHost) {
+      return working.dataSourceRows.map((r) => [...r]);
+    }
+    const trs = dataGridHost.querySelectorAll("tr[data-grid-row]");
+    return Array.from(trs).map((tr) =>
+      Array.from(tr.querySelectorAll("input[data-grid-cell]")).map((inp) =>
+        String((inp as HTMLInputElement).value ?? ""),
+      ),
+    );
+  }
+
+  function renderDataGrid() {
+    if (!dataGridHost) {
       return;
     }
-    el.dataSource.innerHTML = "";
-    const opt0 = document.createElement("option");
-    opt0.value = "";
-    opt0.textContent = "— Selecionar tabela —";
-    el.dataSource.append(opt0);
-    const candidates = blocks.filter((b) => {
-      if (b.id === editingBlock.id) {
-        return false;
+    dataGridHost.innerHTML = "";
+    const rows = working.dataSourceRows;
+    const colCount = Math.max(1, ...rows.map((r) => r.length));
+    const table = document.createElement("table");
+    table.className = "w-full border-collapse text-sm";
+    rows.forEach((row, ri) => {
+      const tr = document.createElement("tr");
+      tr.dataset.gridRow = String(ri);
+      for (let ci = 0; ci < colCount; ci += 1) {
+        const td = document.createElement("td");
+        td.className = "border border-slate-200 p-0";
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.dataset.gridCell = `${ri},${ci}`;
+        inp.className = "h-8 w-full min-w-[4.5rem] border-0 bg-white px-2 py-1 outline-none focus:bg-slate-50";
+        inp.value = row[ci] ?? "";
+        td.append(inp);
+        tr.append(td);
       }
-      if (b.type !== "table" && b.type !== "linkedTable") {
-        return false;
-      }
-      return effectiveBlockLanguageId(b, documentData) === state.activeLanguageId;
+      table.append(tr);
     });
-    candidates.forEach((b) => {
-      const o = document.createElement("option");
-      o.value = b.id;
-      o.textContent = labelForSourceBlock(b, documentData);
-      el.dataSource!.append(o);
-    });
+    dataGridHost.append(table);
   }
 
   function renderDatasetEditors() {
@@ -259,6 +291,8 @@ export function bindChartModal(options: {
   }
 
   function readWorkingFromForm(): ChartBlockContent {
+    working.dataSourceRows = readDataGridFromDom();
+
     const chart = working.chart;
     chart.baseType = (el.baseType?.value || "line") as ChartBaseType;
     chart.title = {
@@ -315,16 +349,13 @@ export function bindChartModal(options: {
 
     return {
       ...working,
-      dataSourceBlockId: el.dataSource?.value || null,
       firstRowIsHeader: el.firstRow?.checked !== false,
       chart,
+      dataSourceBlockId: undefined,
     };
   }
 
   function syncFormFromWorking() {
-    if (el.dataSource) {
-      el.dataSource.value = working.dataSourceBlockId || "";
-    }
     if (el.firstRow) {
       el.firstRow.checked = working.firstRowIsHeader !== false;
     }
@@ -340,6 +371,7 @@ export function bindChartModal(options: {
     if (el.yRight) {
       el.yRight.checked = working.chart.yAxisRight === true;
     }
+    renderDataGrid();
     renderDatasetEditors();
   }
 
@@ -366,11 +398,46 @@ export function bindChartModal(options: {
     renderDatasetEditors();
   });
 
+  tabData?.addEventListener("click", () => setTab("data"));
+  tabInterface?.addEventListener("click", () => setTab("interface"));
+
+  (refs.chartConfigAddGridRow as HTMLButtonElement | null)?.addEventListener("click", () => {
+    working.dataSourceRows = readDataGridFromDom();
+    const cols = Math.max(1, ...working.dataSourceRows.map((r) => r.length));
+    working.dataSourceRows.push(Array(cols).fill(""));
+    renderDataGrid();
+  });
+
+  (refs.chartConfigAddGridCol as HTMLButtonElement | null)?.addEventListener("click", () => {
+    working.dataSourceRows = readDataGridFromDom();
+    working.dataSourceRows = working.dataSourceRows.map((r) => [...r, ""]);
+    renderDataGrid();
+  });
+
+  (refs.chartConfigRemoveGridRow as HTMLButtonElement | null)?.addEventListener("click", () => {
+    working.dataSourceRows = readDataGridFromDom();
+    if (working.dataSourceRows.length <= 1) {
+      return;
+    }
+    working.dataSourceRows.pop();
+    renderDataGrid();
+  });
+
+  (refs.chartConfigRemoveGridCol as HTMLButtonElement | null)?.addEventListener("click", () => {
+    working.dataSourceRows = readDataGridFromDom();
+    const cols = Math.max(1, ...working.dataSourceRows.map((r) => r.length));
+    if (cols <= 1) {
+      return;
+    }
+    working.dataSourceRows = working.dataSourceRows.map((r) => r.slice(0, -1));
+    renderDataGrid();
+  });
+
   modalController = {
     open(block: any) {
       editingBlock = block;
       working = cloneChartContent(block.content);
-      fillDataSourceSelect();
+      setTab("data");
       syncFormFromWorking();
       show();
     },
@@ -411,6 +478,7 @@ export function bindChartModal(options: {
     editingBlock.content = {
       ...next,
       configured: true,
+      dataSourceBlockId: undefined,
     };
     hide();
     renderer.renderCanvas();

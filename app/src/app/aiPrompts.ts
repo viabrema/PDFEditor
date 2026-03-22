@@ -4,6 +4,7 @@ export const AI_CREATABLE_BLOCK_TYPES = [
   "heading",
   "table",
   "image",
+  "chart",
 ] as const;
 
 export type AiCreatableBlockType = (typeof AI_CREATABLE_BLOCK_TYPES)[number];
@@ -20,21 +21,42 @@ export function isFormattingInstruction(instruction: string) {
   );
 }
 
+function chartAndDataSourcePromptLines() {
+  return [
+    "  Tabela (create): excludeFromPdfExport?: boolean — se true, a tabela nao entra no PDF/HTML de impressao.",
+    "  Grafico (create): dataSourceRows (obrigatorio): array de arrays de strings (mesmo formato que tableRows); firstRowIsHeader?: boolean (padrao true);",
+    "    Opcional legado: dataSourceBlockId + id de tabela no layout se nao enviar dataSourceRows (evitar).",
+    "    chart: { baseType, title?: {text, backgroundColor?, color?}, legendDisplay?, legendPosition?: 'top'|'bottom'|'left'|'right', yAxisRight?: boolean,",
+    "      datasets: [{ label, type? (misto: line|bar em graficos cartesianos), mapping: { xColumnIndex, yColumnIndex, openColumnIndex?, highColumnIndex?, lowColumnIndex?, closeColumnIndex?, rColumnIndex? }, style?: { borderColor?, backgroundColor?, fill?, tension?, borderWidth?, pointRadius? } }] }",
+    "    baseType: line|bar|pie|doughnut|radar|polarArea|scatter|bubble|candlestick. Indices de coluna sao 0-based (primeira coluna = 0).",
+    "    candlestick: mapping precisa open, high, low, close (indices). bubble: rColumnIndex. pie/doughnut/polarArea: uma serie. Misto: so combinacoes line+bar com base cartesiana.",
+    "  update em bloco chart: dataSourceRows?, tableRows?, content? (equivalente a rows), firstRowIsHeader?, chart?, configured?, position?, size?, pageId?",
+    "Interpretacao de pedidos (exemplos):",
+    "  'Grafico de barras com a tabela selecionada' -> copiar o array `content` do snapshot da tabela selecionada para dataSourceRows do create chart.",
+    "  'Colunas data e aporte' -> cabecalho na primeira linha (firstRowIsHeader true) e indices x/y a partir dos nomes.",
+    "  'Misto barras e linhas' -> baseType line ou bar + datasets[].type alternando bar/line onde permitido.",
+    "  Fonte desnormalizada ou numeros em texto -> construir dataSourceRows normalizada diretamente no create chart.",
+    "  Duas tabelas selecionadas -> fundir numa unica dataSourceRows (wide ou long) num so create chart.",
+  ];
+}
+
 function actionSchemaLines(options: { formatMode: boolean; pageSizeLine: string; gridLine: string }) {
   const { formatMode, pageSizeLine, gridLine } = options;
   const lines = [
     "Voce edita o documento via JSON. Retorne apenas JSON valido.",
     'Formato obrigatorio: {"actions":[...]}.',
     "Tipos de acao: update, create, delete.",
-    "update: {type:'update', id, contentText?, tableRows?, content?, position?, size?, pageId?}",
-    "  Para tabelas: tableRows OU content (array de arrays; uma celula = string).",
+    "update: {type:'update', id, contentText?, tableRows?, content?, position?, size?, pageId?, excludeFromPdfExport?, ...}",
+    "  Para tabelas: tableRows OU content (array de arrays; uma celula = string). excludeFromPdfExport?: boolean aplica-se a table/linkedTable.",
+    "  Para blocos chart: dataSourceRows?, tableRows?, content? (rows), dataSourceBlockId? (legado), firstRowIsHeader?, chart?, configured?",
     "  pageId: so necessario se estiver a mover o bloco para outra pagina (mesmo idioma).",
-    "create: {type:'create', blockType, pageId?, region?, headingLevel?, contentText?, tableRows?, content?, imageSrc?, position?, size?}",
+    "create: {type:'create', blockType, pageId?, region?, headingLevel?, contentText?, tableRows?, content?, imageSrc?, position?, size?, excludeFromPdfExport?, dataSourceRows?, firstRowIsHeader?, chart?}",
     `  blockType permitido para criar: ${AI_CREATABLE_BLOCK_TYPES.map((t) => `'${t}'`).join(", ")}.`,
     "  pageId: omita para usar a pagina ativa do utilizador.",
     "  region: 'body' (padrao), 'header' ou 'footer' quando fizer sentido.",
     "  imageSrc: URL ou data URL para blocos image.",
     "  Tabelas linkadas ao Excel nao podem ser criadas por aqui; use a interface da app.",
+    ...chartAndDataSourcePromptLines(),
     "delete: {type:'delete', id}",
     "position e size: numeros em pixels, inteiros quando possivel. Sem percentagem ou 'auto'.",
     pageSizeLine,

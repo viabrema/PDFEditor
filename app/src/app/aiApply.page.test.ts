@@ -86,4 +86,63 @@ describe("applyAiResultToPage", () => {
     expect(blocks[0].type).toBe("image");
     expect(blocks[0].content.src).toContain("example.com");
   });
+
+  it("creates chart block with embedded dataSourceRows when spec is valid", () => {
+    const blocks: any[] = [];
+    const state = { activePageId: "page-1", activeLanguageId: "lang-pt" };
+    const ok = applyAiResultToPage({
+      resultText: JSON.stringify({
+        actions: [
+          {
+            type: "create",
+            blockType: "chart",
+            dataSourceRows: [
+              ["Mes", "Val"],
+              ["Jan", "10"],
+              ["Fev", "20"],
+            ],
+            chart: {
+              baseType: "bar",
+              datasets: [{ label: "V", mapping: { xColumnIndex: 0, yColumnIndex: 1 } }],
+            },
+            position: { x: 50, y: 50 },
+            size: { width: 400, height: 260 },
+          },
+        ],
+      }),
+      blocks,
+      state,
+      documentData,
+    });
+    expect(ok).toBe(true);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].type).toBe("chart");
+    expect(blocks[0].content.configured).toBe(true);
+    expect(blocks[0].content.dataSourceRows[1][0]).toBe("Jan");
+    expect(blocks[0].content.chart.baseType).toBe("bar");
+  });
+
+  it("creates chart with configured false when dataSourceRows invalid for spec", () => {
+    const blocks: any[] = [];
+    const state = { activePageId: "page-1", activeLanguageId: "lang-pt" };
+    const ok = applyAiResultToPage({
+      resultText: JSON.stringify({
+        actions: [
+          {
+            type: "create",
+            blockType: "chart",
+            dataSourceRows: [["A"]],
+            chart: { baseType: "line", datasets: [{ label: "S", mapping: { xColumnIndex: 0, yColumnIndex: 9 } }] },
+          },
+        ],
+      }),
+      blocks,
+      state,
+      documentData,
+    });
+    expect(ok).toBe(true);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].type).toBe("chart");
+    expect(blocks[0].content.configured).toBe(false);
+  });
 });

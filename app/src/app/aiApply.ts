@@ -1,7 +1,12 @@
 import { createBlock } from "../blocks/blockModel";
+import { createChartBlock } from "../blocks/chartBlock";
 import { normalizePosition, normalizeSize } from "./aiLayout";
 import { buildTextDocFromString } from "./textUtils";
 import { buildTextDocFromMarkdown, looksLikeMarkdownList } from "./aiMarkdownParser";
+import {
+  buildChartBlockContentFromAiAction,
+  mergeChartBlockFromAiUpdate,
+} from "./aiChartFromAction";
 
 export function sanitizeAiPayload(text) {
   return String(text || "")
@@ -281,10 +286,25 @@ export function applyAiResultToPage({ resultText, blocks, state, documentData })
           target.pageId = nextPageId;
         }
 
+        if (target.type === "chart") {
+          target.content = mergeChartBlockFromAiUpdate(
+            target,
+            action as Record<string, unknown>,
+            blocks,
+          ) as any;
+          return;
+        }
+
         if (target.type === "table" || target.type === "linkedTable") {
           const normalized = tableRowsFromAiAction(action);
           if (normalized) {
             target.content = { ...(target.content || {}), rows: normalized };
+          }
+          if (typeof (action as { excludeFromPdfExport?: unknown }).excludeFromPdfExport === "boolean") {
+            target.metadata = {
+              ...(target.metadata || {}),
+              excludeFromPdfExport: (action as { excludeFromPdfExport: boolean }).excludeFromPdfExport,
+            };
           }
           return;
         }
@@ -332,7 +352,10 @@ export function applyAiResultToPage({ resultText, blocks, state, documentData })
       }
       if (action.type === "create" && action.blockType) {
         const pageId = resolvePageIdForAi(action.pageId, documentData, state);
-        const meta = regionMetadataForCreate(action.region);
+        const meta: Record<string, unknown> = { ...regionMetadataForCreate(action.region) };
+        if ((action as { excludeFromPdfExport?: unknown }).excludeFromPdfExport === true) {
+          meta.excludeFromPdfExport = true;
+        }
 
         if (action.blockType === "table") {
           const normalized = tableRowsFromAiAction(action);
@@ -348,6 +371,25 @@ export function applyAiResultToPage({ resultText, blocks, state, documentData })
             languageId: state.activeLanguageId,
             metadata: meta,
           });
+          blocks.push(newBlock);
+          byId.set(newBlock.id, newBlock);
+          return;
+        }
+
+        if (action.blockType === "chart") {
+          const act = action as Record<string, unknown>;
+          const content = buildChartBlockContentFromAiAction(act, blocks);
+          const newBlock = createChartBlock({
+            position: normalizePosition(action.position) || { x: 32, y: 32 },
+            pageId,
+            languageId: state.activeLanguageId,
+            metadata: meta,
+          });
+          const sz = normalizeSize(action.size);
+          if (sz) {
+            newBlock.size = { width: sz.width, height: sz.height };
+          }
+          newBlock.content = content as any;
           blocks.push(newBlock);
           byId.set(newBlock.id, newBlock);
           return;

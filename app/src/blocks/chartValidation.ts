@@ -45,8 +45,14 @@ export function validateChartConfiguration(
   content: ChartBlockContent,
   resolved: ResolvedTableData,
 ): { ok: true } | { ok: false; message: string } {
-  if (!content.dataSourceBlockId) {
-    return { ok: false, message: "Escolha uma tabela como fonte de dados." };
+  const hasEmbedded =
+    Array.isArray(content.dataSourceRows) &&
+    content.dataSourceRows.length > 0 &&
+    content.dataSourceRows.some((r) =>
+      Array.isArray(r) && r.some((c) => String(c ?? "").trim() !== ""),
+    );
+  if (!hasEmbedded && !content.dataSourceBlockId) {
+    return { ok: false, message: "Preencha a grelha na aba Fonte de dados." };
   }
   if (resolved.columnCount < 1) {
     return { ok: false, message: "A fonte nao tem colunas." };

@@ -242,15 +242,31 @@ function renderBlock(block, offset = { x: 0, y: 0 }) {
   return `<div class="block-wrapper" style="${style}">${renderTextBlock(block)}</div>`;
 }
 
+/** Tabelas auxiliares (ex.: fonte normalizada para gráficos) permanecem no documento mas não entram no PDF/HTML de export. */
+export function isExcludedFromPdfExport(block) {
+  return block?.metadata?.excludeFromPdfExport === true;
+}
+
+function filterBlocksForPdfExport(blocks) {
+  if (!Array.isArray(blocks)) {
+    return [];
+  }
+  return blocks.filter((block) => !isExcludedFromPdfExport(block));
+}
+
 function renderRegionBlocks(blocks, offset) {
   if (!Array.isArray(blocks) || blocks.length === 0) {
     return "";
   }
-  return blocks.map((block) => renderBlock(block, offset)).join("");
+  return filterBlocksForPdfExport(blocks)
+    .map((block) => renderBlock(block, offset))
+    .join("");
 }
 
 function renderPage(page, blocks, pageSize, regions) {
-  const blockMarkup = blocks.map((block) => renderBlock(block)).join("");
+  const blockMarkup = filterBlocksForPdfExport(blocks)
+    .map((block) => renderBlock(block))
+    .join("");
   const headerEnabled = regions?.header?.enabled ?? true;
   const footerEnabled = regions?.footer?.enabled ?? true;
   const headerHeight = regions?.header?.height ?? 0;

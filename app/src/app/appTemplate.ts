@@ -295,7 +295,7 @@ export function renderAppTemplate(root) {
           <div class="mb-4 flex items-center justify-between">
             <div>
               <div class="text-lg font-semibold text-slate-900">Configurar grafico</div>
-              <div class="text-xs text-slate-500">Fonte: tabela ou tabela linkada no documento</div>
+              <div class="text-xs text-slate-500">Fonte de dados na grelha abaixo; series e aparencia na aba Interface</div>
             </div>
             <button
               id="chart-config-close"
@@ -305,20 +305,64 @@ export function renderAppTemplate(root) {
               Fechar
             </button>
           </div>
-          <div class="grid gap-4">
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="chart-config-data-source">
-                Fonte de dados (bloco tabela)
-              </label>
-              <select
-                id="chart-config-data-source"
-                class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-              ></select>
+          <div class="mb-4 flex gap-2 border-b border-slate-200 pb-2">
+            <button
+              id="chart-config-tab-data"
+              type="button"
+              class="chart-config-tab rounded-md px-3 py-1.5 text-sm font-semibold text-slate-900 bg-slate-100"
+              data-tab="data"
+            >
+              Fonte de dados
+            </button>
+            <button
+              id="chart-config-tab-interface"
+              type="button"
+              class="chart-config-tab rounded-md px-3 py-1.5 text-sm font-semibold text-slate-500"
+              data-tab="interface"
+            >
+              Interface
+            </button>
+          </div>
+          <div id="chart-config-panel-data" class="chart-config-panel grid gap-4">
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                id="chart-config-add-grid-row"
+                type="button"
+                class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700"
+              >
+                + Linha
+              </button>
+              <button
+                id="chart-config-add-grid-col"
+                type="button"
+                class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700"
+              >
+                + Coluna
+              </button>
+              <button
+                id="chart-config-remove-grid-row"
+                type="button"
+                class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700"
+              >
+                − Ultima linha
+              </button>
+              <button
+                id="chart-config-remove-grid-col"
+                type="button"
+                class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700"
+              >
+                − Ultima coluna
+              </button>
             </div>
             <label class="flex items-center gap-2 text-sm text-slate-700">
               <input id="chart-config-first-row-header" type="checkbox" class="h-4 w-4" checked />
               Primeira linha e cabecalho de colunas
             </label>
+            <div class="max-h-[min(50vh,320px)] overflow-auto rounded-lg border border-slate-200">
+              <div id="chart-config-data-grid" class="p-2"></div>
+            </div>
+          </div>
+          <div id="chart-config-panel-interface" class="chart-config-panel hidden grid gap-4">
             <div class="grid gap-3 sm:grid-cols-2">
               <div class="flex flex-col gap-1">
                 <label class="text-xs font-medium uppercase tracking-wide text-slate-500" for="chart-config-base-type">
@@ -364,8 +408,8 @@ export function renderAppTemplate(root) {
               </div>
               <div id="chart-config-datasets" class="flex flex-col gap-2"></div>
             </div>
-            <p id="chart-config-modal-error" class="min-h-[1.25rem] text-xs text-red-600"></p>
           </div>
+          <p id="chart-config-modal-error" class="mt-4 min-h-[1.25rem] text-xs text-red-600"></p>
           <div class="mt-6 flex justify-end gap-2">
             <button
               id="chart-config-cancel"

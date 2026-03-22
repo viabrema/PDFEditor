@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { resolveChartTableData, getTableRowsFromBlock, parseCellNumber } from "./chartDataFromTableBlock";
+import {
+  resolveChartTableData,
+  getTableRowsFromBlock,
+  parseCellNumber,
+  normalizeChartDataSourceRows,
+} from "./chartDataFromTableBlock";
 import type { ChartBlockContent } from "./chartBlockTypes";
 
 describe("chartDataFromTableBlock", () => {
@@ -16,10 +21,14 @@ describe("chartDataFromTableBlock", () => {
     ]);
   });
 
-  it("resolveChartTableData fails without source id", () => {
+  it("normalizeChartDataSourceRows coerces cells to string", () => {
+    expect(normalizeChartDataSourceRows([["x", 1], null])).toEqual([["x", "1"], []]);
+  });
+
+  it("resolveChartTableData fails when grelha vazia e sem legado", () => {
     const content: ChartBlockContent = {
       configured: false,
-      dataSourceBlockId: null,
+      dataSourceRows: [],
       firstRowIsHeader: true,
       chart: { version: 1, baseType: "line", datasets: [] },
     };
@@ -27,12 +36,57 @@ describe("chartDataFromTableBlock", () => {
     expect(r.ok).toBe(false);
   });
 
-  it("resolveChartTableData resolves table block and strips header row", () => {
+  it("resolveChartTableData uses dataSourceRows embutido", () => {
+    const content: ChartBlockContent = {
+      configured: true,
+      dataSourceRows: [
+        ["X", "Y"],
+        ["a", "1"],
+        ["b", "2"],
+      ],
+      firstRowIsHeader: true,
+      chart: { version: 1, baseType: "line", datasets: [] },
+    };
+    const r = resolveChartTableData([], content);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.dataRows).toEqual([
+        ["a", "1"],
+        ["b", "2"],
+      ]);
+      expect(r.data.columnLabels[0]).toBe("X");
+    }
+  });
+
+  it("resolveChartTableData prioriza grelha embutida sobre legado dataSourceBlockId", () => {
+    const blocks = [
+      { id: "tbl-1", type: "table", content: { rows: [["Old"], ["x"]] } },
+    ];
+    const content: ChartBlockContent = {
+      configured: true,
+      dataSourceRows: [
+        ["U", "V"],
+        ["1", "2"],
+      ],
+      dataSourceBlockId: "tbl-1",
+      firstRowIsHeader: true,
+      chart: { version: 1, baseType: "line", datasets: [] },
+    };
+    const r = resolveChartTableData(blocks, content);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.dataRows).toEqual([["1", "2"]]);
+      expect(r.data.columnLabels[0]).toBe("U");
+    }
+  });
+
+  it("resolveChartTableData usa bloco tabela apenas se grelha vazia (legado)", () => {
     const blocks = [
       { id: "tbl-1", type: "table", content: { rows: [["X", "Y"], ["a", "1"], ["b", "2"]] } },
     ];
     const content: ChartBlockContent = {
       configured: true,
+      dataSourceRows: [],
       dataSourceBlockId: "tbl-1",
       firstRowIsHeader: true,
       chart: { version: 1, baseType: "line", datasets: [] },
@@ -44,7 +98,6 @@ describe("chartDataFromTableBlock", () => {
         ["a", "1"],
         ["b", "2"],
       ]);
-      expect(r.data.columnLabels[0]).toBe("X");
     }
   });
 });

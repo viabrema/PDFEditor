@@ -1,5 +1,6 @@
 import { createBlock, BLOCK_TYPES } from "./blockModel";
 import { emptyChartContent, type ChartBlockContent } from "./chartBlockTypes";
+import { normalizeChartDataSourceRows } from "./chartDataFromTableBlock";
 
 const DEFAULT_CHART_SIZE = { width: 520, height: 320 };
 
@@ -23,18 +24,33 @@ export function createChartBlock(options: {
 export function getChartContent(block: { content?: unknown }): ChartBlockContent {
   const c = block.content as ChartBlockContent | undefined;
   if (c && typeof c === "object" && "chart" in c) {
+    let dataSourceRows = normalizeChartDataSourceRows(c.dataSourceRows);
+    if (dataSourceRows.length === 0) {
+      dataSourceRows = emptyChartContent().dataSourceRows;
+    }
     return {
       configured: Boolean(c.configured),
-      dataSourceBlockId: c.dataSourceBlockId ?? null,
+      dataSourceRows,
       firstRowIsHeader: c.firstRowIsHeader !== false,
       chart: c.chart,
       previewDataUrl: c.previewDataUrl,
+      dataSourceBlockId: c.dataSourceBlockId ?? undefined,
     };
   }
   return emptyChartContent();
 }
 
+function gridHasAnyValue(rows: string[][]): boolean {
+  return rows.some((r) => r.some((cell) => String(cell ?? "").trim() !== ""));
+}
+
 export function isChartConfigured(block: { content?: unknown }): boolean {
   const c = getChartContent(block);
-  return Boolean(c.configured && c.dataSourceBlockId);
+  if (!c.configured) {
+    return false;
+  }
+  if (gridHasAnyValue(c.dataSourceRows)) {
+    return true;
+  }
+  return Boolean(c.dataSourceBlockId);
 }

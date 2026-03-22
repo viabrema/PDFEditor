@@ -1,18 +1,24 @@
 ---
-description: Invariantes do bloco chart (Chart.js), modal, export PDF e refresh Excel.
+description: Invariantes do bloco chart (Chart.js), modal, export PDF, refresh Excel e IA.
 globs:
   - app/src/blocks/chart*.ts
   - app/src/blocks/chartJsRegister.ts
   - app/src/app/chartModal.ts
+  - app/src/app/aiChartFromAction.ts
+  - app/src/app/aiPrompts.ts
+  - app/src/app/aiApply.ts
+  - app/src/app/aiBlockSerialize.ts
   - app/src/app/renderBlocks.ts
   - app/src/services/export.ts
 ---
 
 # Bloco Chart
 
-- **Conteúdo**: `block.content` segue `ChartBlockContent` em `chartBlockTypes.ts` (`configured`, `dataSourceBlockId`, `firstRowIsHeader`, `chart` com `version` e `baseType`, `previewDataUrl` opcional).
+- **Conteúdo**: `block.content` segue `ChartBlockContent` em `chartBlockTypes.ts` (`configured`, `dataSourceRows` grelha embutida, `firstRowIsHeader`, `chart`, `previewDataUrl` opcional; `dataSourceBlockId` só legado).
 - **Chart.js**: registo de controllers/plugins num único módulo (`chartJsRegister.ts`); não duplicar `Chart.register` noutros sítios.
 - **Runtime**: `chartRuntime.ts` gere instâncias por `blockId`; antes de limpar o canvas do documento chamar `destroyAllBlockCharts()` (ver `render.ts`).
 - **PDF / HTML**: export usa `<img src="previewDataUrl">` quando `previewDataUrl` é `data:image/...`; sem snapshot, mostrar placeholder textual.
+- **Tabelas auxiliares**: `metadata.excludeFromPdfExport === true` omite o bloco em `renderDocumentToHtml` / PDF (dados normalizados para gráficos); o bloco permanece no documento guardado.
 - **Modal**: validar com `validateChartConfiguration` + `resolveChartTableData` antes de gravar; falhas → mensagem ao utilizador (`alert` e/ou `#chart-config-modal-error`).
-- **Linked table**: após refresh Excel bem-sucedido, atualizar gráficos ligados com `refreshChartsUsingTableBlock(sourceId, blocks)` (ver `linkedTableEvents.ts`).
+- **Modal**: duas abas — **Fonte de dados** (grelha editável no bloco) e **Interface** (tipo, séries, título). A fonte não é um bloco tabela na área de trabalho.
+- **IA**: `chart` está em `AI_CREATABLE_BLOCK_TYPES`; ações `create`/`update` documentadas em `aiPrompts.ts`; montagem e validação em `aiChartFromAction.ts` + `applyAiResultToPage` em `aiApply.ts`; snapshot de gráfico em `serializeBlockForAi`.

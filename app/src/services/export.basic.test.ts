@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderDocumentToHtml } from "./export";
+import { isExcludedFromPdfExport, renderDocumentToHtml } from "./export";
 
 describe("export service (basic)", () => {
   it("renders basic HTML", () => {
@@ -77,6 +77,40 @@ describe("export service (basic)", () => {
     expect(html).toContain("<table>");
   });
 
+  it("omits blocks with metadata.excludeFromPdfExport from export HTML", () => {
+    const html = renderDocumentToHtml({
+      title: "Hidden",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "block-visible",
+              type: "text",
+              position: { x: 0, y: 0 },
+              size: { width: 100, height: 40 },
+              content: { type: "doc", content: [{ type: "text", text: "Visivel" }] },
+            },
+            {
+              id: "block-hidden-table",
+              type: "table",
+              position: { x: 900, y: 0 },
+              size: { width: 120, height: 60 },
+              metadata: { excludeFromPdfExport: true },
+              content: { rows: [["X", "Y"], ["1", "2"]] },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(isExcludedFromPdfExport({ metadata: { excludeFromPdfExport: true } })).toBe(true);
+    expect(html).toContain("block-visible");
+    expect(html).toContain("Visivel");
+    expect(html).not.toContain("block-hidden-table");
+  });
+
   it("renders chart block with preview image", () => {
     const html = renderDocumentToHtml({
       title: "Chart",
@@ -93,7 +127,7 @@ describe("export service (basic)", () => {
               content: {
                 previewDataUrl: "data:image/png;base64,AAAA",
                 configured: true,
-                dataSourceBlockId: "t1",
+                dataSourceRows: [["A"], ["1"]],
                 chart: { version: 1, baseType: "line", datasets: [] },
               },
             },

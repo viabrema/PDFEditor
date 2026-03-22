@@ -59,8 +59,7 @@ export function buildChartJsConfiguration(
     base === "line" ||
     base === "bar" ||
     base === "scatter" ||
-    base === "bubble" ||
-    base === "candlestick"
+    base === "bubble"
       ? {
           x: {
             grid: { display: true },
@@ -178,6 +177,37 @@ export function buildChartJsConfiguration(
         c: c ?? 0,
       };
     });
+    // chartjs-chart-financial defaults x to `timeseries`, which needs a date adapter.
+    // We use index / numeric X and show labels from the X column via ticks.callback.
+    const scalesCandlestick = {
+      x: {
+        type: "linear" as const,
+        grid: { display: true },
+        ticks: {
+          maxRotation: 45,
+          minRotation: 0,
+          callback(tickValue: string | number) {
+            const n = typeof tickValue === "number" ? tickValue : Number(tickValue);
+            if (!Number.isFinite(n)) {
+              return String(tickValue);
+            }
+            const idx = Math.round(n);
+            if (idx >= 0 && idx < rows.length) {
+              const label = cell(rows, idx, xi).trim();
+              if (label) {
+                return label;
+              }
+            }
+            return String(tickValue);
+          },
+        },
+      },
+      y: {
+        type: "linear" as const,
+        position: chart.yAxisRight ? ("right" as const) : ("left" as const),
+        grid: { display: true },
+      },
+    };
     return {
       type: "candlestick",
       data: {
@@ -206,7 +236,7 @@ export function buildChartJsConfiguration(
           legend: legendOpts,
           title: titlePlugin as any,
         },
-        scales: scalesCartesian as any,
+        scales: scalesCandlestick as any,
       },
     };
   }

@@ -145,7 +145,7 @@ describe("block renderer", () => {
     const block = {
       id: "block-chart",
       type: "chart",
-      content: { configured: false, dataSourceBlockId: null, chart: { datasets: [] } },
+      content: { configured: false, dataSourceRows: [], chart: { datasets: [] } },
       position: { x: 0, y: 0 },
       size: { width: 300, height: 200 },
     };
@@ -161,7 +161,10 @@ describe("block renderer", () => {
       type: "chart",
       content: {
         configured: true,
-        dataSourceBlockId: "tbl-x",
+        dataSourceRows: [
+          ["a", "b"],
+          ["1", "2"],
+        ],
         firstRowIsHeader: true,
         chart: { version: 1, baseType: "line", datasets: [] },
       },

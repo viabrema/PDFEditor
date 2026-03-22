@@ -1,5 +1,4 @@
 import { createLinkedTableBlockFromRows } from "../../blocks/tableBlock";
-import { refreshChartsUsingTableBlock } from "../../blocks/chartRefresh";
 import { getLinkedTablesToRefresh, loadExcelLinkTableContent } from "../../services/excelLink";
 import { getTauriBackend } from "../../services/tauriStorage";
 import { getBlockInsertionRegionContext } from "../blockInsertionContext";
@@ -118,7 +117,6 @@ export function bindLinkedTableEvents({
       return;
     }
     const errors: string[] = [];
-    const refreshedIds: string[] = [];
     for (const block of targets) {
       const link = block.metadata?.excelLink;
       if (!link) {
@@ -138,7 +136,6 @@ export function bindLinkedTableEvents({
         } else {
           delete block.content.rowHeights;
         }
-        refreshedIds.push(block.id);
       } catch (e) {
         const msg =
           e instanceof Error
@@ -146,9 +143,6 @@ export function bindLinkedTableEvents({
             : "Nao foi possivel ler o ficheiro (pode ter sido movido ou apagado).";
         errors.push(`Bloco ${block.id}: ${msg}`);
       }
-    }
-    for (const id of refreshedIds) {
-      refreshChartsUsingTableBlock(id, blocks);
     }
     renderer.renderCanvas();
     setLastAction(
