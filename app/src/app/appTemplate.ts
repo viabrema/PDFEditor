@@ -132,10 +132,8 @@ export function renderAppTemplate(root) {
             class="min-h-0 flex-1 overflow-auto rounded-xl bg-slate-50"
           >
             <div class="flex min-h-full w-full flex-col items-center p-6">
-              <div id="canvas-scale-outer" class="inline-block align-top">
-                <div id="canvas-scale-root" class="inline-block align-top">
-                  <div id="canvas" class="flex w-full flex-col gap-6"></div>
-                </div>
+              <div id="canvas-zoom-root" class="inline-block align-top">
+                <div id="canvas" class="flex w-full flex-col gap-6"></div>
               </div>
             </div>
           </div>

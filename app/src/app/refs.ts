@@ -1,8 +1,7 @@
 export function getDomRefs() {
   return {
     canvasScroll: document.querySelector("#canvas-scroll"),
-    canvasScaleOuter: document.querySelector("#canvas-scale-outer"),
-    canvasScaleRoot: document.querySelector("#canvas-scale-root"),
+    canvasZoomRoot: document.querySelector("#canvas-zoom-root"),
     canvas: document.querySelector("#canvas"),
     statusLastAction: document.querySelector("#status-last-action"),
     zoomOutButton: document.querySelector("#zoom-out"),

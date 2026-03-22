@@ -6,27 +6,20 @@ export function clampZoomPercent(value: number): number {
   return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, n));
 }
 
-export function getPointerScale(state: any): number {
-  const p = state?.ui?.zoomPercent ?? 100;
-  return clampZoomPercent(p) / 100;
-}
-
+/**
+ * Zoom do canvas com CSS `zoom` (Chromium / WebView2 / Tauri). Mantém coordenadas de layout
+ * alinhadas ao ponteiro para interact.js, ao contrário de `transform: scale`.
+ */
 export function syncCanvasZoomLayout(refs: any, state: any) {
-  const outer = refs.canvasScaleOuter;
-  const scaleRoot = refs.canvasScaleRoot;
-  const canvas = refs.canvas;
-  if (!outer || !scaleRoot || !canvas) {
+  const root = refs.canvasZoomRoot;
+  if (!root) {
     return;
   }
 
-  const s = getPointerScale(state);
-  scaleRoot.style.transform = `scale(${s})`;
-  scaleRoot.style.transformOrigin = "0 0";
-
-  const w = canvas.offsetWidth;
-  const h = canvas.offsetHeight;
-  outer.style.width = `${Math.ceil(w * s)}px`;
-  outer.style.height = `${Math.ceil(h * s)}px`;
+  const z = clampZoomPercent(state?.ui?.zoomPercent ?? 100);
+  (root as HTMLElement).style.zoom = `${z}%`;
+  (root as HTMLElement).style.removeProperty("transform");
+  (root as HTMLElement).style.removeProperty("transform-origin");
 }
 
 let zoomLayoutRaf = 0;

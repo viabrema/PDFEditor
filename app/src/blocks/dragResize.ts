@@ -53,12 +53,11 @@ function hasFullClientRect(er: any): boolean {
   );
 }
 
-/** Mocks / eventos sem `left`+`top`: lógica antiga só para testes. */
-function resizeLayoutFallback(block: any, event: any, scale: number) {
-  const s = scale > 0 ? scale : 1;
+/** Mocks sem `left`+`top` no rect. */
+function resizeLayoutFallback(block: any, event: any) {
   const dr = event.deltaRect || {};
-  const dl = (dr.left ?? 0) / s;
-  const dt = (dr.top ?? 0) / s;
+  const dl = dr.left ?? 0;
+  const dt = dr.top ?? 0;
   const x = block.position.x + dl;
   const y = block.position.y + dt;
 
@@ -67,15 +66,15 @@ function resizeLayoutFallback(block: any, event: any, scale: number) {
     return {
       x,
       y,
-      width: Math.max(1, er.width / s),
-      height: Math.max(1, er.height / s),
+      width: Math.max(1, er.width),
+      height: Math.max(1, er.height),
     };
   }
 
-  const dwFromEdges = ((dr.right ?? 0) - (dr.left ?? 0)) / s;
-  const dhFromEdges = ((dr.bottom ?? 0) - (dr.top ?? 0)) / s;
-  const dw = Number.isFinite(dr.width) ? dr.width / s : dwFromEdges;
-  const dh = Number.isFinite(dr.height) ? dr.height / s : dhFromEdges;
+  const dwFromEdges = (dr.right ?? 0) - (dr.left ?? 0);
+  const dhFromEdges = (dr.bottom ?? 0) - (dr.top ?? 0);
+  const dw = Number.isFinite(dr.width) ? dr.width : dwFromEdges;
+  const dh = Number.isFinite(dr.height) ? dr.height : dhFromEdges;
 
   return {
     x,
@@ -90,11 +89,9 @@ export function setupDragResize({
   block,
   gridSize,
   snapEnabled,
-  coordinateScale = 1,
   onUpdate,
   interactFactory = interact,
 }: any) {
-  const s = coordinateScale > 0 ? coordinateScale : 1;
   if (!element || !block) {
     throw new Error("Drag/resize requires element and block.");
   }
@@ -132,7 +129,7 @@ export function setupDragResize({
         move(event) {
           const nextPosition = applyDrag({
             position: block.position,
-            delta: { x: event.dx / s, y: event.dy / s },
+            delta: { x: event.dx, y: event.dy },
             gridSize,
             snapEnabled: false,
           });
@@ -180,13 +177,13 @@ export function setupDragResize({
             }
             const b = resizeBaseline;
             rect = {
-              x: b.pos.x + (er.left - b.client.left) / s,
-              y: b.pos.y + (er.top - b.client.top) / s,
-              width: Math.max(1, b.size.width + (er.width - b.client.width) / s),
-              height: Math.max(1, b.size.height + (er.height - b.client.height) / s),
+              x: b.pos.x + (er.left - b.client.left),
+              y: b.pos.y + (er.top - b.client.top),
+              width: Math.max(1, b.size.width + (er.width - b.client.width)),
+              height: Math.max(1, b.size.height + (er.height - b.client.height)),
             };
           } else {
-            rect = resizeLayoutFallback(block, event, s);
+            rect = resizeLayoutFallback(block, event);
           }
 
           const next = applyResize({ rect, gridSize, snapEnabled: false });

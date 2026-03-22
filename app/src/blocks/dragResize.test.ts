@@ -300,7 +300,7 @@ describe("dragResize", () => {
     expect(() => setupDragResize({})).toThrow(/element/);
   });
 
-  it("divide deltas pelo coordinateScale (zoom)", () => {
+  it("drag usa deltas em px de cliente sem conversao (ex.: zoom CSS)", () => {
     const window = new Window();
     const element = window.document.createElement("div");
     const block = {
@@ -326,23 +326,22 @@ describe("dragResize", () => {
       block,
       gridSize: 10,
       snapEnabled: false,
-      coordinateScale: 2,
       interactFactory,
     });
 
     api.dragOptions.listeners.move({ dx: 10, dy: 6 });
-    expect(block.position).toEqual({ x: 5, y: 3 });
+    expect(block.position).toEqual({ x: 10, y: 6 });
 
     api.resizeOptions.listeners.move({
       rect: { width: 200, height: 100 },
       deltaRect: { left: 0, top: 0 },
     });
-    expect(block.size).toEqual({ width: 100, height: 50 });
+    expect(block.size).toEqual({ width: 200, height: 100 });
 
     interaction.destroy();
   });
 
-  it("resize incremental com deltaRect alinha com zoom (dois passos)", () => {
+  it("resize incremental com deltaRect (dois passos)", () => {
     const window = new Window();
     const element = window.document.createElement("div");
     const block = {
@@ -368,24 +367,23 @@ describe("dragResize", () => {
       block,
       gridSize: 10,
       snapEnabled: false,
-      coordinateScale: 2,
       interactFactory,
     });
 
     api.resizeOptions.listeners.move({
       deltaRect: { left: 0, top: 0, right: 20, bottom: 0, width: 20, height: 0 },
     });
-    expect(block.size).toEqual({ width: 110, height: 80 });
+    expect(block.size).toEqual({ width: 120, height: 80 });
 
     api.resizeOptions.listeners.move({
       deltaRect: { left: 0, top: 0, right: 0, bottom: 20, width: 0, height: 20 },
     });
-    expect(block.size).toEqual({ width: 110, height: 90 });
+    expect(block.size).toEqual({ width: 120, height: 100 });
 
     interaction.destroy();
   });
 
-  it("resize com rect completo: delta em cliente / escala sem salto inicial", () => {
+  it("resize com rect completo: baseline 1:1 sem salto inicial", () => {
     const window = new Window();
     const element = window.document.createElement("div");
     const block = {
@@ -411,7 +409,6 @@ describe("dragResize", () => {
       block,
       gridSize: 10,
       snapEnabled: false,
-      coordinateScale: 2,
       interactFactory,
     });
 
@@ -424,13 +421,13 @@ describe("dragResize", () => {
     api.resizeOptions.listeners.move({
       rect: { left: 100, top: 200, width: 120, height: 80 },
     });
-    expect(block.size.width).toBe(110);
+    expect(block.size.width).toBe(120);
 
     api.resizeOptions.listeners.move({
       rect: { left: 110, top: 200, width: 110, height: 80 },
     });
-    expect(block.position.x).toBe(15);
-    expect(block.size.width).toBe(105);
+    expect(block.position.x).toBe(20);
+    expect(block.size.width).toBe(110);
 
     interaction.destroy();
   });

@@ -5,11 +5,9 @@ export function setupRegionResize({
   region,
   documentData,
   pageSize,
-  coordinateScale = 1,
   onFinish,
   interactFactory = interact,
 }) {
-  const s = coordinateScale > 0 ? coordinateScale : 1;
   const isHeader = region === "header";
   const minHeight = 40;
   const maxHeight = Math.max(minHeight, Math.floor(pageSize.height * 0.4));
@@ -21,7 +19,7 @@ export function setupRegionResize({
       move(event) {
         const nextHeight = Math.max(
           minHeight,
-          Math.min(maxHeight, event.rect.height / s)
+          Math.min(maxHeight, event.rect.height),
         );
         if (!documentData.regions) {
           documentData.regions = { header: { enabled: true }, footer: { enabled: true } };
