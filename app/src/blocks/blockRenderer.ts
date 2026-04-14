@@ -15,6 +15,9 @@ export function createBlockElement(block, { selected = false, editing = false } 
   if (selected) {
     element.classList.add("is-selected");
   }
+  if (block.metadata?.hidden === true) {
+    element.classList.add("is-hidden-data");
+  }
   if (editing) {
     element.classList.add("is-editing");
   }

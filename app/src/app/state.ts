@@ -38,6 +38,7 @@ export function createInitialState(documentData) {
     ui: {
       zoomPercent: 100,
       lastAction: "Pronto.",
+      showHiddenBlocks: false,
     },
   };
 }

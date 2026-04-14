@@ -2,7 +2,7 @@ import { normalizeGridSize } from "../../utils/grid";
 import { clampZoomPercent, syncStatusBar } from "../canvasZoom";
 import { setLastAction } from "../activityLog";
 
-export function bindUiEvents({ documentData, state, refs, renderer, documentHistory }) {
+export function bindUiEvents({ documentData, state, blocks, refs, renderer, documentHistory }) {
   function openSettings() {
     refs.pageSettingsModal.classList.remove("hidden");
     refs.pageSettingsModal.classList.add("flex");
@@ -104,6 +104,26 @@ export function bindUiEvents({ documentData, state, refs, renderer, documentHist
   refs.aiPanelClose.addEventListener("click", () => {
     state.ai.open = false;
     renderer.renderAiPanel();
+  });
+
+  refs.toggleHiddenDataButton?.addEventListener("click", () => {
+    state.ui = state.ui || { zoomPercent: 100, lastAction: "", showHiddenBlocks: false };
+    state.ui.showHiddenBlocks = !state.ui.showHiddenBlocks;
+
+    if (!state.ui.showHiddenBlocks) {
+      const hiddenIds = new Set(
+        blocks
+          .filter((block) => block.metadata?.hidden === true)
+          .map((block) => block.id),
+      );
+      state.selectedBlockIds = (state.selectedBlockIds || []).filter((id) => !hiddenIds.has(id));
+      if (hiddenIds.has(state.editingBlockId)) {
+        state.editingBlockId = null;
+      }
+    }
+
+    setLastAction(state, state.ui.showHiddenBlocks ? "Visualizacao de dados: ligada." : "Visualizacao de dados: desligada.");
+    renderer.render();
   });
 
   function bumpZoom(delta: number) {

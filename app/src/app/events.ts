@@ -23,7 +23,7 @@ export function bindEvents({
   documentHistory,
 }) {
   bindHistoryEvents({ refs, state, documentHistory, renderer });
-  bindUiEvents({ documentData, state, refs, renderer, documentHistory });
+  bindUiEvents({ documentData, state, blocks, refs, renderer, documentHistory });
   bindPageEvents({ documentData, state, blocks, refs, renderer, documentHistory });
   bindBlockEvents({ documentData, state, blocks, refs, renderer, documentHistory });
   bindChartModal({ refs, blocks, documentData, state, renderer, documentHistory });

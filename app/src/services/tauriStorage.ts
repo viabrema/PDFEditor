@@ -37,24 +37,58 @@ export function createTauriAdapter({ fs }) {
   };
 }
 
-export async function pickSavePath({ dialog }) {
+function createJsonDialogFilters(extensions: string[]) {
+  return [{ name: "JSON", extensions }];
+}
+
+function normalizeJsonExtensions(extensions?: string[]) {
+  if (!Array.isArray(extensions) || extensions.length === 0) {
+    return ["json"];
+  }
+
+  const normalized = extensions
+    .map((value) => String(value || "").trim().toLowerCase().replace(/^\./, ""))
+    .filter(Boolean);
+
+  return normalized.length > 0 ? normalized : ["json"];
+}
+
+function ensureFileSuffix(path: string, suffix?: string) {
+  if (!suffix) {
+    return path;
+  }
+
+  const normalizedSuffix = String(suffix).trim();
+  if (!normalizedSuffix) {
+    return path;
+  }
+
+  return path.toLowerCase().endsWith(normalizedSuffix.toLowerCase())
+    ? path
+    : `${path}${normalizedSuffix}`;
+}
+
+export async function pickSavePath({ dialog }, options: any = {}) {
   if (!dialog?.save) {
     throw new Error("Tauri dialog API is required.");
   }
 
+  const extensions = normalizeJsonExtensions(options.extensions);
   return dialog.save({
-    filters: [{ name: "JSON", extensions: ["json"] }],
+    filters: createJsonDialogFilters(extensions),
+    defaultPath: options.defaultPath,
   });
 }
 
-export async function pickOpenPath({ dialog }) {
+export async function pickOpenPath({ dialog }, options: any = {}) {
   if (!dialog?.open) {
     throw new Error("Tauri dialog API is required.");
   }
 
+  const extensions = normalizeJsonExtensions(options.extensions);
   return dialog.open({
     multiple: false,
-    filters: [{ name: "JSON", extensions: ["json"] }],
+    filters: createJsonDialogFilters(extensions),
   });
 }
 
@@ -91,7 +125,7 @@ export async function pickPdfSavePath({ dialog }) {
 }
 
 export async function saveDocumentToFile(document: unknown, options: any = {}) {
-  const { filePath, tauri, adapter } = options;
+  const { filePath, tauri, adapter, dialogOptions, fileSuffix } = options;
   const resolvedAdapter = adapter || (tauri ? createTauriAdapter(tauri) : null);
 
   if (!resolvedAdapter) {
@@ -99,18 +133,20 @@ export async function saveDocumentToFile(document: unknown, options: any = {}) {
   }
 
   const storage = createStorageService(resolvedAdapter);
-  const targetPath = filePath || (tauri ? await pickSavePath(tauri) : null);
+  const rawTargetPath = filePath || (tauri ? await pickSavePath(tauri, dialogOptions) : null);
 
-  if (!targetPath) {
+  if (!rawTargetPath) {
     return null;
   }
+
+  const targetPath = ensureFileSuffix(rawTargetPath, fileSuffix);
 
   await storage.saveDocument(document, targetPath);
   return targetPath;
 }
 
 export async function loadDocumentFromFile(options: any = {}) {
-  const { filePath, tauri, adapter } = options;
+  const { filePath, tauri, adapter, dialogOptions } = options;
   const resolvedAdapter = adapter || (tauri ? createTauriAdapter(tauri) : null);
 
   if (!resolvedAdapter) {
@@ -118,7 +154,7 @@ export async function loadDocumentFromFile(options: any = {}) {
   }
 
   const storage = createStorageService(resolvedAdapter);
-  const targetPath = filePath || (tauri ? await pickOpenPath(tauri) : null);
+  const targetPath = filePath || (tauri ? await pickOpenPath(tauri, dialogOptions) : null);
 
   if (!targetPath) {
     return null;

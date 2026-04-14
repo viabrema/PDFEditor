@@ -229,6 +229,8 @@ export function createRenderer({
   }
 
   function render() {
+    state.ui = state.ui || { zoomPercent: 100, lastAction: "", showHiddenBlocks: false };
+
     if (refs.removePageButton) {
       const onlyOne = documentData.pages.length <= 1;
       (refs.removePageButton as HTMLButtonElement).disabled = onlyOne;
@@ -243,6 +245,21 @@ export function createRenderer({
     refs.snapToggle.checked = documentData.grid.snap;
     refs.headerToggle.checked = documentData.regions?.header?.enabled ?? true;
     refs.footerToggle.checked = documentData.regions?.footer?.enabled ?? true;
+    if (refs.toggleHiddenDataButton) {
+      refs.toggleHiddenDataButton.className = state.ui.showHiddenBlocks
+        ? "icon-button rounded-md bg-slate-900 text-white"
+        : "icon-button rounded-md border border-slate-300 bg-white text-slate-700";
+      refs.toggleHiddenDataButton.innerHTML = state.ui.showHiddenBlocks
+        ? '<i data-lucide="eye-off"></i>'
+        : '<i data-lucide="eye"></i>';
+      refs.toggleHiddenDataButton.title = state.ui.showHiddenBlocks
+        ? "Ocultar dados ocultos"
+        : "Ver dados ocultos";
+      refs.toggleHiddenDataButton.setAttribute(
+        "aria-label",
+        state.ui.showHiddenBlocks ? "Ocultar dados ocultos" : "Ver dados ocultos",
+      );
+    }
 
     renderTabs(
       refs.languageTabsHost,

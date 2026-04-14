@@ -26,13 +26,17 @@ export function renderCanvasView({
   const activeBlocks = blocks.filter(
     (block) => effectiveBlockLanguageId(block, documentData) === state.activeLanguageId,
   );
-  const headerBlocks = activeBlocks.filter(
+  const showHiddenBlocks = state.ui?.showHiddenBlocks === true;
+  const visibleBlocks = showHiddenBlocks
+    ? activeBlocks
+    : activeBlocks.filter((block) => block.metadata?.hidden !== true);
+  const headerBlocks = visibleBlocks.filter(
     (block) => block.metadata?.region === "header"
   );
-  const footerBlocks = activeBlocks.filter(
+  const footerBlocks = visibleBlocks.filter(
     (block) => block.metadata?.region === "footer"
   );
-  const bodyBlocks = activeBlocks.filter(
+  const bodyBlocks = visibleBlocks.filter(
     (block) =>
       block.metadata?.region !== "header" && block.metadata?.region !== "footer"
   );

@@ -2,6 +2,7 @@ export function createToolbar(commands: any, options: any = {}) {
   const {
     disabled = false,
     variant = "text",
+    hiddenValue = false,
     onAlignChange,
     onFontFamilyChange,
     onFontSizeChange,
@@ -10,6 +11,7 @@ export function createToolbar(commands: any, options: any = {}) {
     onLinkedTableExcelConfigure,
     onLinkedChartExcelConfigure,
     onLinkedChartDesignConfigure,
+    onToggleHidden,
     alignValue = "left",
     fontFamilyValue = "Segoe UI",
     fontSizeValue = "16px",
@@ -18,6 +20,32 @@ export function createToolbar(commands: any, options: any = {}) {
   } = options;
   const container = document.createElement("div");
   container.className = "flex flex-wrap items-center gap-2";
+
+  function appendHiddenToggleButton() {
+    if (!onToggleHidden) {
+      return;
+    }
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.action = "toggle-hidden";
+    btn.className = hiddenValue
+      ? "toolbar-icon-button rounded-md bg-slate-900 text-white shadow-sm"
+      : "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
+    btn.title = hiddenValue ? "Desmarcar dado oculto" : "Marcar como dado oculto";
+    btn.setAttribute("aria-label", btn.title);
+    btn.innerHTML = `<i data-lucide="database"></i>`;
+    if (disabled) {
+      btn.disabled = true;
+      btn.classList.add("opacity-40", "cursor-not-allowed");
+    }
+    btn.addEventListener("click", () => onToggleHidden?.(!hiddenValue));
+    container.append(btn);
+  }
+
+  if (variant === "table") {
+    appendHiddenToggleButton();
+    return container;
+  }
 
   if (variant === "linkedTable" || variant === "linkedChart") {
     const label = document.createElement("span");
@@ -71,6 +99,8 @@ export function createToolbar(commands: any, options: any = {}) {
       designBtn.addEventListener("click", () => onLinkedChartDesignConfigure());
       container.append(designBtn);
     }
+
+    appendHiddenToggleButton();
 
     return container;
   }
@@ -191,6 +221,8 @@ export function createToolbar(commands: any, options: any = {}) {
     button.addEventListener("click", () => item.action && item.action());
     container.append(button);
   });
+
+  appendHiddenToggleButton();
 
   return container;
 }

@@ -48,6 +48,27 @@ describe("tauri storage", () => {
     const dialog = { save: vi.fn(async () => "doc.json") };
     const path = await pickSavePath({ dialog });
     expect(path).toBe("doc.json");
+    expect(dialog.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: [{ name: "JSON", extensions: ["json"] }],
+      })
+    );
+  });
+
+  it("picks save path with custom json options", async () => {
+    const dialog = { save: vi.fn(async () => "arquivo") };
+    const path = await pickSavePath(
+      { dialog },
+      { extensions: [".tp.json", " json "], defaultPath: "arquivo.tp.json" }
+    );
+
+    expect(path).toBe("arquivo");
+    expect(dialog.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        defaultPath: "arquivo.tp.json",
+        filters: [{ name: "JSON", extensions: ["tp.json", "json"] }],
+      })
+    );
   });
 
   it("throws when dialog save missing", async () => {
@@ -58,6 +79,23 @@ describe("tauri storage", () => {
     const dialog = { open: vi.fn(async () => "doc.json") };
     const path = await pickOpenPath({ dialog });
     expect(path).toBe("doc.json");
+    expect(dialog.open).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: [{ name: "JSON", extensions: ["json"] }],
+      })
+    );
+  });
+
+  it("picks open path with custom json options", async () => {
+    const dialog = { open: vi.fn(async () => "modelo.tp.json") };
+    const path = await pickOpenPath({ dialog }, { extensions: ["TP.JSON"] });
+
+    expect(path).toBe("modelo.tp.json");
+    expect(dialog.open).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: [{ name: "JSON", extensions: ["tp.json"] }],
+      })
+    );
   });
 
   it("throws when dialog open missing", async () => {
@@ -121,6 +159,25 @@ describe("tauri storage", () => {
 
     expect(path).toBe("doc.json");
     expect(fs.writeTextFile).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies file suffix when saving", async () => {
+    const adapter = {
+      readFile: vi.fn(),
+      writeFile: vi.fn(async () => {}),
+    };
+
+    const path = await saveDocumentToFile(sampleDocument, {
+      filePath: "arquivo",
+      adapter,
+      fileSuffix: ".tp.json",
+    });
+
+    expect(path).toBe("arquivo.tp.json");
+    expect(adapter.writeFile).toHaveBeenCalledWith(
+      "arquivo.tp.json",
+      expect.any(String)
+    );
   });
 
   it("returns null when save is cancelled", async () => {

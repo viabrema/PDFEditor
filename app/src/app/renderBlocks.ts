@@ -57,7 +57,15 @@ export function renderBlocksInContainer({
     container.append(element);
 
     if (isEditing && block.type === "table") {
-      const toolbar = createToolbar(null, { disabled: true, variant: "table" });
+      const toolbar = createToolbar(null, {
+        variant: "table",
+        hiddenValue: block.metadata?.hidden === true,
+        onToggleHidden: (hidden: boolean) => {
+          documentHistory?.checkpointBeforeChange();
+          block.metadata = { ...(block.metadata || {}), hidden };
+          requestRender();
+        },
+      });
       state.interactions.push(attachFloatingBlockToolbar(element, toolbar));
     }
 
@@ -79,6 +87,12 @@ export function renderBlocksInContainer({
         onLinkedTableExcelConfigure: linkedTableBridge?.reconfigure
           ? () => linkedTableBridge.reconfigure!(block)
           : undefined,
+        hiddenValue: block.metadata?.hidden === true,
+        onToggleHidden: (hidden: boolean) => {
+          documentHistory?.checkpointBeforeChange();
+          block.metadata = { ...(block.metadata || {}), hidden };
+          requestRender();
+        },
       });
       state.interactions.push(attachFloatingBlockToolbar(element, toolbar));
     }
@@ -96,6 +110,12 @@ export function renderBlocksInContainer({
           ? () => linkedChartBridge.reconfigure!(block)
           : undefined,
         onLinkedChartDesignConfigure: () => openChartConfiguration(block),
+        hiddenValue: block.metadata?.hidden === true,
+        onToggleHidden: (hidden: boolean) => {
+          documentHistory?.checkpointBeforeChange();
+          block.metadata = { ...(block.metadata || {}), hidden };
+          requestRender();
+        },
       });
       state.interactions.push(attachFloatingBlockToolbar(element, toolbar));
     }
@@ -228,6 +248,12 @@ export function renderBlocksInContainer({
             documentHistory?.checkpointBeforeChange();
             block.metadata = { ...(block.metadata || {}), headingLevel: level };
             applyBlockStyles();
+            requestRender();
+          },
+          hiddenValue: block.metadata?.hidden === true,
+          onToggleHidden: (hidden) => {
+            documentHistory?.checkpointBeforeChange();
+            block.metadata = { ...(block.metadata || {}), hidden };
             requestRender();
           },
         });

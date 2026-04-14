@@ -204,4 +204,17 @@ describe("block renderer", () => {
 
     expect(headingElement.className).toContain("heading-block");
   });
+
+  it("applies hidden data class when block metadata.hidden is true", () => {
+    const block = {
+      id: "block-hidden",
+      type: "text",
+      metadata: { hidden: true },
+      position: { x: 0, y: 0 },
+      size: { width: 200, height: 100 },
+    };
+
+    const { element } = createBlockElement(block);
+    expect(element.className).toContain("is-hidden-data");
+  });
 });

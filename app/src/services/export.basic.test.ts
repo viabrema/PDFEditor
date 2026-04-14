@@ -115,6 +115,39 @@ describe("export service (basic)", () => {
     expect(html).not.toContain("block-hidden-table");
   });
 
+  it("omits blocks marked as hidden from export HTML", () => {
+    const html = renderDocumentToHtml({
+      title: "Hidden Data",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "block-visible-text",
+              type: "text",
+              position: { x: 0, y: 0 },
+              size: { width: 120, height: 40 },
+              content: { type: "doc", content: [{ type: "text", text: "Renderiza" }] },
+            },
+            {
+              id: "block-hidden-data",
+              type: "table",
+              position: { x: 0, y: 50 },
+              size: { width: 120, height: 40 },
+              metadata: { hidden: true },
+              content: { rows: [["A"]] },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(isExcludedFromPdfExport({ metadata: { hidden: true } })).toBe(true);
+    expect(html).toContain("block-visible-text");
+    expect(html).not.toContain("block-hidden-data");
+  });
+
   it("renders chart block with preview image", () => {
     const html = renderDocumentToHtml({
       title: "Chart",

@@ -190,4 +190,59 @@ describe("toolbar", () => {
       expect(select.disabled).toBe(true);
     });
   });
+
+  it("renders hidden toggle on text toolbar and toggles state", () => {
+    let nextHidden = false;
+    const toolbar = createToolbar(
+      {
+        toggleBold: () => {},
+        toggleItalic: () => {},
+        toggleBulletList: () => {},
+        toggleOrderedList: () => {},
+      },
+      {
+        variant: "text",
+        hiddenValue: false,
+        onToggleHidden: (next: boolean) => {
+          nextHidden = next;
+        },
+      }
+    );
+
+    const toggle = toolbar.querySelector('button[data-action="toggle-hidden"]') as HTMLButtonElement;
+    expect(toggle).toBeTruthy();
+    expect(toggle.getAttribute("aria-label")).toContain("Marcar como dado oculto");
+    toggle.click();
+    expect(nextHidden).toBe(true);
+  });
+
+  it("renders table toolbar with only hidden toggle", () => {
+    let nextHidden = true;
+    const toolbar = createToolbar(null, {
+      variant: "table",
+      hiddenValue: true,
+      onToggleHidden: (next: boolean) => {
+        nextHidden = next;
+      },
+    });
+
+    const buttons = toolbar.querySelectorAll("button");
+    expect(buttons.length).toBe(1);
+    expect((buttons[0] as HTMLButtonElement).dataset.action).toBe("toggle-hidden");
+    expect((buttons[0] as HTMLButtonElement).getAttribute("aria-label")).toContain("Desmarcar");
+    (buttons[0] as HTMLButtonElement).click();
+    expect(nextHidden).toBe(false);
+  });
+
+  it("disables hidden toggle when toolbar is disabled", () => {
+    const toolbar = createToolbar(null, {
+      variant: "table",
+      disabled: true,
+      hiddenValue: false,
+      onToggleHidden: () => {},
+    });
+
+    const toggle = toolbar.querySelector('button[data-action="toggle-hidden"]') as HTMLButtonElement;
+    expect(toggle.disabled).toBe(true);
+  });
 });

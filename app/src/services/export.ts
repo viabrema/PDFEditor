@@ -244,7 +244,7 @@ function renderBlock(block, offset = { x: 0, y: 0 }) {
 
 /** Tabelas auxiliares (ex.: fonte normalizada para gráficos) permanecem no documento mas não entram no PDF/HTML de export. */
 export function isExcludedFromPdfExport(block) {
-  return block?.metadata?.excludeFromPdfExport === true;
+  return block?.metadata?.excludeFromPdfExport === true || block?.metadata?.hidden === true;
 }
 
 export function filterBlocksForPdfExport(blocks) {

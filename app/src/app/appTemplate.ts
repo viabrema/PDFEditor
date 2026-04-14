@@ -47,6 +47,33 @@ export function renderAppTemplate(root) {
               <i data-lucide="save"></i>
             </button>
             <button
+              id="save-template"
+              type="button"
+              class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"
+              title="Salvar template"
+              aria-label="Salvar template"
+            >
+              <i data-lucide="file-json"></i>
+            </button>
+            <button
+              id="open-template"
+              type="button"
+              class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"
+              title="Carregar template"
+              aria-label="Carregar template"
+            >
+              <i data-lucide="file-input"></i>
+            </button>
+            <button
+              id="toggle-hidden-data"
+              type="button"
+              class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"
+              title="Ver dados ocultos"
+              aria-label="Ver dados ocultos"
+            >
+              <i data-lucide="eye"></i>
+            </button>
+            <button
               id="export-pdf"
               type="button"
               class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"

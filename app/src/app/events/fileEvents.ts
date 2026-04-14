@@ -19,6 +19,7 @@ export function bindFileEvents({
   renderer,
   documentHistory,
 }: any) {
+  let templateFilePath: string | null = null;
 
   refs.openDocButton.addEventListener("click", async () => {
     const tauri = await getTauriBackend();
@@ -66,6 +67,64 @@ export function bindFileEvents({
     stateFile.path = path;
     refs.docStatus.textContent = path.split(/[\\/]/).pop();
     setLastAction(state, "Documento guardado.");
+  });
+
+  refs.saveTemplateButton.addEventListener("click", async () => {
+    const tauri = await getTauriBackend();
+    if (!tauri) {
+      refs.docStatus.textContent = "Tauri indisponivel";
+      return;
+    }
+
+    const snapshot = buildDocumentSnapshot(documentData, blocks);
+    const path = await saveDocumentToFile(snapshot, {
+      tauri,
+      filePath: templateFilePath,
+      dialogOptions: {
+        extensions: ["json"],
+        defaultPath: "arquivo.tp.json",
+      },
+      fileSuffix: ".tp.json",
+    });
+
+    if (!path) {
+      return;
+    }
+
+    templateFilePath = path;
+    refs.docStatus.textContent = path.split(/[\\/]/).pop();
+    setLastAction(state, "Template guardado.");
+  });
+
+  refs.openTemplateButton.addEventListener("click", async () => {
+    const tauri = await getTauriBackend();
+    if (!tauri) {
+      refs.docStatus.textContent = "Tauri indisponivel";
+      return;
+    }
+
+    const result = await loadDocumentFromFile({
+      tauri,
+      dialogOptions: {
+        extensions: ["json"],
+      },
+    });
+    if (!result) {
+      return;
+    }
+
+    templateFilePath = result.path;
+    refs.docStatus.textContent = result.path.split(/[\\/]/).pop();
+    setLastAction(state, "Template carregado.");
+    documentHistory?.clear();
+    applyDocumentSnapshot({
+      documentData,
+      blocks,
+      state,
+      snapshot: result.document,
+      renderer,
+      preserveNavigation: false,
+    });
   });
 
   refs.exportPdfButton.addEventListener("click", async () => {
