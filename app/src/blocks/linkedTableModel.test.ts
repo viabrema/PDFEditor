@@ -5,6 +5,7 @@ import {
   formatDataLayerCellForDisplay,
   getTableDataRows,
   getTableRowsForStyleGrid,
+  getTableDataMerges,
   getTableStructureMerges,
   getTableVisualRows,
   getTypingCellRawValue,
@@ -235,7 +236,7 @@ describe("linkedTableModel", () => {
     ).toEqual([merge]);
   });
 
-  it("getTableStructureMerges prefers dataSourceMerges on linked table", () => {
+  it("getTableStructureMerges uses visual merges on linked table", () => {
     const block = {
       type: BLOCK_TYPES.LINKED_TABLE,
       content: {
@@ -244,7 +245,38 @@ describe("linkedTableModel", () => {
         merges: [{ r: 0, c: 0, rowspan: 1, colspan: 1 }],
       },
     };
-    expect(getTableStructureMerges(block)).toEqual([{ r: 0, c: 0, rowspan: 1, colspan: 2 }]);
+    expect(getTableStructureMerges(block)).toEqual([{ r: 0, c: 0, rowspan: 1, colspan: 1 }]);
+  });
+
+  it("getTableDataMerges delegates to structure merges on plain table", () => {
+    const merge = { r: 0, c: 0, rowspan: 1, colspan: 2 };
+    expect(
+      getTableDataMerges({
+        type: BLOCK_TYPES.TABLE,
+        content: { rows: [["a"]], merges: [merge] },
+      }),
+    ).toEqual([merge]);
+  });
+
+  it("getTableDataMerges returns empty when dataSourceMerges is invalid", () => {
+    expect(
+      getTableDataMerges({
+        type: BLOCK_TYPES.LINKED_TABLE,
+        content: { dataSourceRows: [["a"]], dataSourceMerges: null as unknown as [] },
+      }),
+    ).toEqual([]);
+  });
+
+  it("getTableDataMerges prefers dataSourceMerges on linked table", () => {
+    const block = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: {
+        dataSourceRows: [["a"]],
+        dataSourceMerges: [{ r: 0, c: 0, rowspan: 1, colspan: 2 }],
+        merges: [{ r: 0, c: 0, rowspan: 1, colspan: 1 }],
+      },
+    };
+    expect(getTableDataMerges(block)).toEqual([{ r: 0, c: 0, rowspan: 1, colspan: 2 }]);
   });
 
   it("getTableRowsForStyleGrid returns data rows", () => {

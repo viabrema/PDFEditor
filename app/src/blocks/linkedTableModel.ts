@@ -57,16 +57,30 @@ export function getTableDataRows(block: { type?: string; content?: LinkedTableBl
   );
 }
 
+/** Mesclagens visuais no canvas (editor); em tabelas linkadas nao inclui merges do Excel. */
 export function getTableStructureMerges(block: {
   type?: string;
   content?: LinkedTableBlockContent;
 }): ExcelTableMerge[] {
   if (isLinkedTableBlock(block)) {
     normalizeLinkedTableContent(block);
-    const list = block.content?.dataSourceMerges ?? block.content?.merges;
+    const list = block.content?.merges;
     return Array.isArray(list) ? [...list] : [];
   }
   return Array.isArray(block.content?.merges) ? [...(block.content!.merges as ExcelTableMerge[])] : [];
+}
+
+/** Mesclagens da camada de dados (Excel); modal Fonte de dados. */
+export function getTableDataMerges(block: {
+  type?: string;
+  content?: LinkedTableBlockContent;
+}): ExcelTableMerge[] {
+  if (isLinkedTableBlock(block)) {
+    normalizeLinkedTableContent(block);
+    const list = block.content?.dataSourceMerges;
+    return Array.isArray(list) ? [...list] : [];
+  }
+  return getTableStructureMerges(block);
 }
 
 export function getTableVisualRows(block: { type?: string; content?: LinkedTableBlockContent }): string[][] {

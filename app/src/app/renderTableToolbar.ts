@@ -3,6 +3,13 @@ import {
   resolveTableDomMode,
   syncTableElementWithBlock,
 } from "../blocks/tableBlock";
+import { getTableDataRows } from "../blocks/linkedTableModel";
+import {
+  getStructureMerges,
+  mergeCellsInBlock,
+  mergeStateForSelection,
+  unmergeCellsInBlock,
+} from "../blocks/tableCellMerge";
 import {
   applyFormatPatchToEdit,
   effectiveFormatScope,
@@ -12,8 +19,40 @@ import {
 import type { ExcelTableCellStyle } from "../services/excelTableStyle";
 import { createTableFormatToolbar } from "../ui/tableFormatToolbar";
 import { compactIconButton, labeledField } from "../ui/contextToolbarLayout";
+import type { TableEditState } from "../blocks/tableBlockInteraction";
 import type { DocumentHistory } from "./documentHistory";
 import { openLinkedTableDataSource } from "./linkedTableDataModal";
+
+function tableRowColCounts(block: { type?: string; content?: unknown }) {
+  const rows = getTableDataRows(block);
+  return {
+    rowCount: rows.length,
+    colCount: rows.reduce((max, row) => Math.max(max, row.length), 0),
+  };
+}
+
+function applyTableMergeEdit(
+  block: { id?: string; type?: string; content?: unknown; metadata?: { fontScale?: unknown } },
+  state: { tableEdit?: { blockId?: string } & Record<string, unknown> },
+  element: HTMLElement,
+  documentHistory: DocumentHistory | undefined,
+  requestRender: () => void,
+  nextEdit: Omit<TableEditState, "blockId"> | null,
+) {
+  if (!nextEdit || !block.id) {
+    return;
+  }
+  documentHistory?.checkpointBeforeChange();
+  state.tableEdit = { blockId: block.id, ...nextEdit };
+  const table = element.querySelector("table.table-block") as HTMLTableElement | undefined;
+  if (table) {
+    syncTableElementWithBlock(table, block, {
+      mode: resolveTableDomMode(block.id, (state as { editingBlockId?: string | null }).editingBlockId ?? null, state.tableEdit as TableEditState),
+      edit: state.tableEdit as TableEditState,
+    });
+  }
+  requestRender();
+}
 
 function buildLinkedTableToolbarParts(
   block: any,
@@ -130,6 +169,27 @@ export function mountTableFormatToolbar({
       documentHistory?.checkpointBeforeChange();
       block.metadata = { ...(block.metadata || {}), hidden };
       requestRender();
+    },
+    getMergeState: () => {
+      const edit = state.tableEdit?.blockId === block.id ? state.tableEdit : null;
+      const { rowCount, colCount } = tableRowColCounts(block);
+      return mergeStateForSelection(edit, getStructureMerges(block), rowCount, colCount);
+    },
+    onMerge: () => {
+      const edit = state.tableEdit?.blockId === block.id ? state.tableEdit : null;
+      if (!edit) {
+        return;
+      }
+      const next = mergeCellsInBlock(block, edit);
+      applyTableMergeEdit(block, state, element, documentHistory, requestRender, next);
+    },
+    onUnmerge: () => {
+      const edit = state.tableEdit?.blockId === block.id ? state.tableEdit : null;
+      if (!edit) {
+        return;
+      }
+      const next = unmergeCellsInBlock(block, edit);
+      applyTableMergeEdit(block, state, element, documentHistory, requestRender, next);
     },
     linkedActionButtons: linkedParts?.actionButtons,
     linkedFields: linkedParts?.fields,

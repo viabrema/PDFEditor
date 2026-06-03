@@ -1,7 +1,7 @@
 import {
   formatDataLayerCellForDisplay,
   getTableDataRows,
-  getTableStructureMerges,
+  getTableDataMerges,
   normalizeLinkedTableContent,
 } from "../blocks/linkedTableModel";
 import type { ExcelTableMerge } from "../services/excelRange";
@@ -91,7 +91,7 @@ export function bindLinkedTableDataModal(refs: Record<string, Element | null>) {
     open(block) {
       normalizeLinkedTableContent(block);
       const rows = getTableDataRows(block);
-      const merges = getTableStructureMerges(block);
+      const merges = getTableDataMerges(block);
       renderDataGrid(gridHost, rows, merges);
       show();
     },

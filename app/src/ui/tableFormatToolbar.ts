@@ -15,6 +15,9 @@ export function createTableFormatToolbar(options: {
   getFocus: () => { row: number; col: number };
   getScope: () => TableFormatScope;
   onApply: (patch: Partial<ExcelTableCellStyle>, scope: TableFormatScope) => void;
+  getMergeState?: () => { canMerge: boolean; canUnmerge: boolean };
+  onMerge?: () => void;
+  onUnmerge?: () => void;
   hiddenValue?: boolean;
   onToggleHidden?: (hidden: boolean) => void;
   linkedActionButtons?: HTMLElement[];
@@ -51,6 +54,20 @@ export function createTableFormatToolbar(options: {
     ),
     compactIconButton("align-right", "Alinhar direita", () => options.onApply({ textAlign: "right" }, scope())),
   );
+
+  if (options.getMergeState && options.onMerge && options.onUnmerge) {
+    const mergeBtn = compactIconButton("table-cells-merge", "Mesclar celulas", () => options.onMerge!());
+    const unmergeBtn = compactIconButton("table-cells-split", "Desmesclar celulas", () => options.onUnmerge!());
+    const refreshMergeButtons = () => {
+      const st = options.getMergeState!();
+      mergeBtn.disabled = !st.canMerge;
+      unmergeBtn.disabled = !st.canUnmerge;
+    };
+    refreshMergeButtons();
+    mergeBtn.addEventListener("click", refreshMergeButtons);
+    unmergeBtn.addEventListener("click", refreshMergeButtons);
+    actions.append(toolbarSeparator(), mergeBtn, unmergeBtn);
+  }
 
   if (options.linkedActionButtons?.length) {
     actions.append(toolbarSeparator());

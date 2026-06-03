@@ -210,4 +210,42 @@ describe("tableFormatToolbar", () => {
     expect(hiddenBtn.title).toContain("Marcar");
     hiddenBtn.click();
   });
+
+  it("renders merge buttons and respects merge state", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const onMerge = vi.fn();
+    const onUnmerge = vi.fn();
+
+    const toolbar = createTableFormatToolbar({
+      block: { content: { rows: [["1", "2"]] } },
+      getFocus: () => ({ row: 0, col: 0 }),
+      getScope: () => "cell",
+      onApply: vi.fn(),
+      getMergeState: () => ({ canMerge: true, canUnmerge: false }),
+      onMerge,
+      onUnmerge,
+    });
+
+    const mergeBtn = toolbar.querySelector('[title="Mesclar celulas"]') as HTMLButtonElement;
+    const unmergeBtn = toolbar.querySelector('[title="Desmesclar celulas"]') as HTMLButtonElement;
+    expect(mergeBtn.disabled).toBe(false);
+    expect(unmergeBtn.disabled).toBe(true);
+    mergeBtn.click();
+    expect(onMerge).toHaveBeenCalled();
+
+    const unmergeToolbar = createTableFormatToolbar({
+      block: { content: { rows: [["1"]] } },
+      getFocus: () => ({ row: 0, col: 0 }),
+      getScope: () => "cell",
+      onApply: vi.fn(),
+      getMergeState: () => ({ canMerge: false, canUnmerge: true }),
+      onMerge: vi.fn(),
+      onUnmerge,
+    });
+    const unmergeOnly = unmergeToolbar.querySelector('[title="Desmesclar celulas"]') as HTMLButtonElement;
+    unmergeOnly.click();
+    expect(onUnmerge).toHaveBeenCalled();
+  });
 });
