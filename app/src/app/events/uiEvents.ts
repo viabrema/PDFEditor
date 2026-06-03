@@ -3,32 +3,6 @@ import { clampZoomPercent, syncStatusBar } from "../canvasZoom";
 import { setLastAction } from "../activityLog";
 
 export function bindUiEvents({ documentData, state, blocks, refs, renderer, documentHistory }) {
-  function openSettings() {
-    refs.pageSettingsModal.classList.remove("hidden");
-    refs.pageSettingsModal.classList.add("flex");
-    refs.pageSettingsModal.setAttribute("aria-hidden", "false");
-  }
-
-  function closeSettings() {
-    refs.pageSettingsModal.classList.add("hidden");
-    refs.pageSettingsModal.classList.remove("flex");
-    refs.pageSettingsModal.setAttribute("aria-hidden", "true");
-  }
-
-  refs.pageSettingsButton.addEventListener("click", () => {
-    openSettings();
-  });
-
-  refs.pageSettingsClose.addEventListener("click", () => {
-    closeSettings();
-  });
-
-  refs.pageSettingsModal.addEventListener("click", (event) => {
-    if (event.target === refs.pageSettingsModal) {
-      closeSettings();
-    }
-  });
-
   refs.formatSelect.addEventListener("change", (event) => {
     documentHistory?.checkpointBeforeChange();
     documentData.page.format = event.target.value;
@@ -73,6 +47,7 @@ export function bindUiEvents({ documentData, state, blocks, refs, renderer, docu
       state.activeRegion = "body";
       state.selectedBlockIds = [];
       state.editingBlockId = null;
+      state.tableEdit = null;
     }
     setLastAction(state, `Cabecalho: ${event.target.checked ? "visivel" : "oculto"}`);
     renderer.render();
@@ -91,6 +66,7 @@ export function bindUiEvents({ documentData, state, blocks, refs, renderer, docu
       state.activeRegion = "body";
       state.selectedBlockIds = [];
       state.editingBlockId = null;
+      state.tableEdit = null;
     }
     setLastAction(state, `Rodape de pagina: ${event.target.checked ? "visivel" : "oculto"}`);
     renderer.render();
@@ -119,6 +95,7 @@ export function bindUiEvents({ documentData, state, blocks, refs, renderer, docu
       state.selectedBlockIds = (state.selectedBlockIds || []).filter((id) => !hiddenIds.has(id));
       if (hiddenIds.has(state.editingBlockId)) {
         state.editingBlockId = null;
+        state.tableEdit = null;
       }
     }
 

@@ -20,6 +20,8 @@ export default defineConfig({
         "src/blocks/chartJsRegister.ts",
         "src/blocks/chartPalette.ts",
         "src/blocks/chartSpecToChartJs.ts",
+        "src/blocks/chartJsConfig*.ts",
+        "src/blocks/tableBlock.ts",
         "src/blocks/chartDataFromTableBlock.ts",
         "src/blocks/chartValidation.ts",
         "src/blocks/dragResize.ts",

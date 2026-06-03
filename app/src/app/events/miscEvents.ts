@@ -10,6 +10,7 @@ export function bindMiscEvents({ state, blocks, renderer, documentHistory }: any
     if (el?.closest(".page-surface")) {
       if (state.editingBlockId || state.selectedBlockIds.length > 0) {
         state.editingBlockId = null;
+        state.tableEdit = null;
         state.selectedBlockIds = [];
         renderer.render();
       }
@@ -42,6 +43,7 @@ export function bindMiscEvents({ state, blocks, renderer, documentHistory }: any
     }
     state.selectedBlockIds = [];
     state.editingBlockId = null;
+    state.tableEdit = null;
     setLastAction(state, "Bloco removido.");
     renderer.render();
   });

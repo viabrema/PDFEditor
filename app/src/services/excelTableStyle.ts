@@ -9,6 +9,15 @@ export {
   parseThemeClrScheme,
 } from "./excelThemeColors";
 
+export type TableNumberFormatKind = "general" | "number" | "currency" | "percent";
+
+/** Formato numerico por celula/linha/coluna (locale + casas decimais). */
+export type TableNumberFormat = {
+  kind: TableNumberFormatKind;
+  decimals?: number;
+  locale?: string;
+};
+
 /** Estilo serializavel por celula (CSS) para canvas + export PDF. */
 export type ExcelTableCellStyle = {
   color?: string;
@@ -23,6 +32,7 @@ export type ExcelTableCellStyle = {
   borderRight?: string;
   borderBottom?: string;
   borderLeft?: string;
+  numberFormat?: TableNumberFormat;
 };
 
 const BORDER_STYLE_CSS: Partial<Record<string, string>> = {

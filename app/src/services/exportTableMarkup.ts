@@ -1,4 +1,5 @@
 import { TABLE_BLOCK_BASE_FONT_PX, clampLinkedTableFontScale } from "../blocks/tableBlock";
+import { buildResolvedCellStylesMap } from "../blocks/tableFormatting";
 import {
   cellStyleToCssString,
   escapeHtmlStyleAttr,
@@ -18,13 +19,24 @@ export function renderTableBlockMarkup(
     id: string;
     type?: string;
     metadata?: { fontScale?: unknown };
-    content?: { rows?: unknown; merges?: unknown; cellStyles?: unknown };
+    content?: {
+      rows?: unknown;
+      merges?: unknown;
+      cellStyles?: unknown;
+      rowStyles?: unknown;
+      colStyles?: unknown;
+    };
   },
   escapeHtml: (v: unknown) => string,
 ): string {
   const rows = Array.isArray(block.content?.rows) ? (block.content!.rows as string[][]) : [];
   const merges = (Array.isArray(block.content?.merges) ? block.content!.merges : []) as ExportTableMerge[];
-  const cellStyles = (block.content?.cellStyles as Record<string, ExcelTableCellStyle> | undefined) || {};
+  const cellStyles = buildResolvedCellStylesMap({
+    rows: rows as string[][],
+    cellStyles: block.content?.cellStyles as Record<string, ExcelTableCellStyle> | undefined,
+    rowStyles: block.content?.rowStyles as Record<string, Partial<ExcelTableCellStyle>> | undefined,
+    colStyles: block.content?.colStyles as Record<string, Partial<ExcelTableCellStyle>> | undefined,
+  });
   const excelBorderMode =
     block.type === "linkedTable" || Object.keys(cellStyles).length > 0;
   const fontScale =

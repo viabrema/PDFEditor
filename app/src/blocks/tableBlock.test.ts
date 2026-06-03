@@ -10,8 +10,11 @@ import {
   createTableElement,
   normalizeRows,
   parseTabularText,
+  cellValueForDisplay,
+  cellValueFromDisplay,
   readTableRows,
   setTableEditable,
+  TABLE_CELL_EMPTY_PLACEHOLDER,
   updateTableBody,
 } from "./tableBlock";
 
@@ -159,6 +162,46 @@ describe("table block", () => {
     expect(rows).toEqual([["a", "b"]]);
   });
 
+  it("cellValue helpers pass through non-empty text", () => {
+    expect(cellValueForDisplay("x")).toBe("x");
+    expect(cellValueFromDisplay("hello")).toBe("hello");
+    expect(cellValueFromDisplay(undefined)).toBe("");
+    expect(cellValueFromDisplay(null)).toBe("");
+  });
+
+  it("empty cells use placeholder in DOM but read as empty string", () => {
+    expect(cellValueForDisplay("")).toBe(TABLE_CELL_EMPTY_PLACEHOLDER);
+    expect(cellValueFromDisplay(TABLE_CELL_EMPTY_PLACEHOLDER)).toBe("");
+
+    const window = new Window();
+    globalThis.document = window.document;
+    const table = window.document.createElement("table");
+    updateTableBody(table, [["a", ""], ["", "b"]]);
+    const emptyTd = table.querySelector("td[data-table-col='1']") as HTMLTableCellElement;
+    expect(emptyTd.textContent).toBe(TABLE_CELL_EMPTY_PLACEHOLDER);
+    expect(readTableRows(table)).toEqual([["a", ""], ["", "b"]]);
+  });
+
+  it("readTableRows treats null textContent as empty", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+    const table = window.document.createElement("table");
+    updateTableBody(table, [["a"]]);
+    const td = table.querySelector("td") as HTMLTableCellElement;
+    Object.defineProperty(td, "textContent", { value: null, configurable: true });
+    expect(readTableRows(table)).toEqual([[""]]);
+  });
+
+  it("updateTableBody treats undefined cell values as empty", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+    const table = window.document.createElement("table");
+    updateTableBody(table, [["filled", undefined as unknown as string]]);
+    const cells = table.querySelectorAll("td");
+    expect(cells[0]?.textContent).toBe("filled");
+    expect(cells[1]?.textContent).toBe(TABLE_CELL_EMPTY_PLACEHOLDER);
+  });
+
   it("toggles table edit mode", () => {
     const window = new Window();
     globalThis.document = window.document;
@@ -167,9 +210,9 @@ describe("table block", () => {
     const table = createTableElement(block);
 
     setTableEditable(table, false);
-    expect(table.classList.contains("is-readonly")).toBe(true);
+    expect(table.classList.contains("is-view-mode")).toBe(true);
     setTableEditable(table, true);
-    expect(table.classList.contains("is-editing")).toBe(true);
+    expect(table.classList.contains("is-structure-mode")).toBe(true);
   });
 
   it("updates table body", () => {
@@ -182,14 +225,16 @@ describe("table block", () => {
     expect(table.querySelectorAll("td")).toHaveLength(2);
   });
 
-  it("updates existing tbody", () => {
+  it("rebuilds table with column and row selectors", () => {
     const window = new Window();
     globalThis.document = window.document;
 
     const table = window.document.createElement("table");
-    table.appendChild(window.document.createElement("tbody"));
-    updateTableBody(table, [["1"]]);
+    updateTableBody(table, [["1", "2"]]);
 
+    expect(table.querySelector("thead")).not.toBeNull();
+    expect(table.querySelectorAll(".table-col-select")).toHaveLength(2);
+    expect(table.querySelectorAll(".table-row-select")).toHaveLength(1);
     expect(table.querySelectorAll("tbody tr")).toHaveLength(1);
   });
 
@@ -268,7 +313,7 @@ describe("table block", () => {
       table,
       [["x"]],
       [],
-      { "0,0": { fontSize: "10pt" } },
+      { cellStyles: { "0,0": { fontSize: "10pt" } } },
       null,
       { fontScale: 2 },
     );
@@ -282,7 +327,7 @@ describe("table block", () => {
       table,
       [["x"]],
       [],
-      { "0,0": { fontSize: "10pt" } },
+      { cellStyles: { "0,0": { fontSize: "10pt" } } },
       null,
       { fontScale: 1 },
     );

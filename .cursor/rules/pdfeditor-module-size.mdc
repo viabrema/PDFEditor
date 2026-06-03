@@ -1,0 +1,41 @@
+---
+description: Limite de 300 linhas por ficheiro TypeScript de produção em app/
+globs: app/src/**/*.ts
+alwaysApply: false
+---
+
+# Tamanho máximo de módulos (`app/`)
+
+## Regra
+
+Ficheiros **`.ts` de produção** em `app/src/` devem ter **menos de 300 linhas** (contagem total do ficheiro, incluindo imports e linhas em branco).
+
+## Exceções
+
+- Ficheiros de teste (`*.test.ts`, `*.spec.ts`) e tudo em `**/__tests__/**` — **sem limite**.
+- Ficheiros de configuração na raiz de `app/` (`vite.config.ts`, `vitest.config.ts`, etc.) — fora do âmbito desta regra.
+
+## Quando um ficheiro ultrapassa 300 linhas
+
+1. **Dividir** por responsabilidade (não por número de linhas arbitrário).
+2. Extrair funções puras ou tipos para módulos irmãos ou subpastas.
+3. Manter exports públicos estáveis no ficheiro original quando possível (re-export).
+4. Atualizar imports e testes no mesmo PR lógico.
+
+## Exemplos
+
+```
+app/src/services/export.ts          → 340 linhas  ❌ dividir
+app/src/services/__tests__/export.test.ts → 500 linhas  ✅ permitido
+app/src/app/render.ts               → 280 linhas  ✅ ok
+```
+
+## Ao criar código novo
+
+- Preferir módulos pequenos desde o início; se a funcionalidade crescer, extrair **antes** de atingir 300 linhas.
+- Não adicionar comentários ou linhas vazias só para “cumprir” o limite — refatorar estrutura.
+
+## Verificação automática
+
+- ESLint (`app/eslint.config.js`): regra **`max-lines`** com limiar **300** e severidade **`error`** em `src/**/*.ts`, exceto testes.
+- `npm run lint` falha se um módulo de produção ultrapassar o limite.

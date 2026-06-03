@@ -1,0 +1,66 @@
+---
+description: Catálogo de funcionalidades em docs/ (português, formato de blocos)
+globs: docs/**
+alwaysApply: true
+---
+
+# Documentação de funcionalidades (`docs/`)
+
+## Objetivo
+
+Na **raiz do repositório**, a pasta **`docs/`** é o catálogo oficial das funcionalidades do PDFEditor. Tudo em **português** (nomes e descrições).
+
+## Ficheiro índice
+
+- **`docs/README.md`** — lista **todas** as funcionalidades do projeto.
+- Cada funcionalidade é um **bloco** autónomo (secção/card), separado dos restantes.
+
+## Formato de cada bloco
+
+Cada funcionalidade no índice segue este esquema (markdown):
+
+```markdown
+### Nome da funcionalidade
+
+Breve descrição do que faz, para quem serve e limitações relevantes.
+
+- **Área:** `app/` | `desktop/` | ambos
+- **Doc detalhada:** [título](caminho-relativo.md) _(opcional, se existir página dedicada)_
+- **Módulos principais:** `app/src/...` _(opcional)_
+```
+
+Regras dos blocos:
+
+- **Nome** curto e claro (título `###`).
+- **Descrição** em 1–3 frases; sem jargão desnecessário.
+- Um bloco = uma capacidade de produto (ex.: “Exportação PDF”, “Tabelas linkadas ao Excel”), não um ficheiro isolado.
+
+## Docs detalhadas
+
+- Funcionalidades complexas podem ter ficheiro próprio em `docs/` (ex.: `docs/linked-excel-tables.md`).
+- O bloco em `docs/README.md` resume e liga para a doc longa.
+
+## Quando atualizar
+
+- **Funcionalidade nova** → acrescentar bloco em `docs/README.md`; criar doc detalhada se fizer sentido.
+- **Comportamento ou âmbito alterado** → atualizar descrição do bloco (e doc detalhada se existir).
+- **Funcionalidade removida** → retirar o bloco ou marcar como descontinuada com data/motivo breve.
+
+## Agrupamento sugerido no índice
+
+Organizar blocos por tema (secções `##`), por exemplo:
+
+- Editor e blocos
+- Documento e layout
+- Tradução e IA
+- Integrações (Excel, gráficos)
+- Persistência e ficheiros
+- Exportação PDF
+- Desktop (Tauri)
+
+A ordem pode ajustar-se; o importante é **cobrir todas** as funcionalidades visíveis ao utilizador.
+
+## Idioma
+
+- Nomes e descrições dos blocos: **português**.
+- Identificadores de código e paths de ficheiros: como no repositório (inglês).

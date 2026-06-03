@@ -1,6 +1,8 @@
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 
+const testFiles = ["**/*.test.ts", "**/*.spec.ts", "**/__tests__/**"];
+
 export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
@@ -9,13 +11,14 @@ export default tseslint.config(
   },
   {
     files: ["src/**/*.ts"],
+    ignores: testFiles,
     rules: {
       "max-lines": [
         "error",
         {
           max: 300,
-          skipBlankLines: true,
-          skipComments: true,
+          skipBlankLines: false,
+          skipComments: false,
         },
       ],
       "@typescript-eslint/no-explicit-any": "off",
@@ -24,15 +27,12 @@ export default tseslint.config(
     },
   },
   {
-    files: [
-      "src/app/aiApply.ts",
-      "src/app/appTemplate.ts",
-      "src/app/chartModal.ts",
-      "src/blocks/chartSpecToChartJs.ts",
-      "src/blocks/dragResize.test.ts",
-      "src/services/export.basic.test.ts",
-      "src/services/export.ts",
-    ],
-    rules: { "max-lines": "off" },
+    files: testFiles,
+    rules: {
+      "max-lines": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+    },
   },
 );

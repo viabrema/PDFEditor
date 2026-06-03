@@ -1,0 +1,38 @@
+---
+description: Testes Vitest em __tests__/ colocado no mesmo nível do módulo testado
+globs: app/src/**/*.ts
+alwaysApply: false
+---
+
+# Layout de testes (`app/`)
+
+## Regra
+
+Testes unitários/integração do frontend vivem **sempre** em pasta **`__tests__/`** no **mesmo diretório** do ficheiro testado.
+
+## Convenção de nomes
+
+| Módulo testado | Ficheiro de teste |
+|----------------|-------------------|
+| `app/src/services/export.ts` | `app/src/services/__tests__/export.test.ts` |
+| `app/src/blocks/blockModel.ts` | `app/src/blocks/__tests__/blockModel.test.ts` |
+| `app/src/app/pageOps.ts` | `app/src/app/__tests__/pageOps.test.ts` |
+
+- Sufixo: **`.test.ts`** (preferido) ou **`.spec.ts`**.
+- Um ficheiro de teste por módulo de produção, salvo quando vários ficheiros pequenos partilham a mesma suite por coesão.
+
+## Proibido
+
+- Testes colocados **ao lado** do módulo (`export.test.ts` na mesma pasta que `export.ts`).
+- Testes numa pasta global única (ex.: `app/tests/`) que não espelhe a estrutura de `src/`.
+
+## Ao mover ou criar testes
+
+1. Criar `__tests__/` se não existir no diretório do módulo.
+2. Atualizar `vitest.config.ts` (`include`) se necessário para incluir `src/**/__tests__/**/*.{test,spec}.ts`.
+3. Correr `npm run verify` em `app/`.
+
+## Cobertura
+
+- Mesma meta de **100%** no conjunto instrumentado (ver `pdfeditor-testing-workflow.mdc`).
+- Novos módulos em pastas instrumentadas exigem testes em `__tests__/` correspondente.

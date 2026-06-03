@@ -10,6 +10,7 @@ export function renderCanvasView({
   blocks,
   refs,
   requestRender,
+  refreshTableChrome,
   linkedTableBridge,
   linkedChartBridge,
   documentHistory,
@@ -19,6 +20,7 @@ export function renderCanvasView({
   blocks: any[];
   refs: any;
   requestRender: () => void;
+  refreshTableChrome?: () => void;
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
   linkedChartBridge?: { reconfigure?: (block: any) => Promise<void> };
   documentHistory?: DocumentHistory;
@@ -78,6 +80,7 @@ export function renderCanvasView({
       state.activeRegion = "body";
       if (shouldClear) {
         state.editingBlockId = null;
+        state.tableEdit = null;
         state.selectedBlockIds = [];
       }
       if (shouldRender) {
@@ -103,6 +106,7 @@ export function renderCanvasView({
       pageId: page.id,
       region: "body",
       requestRender,
+      refreshTableChrome,
       linkedTableBridge,
       linkedChartBridge,
       documentHistory,
@@ -126,6 +130,7 @@ export function renderCanvasView({
         state.activeRegion = "header";
         if (shouldClear) {
           state.editingBlockId = null;
+          state.tableEdit = null;
           state.selectedBlockIds = [];
         }
         if (shouldRender) {
@@ -146,6 +151,7 @@ export function renderCanvasView({
         pageId: page.id,
         region: "header",
         requestRender,
+        refreshTableChrome,
         linkedTableBridge,
         linkedChartBridge,
         documentHistory,
@@ -182,6 +188,7 @@ export function renderCanvasView({
         state.activeRegion = "footer";
         if (shouldClear) {
           state.editingBlockId = null;
+          state.tableEdit = null;
           state.selectedBlockIds = [];
         }
         if (shouldRender) {
@@ -202,6 +209,7 @@ export function renderCanvasView({
         pageId: page.id,
         region: "footer",
         requestRender,
+        refreshTableChrome,
         linkedTableBridge,
         linkedChartBridge,
         documentHistory,

@@ -1,4 +1,4 @@
-import { EditorState } from "prosemirror-state";
+import { EditorState, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { baseKeymap, setBlockType, toggleMark } from "prosemirror-commands";
 import { history, redo, undo } from "prosemirror-history";
@@ -100,6 +100,48 @@ function applyTextAlign(view, align) {
 
   dispatch(tr.scrollIntoView());
   return true;
+}
+
+/** Seleciona todo o conteudo do bloco para comandos da sidebar sem modo edicao. */
+export function selectEntireEditorDocument(view) {
+  const doc = view.state.doc;
+  let from: number | null = null;
+  let to: number | null = null;
+  doc.descendants((node, pos) => {
+    if (node.isText) {
+      if (from === null) {
+        from = pos;
+      }
+      to = pos + node.nodeSize;
+    }
+  });
+  if (from === null || to === null || to <= from) {
+    return;
+  }
+  const tr = view.state.tr.setSelection(TextSelection.create(doc, from, to));
+  view.dispatch(tr);
+}
+
+export function runEditorCommandOnEntireBlock(view, command: () => unknown) {
+  selectEntireEditorDocument(view);
+  command();
+}
+
+export function editorHasPartialTextSelection(view) {
+  return !view.state.selection.empty;
+}
+
+/** Sidebar: bloco inteiro se nao estiver em edicao ou sem selecao de texto; senao so a selecao. */
+export function runSidebarEditorCommand(
+  view,
+  options: { editMode: boolean },
+  command: () => unknown,
+) {
+  if (options.editMode && editorHasPartialTextSelection(view)) {
+    command();
+    return;
+  }
+  runEditorCommandOnEntireBlock(view, command);
 }
 
 export function createEditorCommands(view) {

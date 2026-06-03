@@ -1,15 +1,12 @@
-import { createEditor, createEditorCommands } from "../editor/editor";
-import { createToolbar } from "../ui/toolbar";
+import { createEditor } from "../editor/editor";
 import { createBlockElement } from "../blocks/blockRenderer";
+import type { TableEditState } from "../blocks/tableBlock";
 import { setupDragResize } from "../blocks/dragResize";
-import { clampLinkedTableFontScale, syncTableElementWithBlock } from "../blocks/tableBlock";
 import { fileToDataUrl } from "../blocks/imageBlock";
-import { getBlockTextStyle } from "../blocks/blockStyles";
 import { chartBlockHasExcelLink } from "../blocks/chartBlock";
 import { resizeBlockChart } from "../blocks/chartRuntime";
 import { scheduleChartJsMountIfConfigured } from "./mountBlockChart";
 import { openChartConfiguration } from "./chartModal";
-import { attachFloatingBlockToolbar } from "./renderFloatingToolbar";
 import type { DocumentHistory } from "./documentHistory";
 
 export function renderBlocksInContainer({
@@ -21,6 +18,7 @@ export function renderBlocksInContainer({
   pageId,
   region,
   requestRender,
+  refreshTableChrome,
   linkedTableBridge,
   linkedChartBridge,
   documentHistory,
@@ -34,6 +32,7 @@ export function renderBlocksInContainer({
   pageId: string;
   region: string;
   requestRender: () => void;
+  refreshTableChrome?: () => void;
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> };
   linkedChartBridge?: { reconfigure?: (block: any) => Promise<void> };
   documentHistory?: DocumentHistory;
@@ -50,75 +49,28 @@ export function renderBlocksInContainer({
     }
     const isSelected = state.selectedBlockIds.includes(block.id);
     const isEditing = block.id === state.editingBlockId;
+    const isTableBlock = block.type === "table" || block.type === "linkedTable";
+    const tableEdit: TableEditState | null =
+      isEditing && state.tableEdit?.blockId === block.id ? state.tableEdit : null;
+    const onTableEditChange = isEditing && isTableBlock
+      ? (edit: Omit<TableEditState, "blockId">) => {
+          const prevTyping = state.tableEdit?.typing === true;
+          state.tableEdit = { blockId: block.id, ...edit };
+          if (edit.typing && !prevTyping) {
+            requestRender();
+            return;
+          }
+          refreshTableChrome?.();
+        }
+      : undefined;
+
     const { element, editorHost } = createBlockElement(block, {
       selected: isSelected,
       editing: isEditing,
+      tableEdit,
+      onTableEditChange,
     });
     container.append(element);
-
-    if (isEditing && block.type === "table") {
-      const toolbar = createToolbar(null, {
-        variant: "table",
-        hiddenValue: block.metadata?.hidden === true,
-        onToggleHidden: (hidden: boolean) => {
-          documentHistory?.checkpointBeforeChange();
-          block.metadata = { ...(block.metadata || {}), hidden };
-          requestRender();
-        },
-      });
-      state.interactions.push(attachFloatingBlockToolbar(element, toolbar));
-    }
-
-    if (isEditing && block.type === "linkedTable") {
-      const toolbar = createToolbar(null, {
-        variant: "linkedTable",
-        fontScaleValue: clampLinkedTableFontScale(block.metadata?.fontScale),
-        onFontScaleChange: (scale: number) => {
-          documentHistory?.checkpointBeforeChange();
-          block.metadata = { ...(block.metadata || {}), fontScale: scale };
-          const shell = document.querySelector(
-            `.block-shell[data-block-id="${block.id}"]`,
-          );
-          const table = shell?.querySelector("table.table-block") as HTMLTableElement | undefined;
-          if (table) {
-            syncTableElementWithBlock(table, block, true);
-          }
-        },
-        onLinkedTableExcelConfigure: linkedTableBridge?.reconfigure
-          ? () => linkedTableBridge.reconfigure!(block)
-          : undefined,
-        hiddenValue: block.metadata?.hidden === true,
-        onToggleHidden: (hidden: boolean) => {
-          documentHistory?.checkpointBeforeChange();
-          block.metadata = { ...(block.metadata || {}), hidden };
-          requestRender();
-        },
-      });
-      state.interactions.push(attachFloatingBlockToolbar(element, toolbar));
-    }
-
-    if (isEditing && block.type === "chart" && chartBlockHasExcelLink(block)) {
-      const toolbar = createToolbar(null, {
-        variant: "linkedChart",
-        fontScaleValue: clampLinkedTableFontScale(block.metadata?.fontScale),
-        onFontScaleChange: (scale: number) => {
-          documentHistory?.checkpointBeforeChange();
-          block.metadata = { ...(block.metadata || {}), fontScale: scale };
-          requestRender();
-        },
-        onLinkedChartExcelConfigure: linkedChartBridge?.reconfigure
-          ? () => linkedChartBridge.reconfigure!(block)
-          : undefined,
-        onLinkedChartDesignConfigure: () => openChartConfiguration(block),
-        hiddenValue: block.metadata?.hidden === true,
-        onToggleHidden: (hidden: boolean) => {
-          documentHistory?.checkpointBeforeChange();
-          block.metadata = { ...(block.metadata || {}), hidden };
-          requestRender();
-        },
-      });
-      state.interactions.push(attachFloatingBlockToolbar(element, toolbar));
-    }
 
     element.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -143,6 +95,11 @@ export function renderBlocksInContainer({
       const shouldRender = !sameSelection || state.editingBlockId !== nextEditing;
       state.selectedBlockIds = nextIds;
       state.editingBlockId = nextEditing;
+      if (!state.editingBlockId) {
+        state.tableEdit = null;
+      } else if (state.tableEdit && state.tableEdit.blockId !== state.editingBlockId) {
+        state.tableEdit = null;
+      }
       if (shouldRender) {
         requestRender();
       }
@@ -186,6 +143,15 @@ export function renderBlocksInContainer({
         state.editingBlockId !== block.id || !state.selectedBlockIds.includes(block.id);
       state.selectedBlockIds = [block.id];
       state.editingBlockId = block.id;
+      if (isTableBlock) {
+        state.tableEdit = {
+          blockId: block.id,
+          scope: "cell",
+          row: 0,
+          col: 0,
+          typing: false,
+        };
+      }
       if (shouldRender) {
         requestRender();
       }
@@ -205,60 +171,6 @@ export function renderBlocksInContainer({
       editorHost.addEventListener("focusin", () => documentHistory?.editorFocusCapture());
       editorHost.addEventListener("focusout", () => documentHistory?.editorBlurFlush());
 
-      const applyBlockStyles = () => {
-        const style = getBlockTextStyle(block);
-        const target = (editorHost.querySelector(".ProseMirror") || editorHost) as HTMLElement;
-        target.style.fontSize = style.fontSize;
-        target.style.fontFamily = style.fontFamily;
-        target.style.fontWeight = style.fontWeight;
-        target.style.color = style.color;
-        target.style.textAlign = style.textAlign;
-      };
-      applyBlockStyles();
-
-      if (isEditing) {
-        const isHeading = block.type === "heading";
-        const headingLevel =
-          Number(block.metadata?.headingLevel ?? block.metadata?.level) || 1;
-        const toolbar = createToolbar(createEditorCommands(view), {
-          variant: isHeading ? "heading" : "text",
-          alignValue: block.metadata?.align || "left",
-          fontFamilyValue: block.metadata?.fontFamily || "Segoe UI",
-          fontSizeValue: block.metadata?.fontSize || getBlockTextStyle(block).fontSize,
-          headingLevelValue: Math.min(3, Math.max(1, headingLevel)),
-          onAlignChange: (align) => {
-            documentHistory?.checkpointBeforeChange();
-            block.metadata = { ...(block.metadata || {}), align };
-            applyBlockStyles();
-            requestRender();
-          },
-          onFontFamilyChange: (fontFamily) => {
-            documentHistory?.checkpointBeforeChange();
-            block.metadata = { ...(block.metadata || {}), fontFamily };
-            applyBlockStyles();
-            requestRender();
-          },
-          onFontSizeChange: (fontSize) => {
-            documentHistory?.checkpointBeforeChange();
-            block.metadata = { ...(block.metadata || {}), fontSize };
-            applyBlockStyles();
-            requestRender();
-          },
-          onHeadingLevelChange: (level) => {
-            documentHistory?.checkpointBeforeChange();
-            block.metadata = { ...(block.metadata || {}), headingLevel: level };
-            applyBlockStyles();
-            requestRender();
-          },
-          hiddenValue: block.metadata?.hidden === true,
-          onToggleHidden: (hidden) => {
-            documentHistory?.checkpointBeforeChange();
-            block.metadata = { ...(block.metadata || {}), hidden };
-            requestRender();
-          },
-        });
-        state.interactions.push(attachFloatingBlockToolbar(element, toolbar));
-      }
     }
 
     const interaction = setupDragResize({

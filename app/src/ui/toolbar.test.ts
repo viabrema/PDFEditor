@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Window } from "happy-dom";
 import { createToolbar } from "./toolbar";
 
@@ -174,6 +174,23 @@ describe("toolbar", () => {
     buttons[1].click();
     expect(excel).toBe(1);
     expect(design).toBe(1);
+  });
+
+  it("renders sidebar layout for text toolbar", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+    const toolbar = createToolbar(
+      {
+        toggleBold: vi.fn(),
+        toggleItalic: vi.fn(),
+        toggleBulletList: vi.fn(),
+        toggleOrderedList: vi.fn(),
+      },
+      { layout: "sidebar", variant: "text" },
+    );
+    expect(toolbar.className).toContain("flex-col");
+    const select = toolbar.querySelector("select") as HTMLSelectElement;
+    expect(select.className).toContain("w-full");
   });
 
   it("renders disabled toolbar", () => {

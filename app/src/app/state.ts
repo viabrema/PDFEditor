@@ -24,6 +24,13 @@ export function createInitialState(documentData) {
     selectedBlockIds: [],
     editingBlockId: null,
     activeRegion: "body",
+    tableEdit: null as null | {
+      blockId: string;
+      scope: "cell" | "row" | "column";
+      row: number;
+      col: number;
+      typing: boolean;
+    },
     translation: {
       loading: false,
       error: null,

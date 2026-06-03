@@ -1,0 +1,251 @@
+import { renderTableBlockMarkup } from "./exportTableMarkup";
+import { escapeHtml, escapeHtmlAttr, sanitizeFontValue } from "./exportHtmlEscape";
+
+/** Deve coincidir com `.text-block { padding }` em `renderDocumentToHtml`. */
+const EXPORT_TEXT_BLOCK_PADDING_Y = 24;
+
+/** Deve coincidir com `.text-block { line-height }` em `renderDocumentToHtml`. */
+const EXPORT_TEXT_LINE_HEIGHT_RATIO = 1.4;
+
+export function parseCssPx(value, fallbackPx) {
+  const m = String(value || "").match(/([\d.]+)\s*px/i);
+  return m ? parseFloat(m[1]) : fallbackPx;
+}
+
+function renderMarks(text, marks = []) {
+  return marks
+    .slice()
+    .reverse()
+    .reduce((current, mark) => {
+      if (mark.type === "strong") {
+        return `<strong>${current}</strong>`;
+      }
+      if (mark.type === "em") {
+        return `<em>${current}</em>`;
+      }
+      if (mark.type === "textStyle") {
+        const fontSize = sanitizeFontValue(mark.attrs?.fontSize);
+        const fontFamily = sanitizeFontValue(mark.attrs?.fontFamily);
+        const styles = [];
+        if (fontSize) {
+          styles.push(`font-size: ${fontSize}`);
+        }
+        if (fontFamily) {
+          styles.push(`font-family: ${fontFamily}`);
+        }
+        if (styles.length === 0) {
+          return current;
+        }
+        return `<span style="${styles.join("; ")}">${current}</span>`;
+      }
+      return current;
+    }, text);
+}
+
+function computeExportTextLineClamp(block) {
+  const h = Number(block?.size?.height);
+  if (!Number.isFinite(h) || h <= 0) {
+    return 1;
+  }
+  const style = getBlockTextStyle(block);
+  const fontPx = parseCssPx(style.fontSize, 16);
+  const inner = Math.max(0, h - EXPORT_TEXT_BLOCK_PADDING_Y);
+  const lineHeightPx = fontPx * EXPORT_TEXT_LINE_HEIGHT_RATIO;
+  if (lineHeightPx <= 0) {
+    return 1;
+  }
+  let lines = Math.floor(inner / lineHeightPx);
+  if (lines > 2) {
+    lines -= 1;
+  }
+  return Math.max(1, Math.min(lines, 9999));
+}
+
+function renderNode(node) {
+  if (!node) {
+    return "";
+  }
+
+  if (node.type === "text") {
+    return renderMarks(escapeHtml(node.text || ""), node.marks || []);
+  }
+
+  const children = Array.isArray(node.content)
+    ? node.content.map(renderNode).join("")
+    : "";
+
+  switch (node.type) {
+    case "doc":
+      return children;
+    case "paragraph": {
+      const align = node.attrs?.textAlign;
+      const style = align ? ` style="text-align: ${align}"` : "";
+      return `<p${style}>${children}</p>`;
+    }
+    case "heading": {
+      const level = node.attrs?.level || 1;
+      const align = node.attrs?.textAlign;
+      const style = align ? ` style="text-align: ${align}"` : "";
+      return `<h${level}${style}>${children}</h${level}>`;
+    }
+    case "bullet_list":
+      return `<ul>${children}</ul>`;
+    case "ordered_list":
+      return `<ol>${children}</ol>`;
+    case "list_item":
+      return `<li>${children}</li>`;
+    case "hard_break":
+      return "<br />";
+    case "horizontal_rule":
+      return "<hr />";
+    case "chart":
+      return '<div class="pm-chart">Chart</div>';
+    default:
+      return children;
+  }
+}
+
+function getHeadingLevel(block) {
+  const rawLevel =
+    block.type === "title"
+      ? 1
+      : block.type === "subtitle"
+        ? 2
+        : block.metadata?.headingLevel ?? block.metadata?.level;
+  const level = Number(rawLevel) || 1;
+  return Math.min(3, Math.max(1, level));
+}
+
+function getBlockTextStyle(block) {
+  const type = block.type || "text";
+  const headingStyles = {
+    1: { fontSize: "26px", fontWeight: "700", color: "#008737" },
+    2: { fontSize: "22px", fontWeight: "700", color: "#1f2937" },
+    3: { fontSize: "18px", fontWeight: "400", color: "#0f172a" },
+  };
+  const isHeading = type === "heading" || type === "title" || type === "subtitle";
+  const defaults = isHeading
+    ? headingStyles[getHeadingLevel(block)]
+    : { fontSize: "16px", fontWeight: "400", color: "#0f172a" };
+  return {
+    fontSize: block.metadata?.fontSize || defaults.fontSize,
+    fontFamily: block.metadata?.fontFamily || "",
+    fontWeight: defaults.fontWeight,
+    color: defaults.color,
+    textAlign: block.metadata?.align || "left",
+  };
+}
+
+function renderTextBlock(block) {
+  const html = renderNode(block.content) || "";
+  const style = getBlockTextStyle(block);
+  const lineClamp = computeExportTextLineClamp(block);
+  const styleParts = [
+    `font-size: ${style.fontSize}`,
+    `font-weight: ${style.fontWeight}`,
+    `color: ${style.color}`,
+    `text-align: ${style.textAlign}`,
+  ];
+  if (style.fontFamily) {
+    styleParts.push(`font-family: ${style.fontFamily}`);
+  }
+  const clampParts = [
+    "max-height: 100%",
+    "overflow: hidden",
+    "display: -webkit-box",
+    "-webkit-box-orient: vertical",
+    `-webkit-line-clamp: ${lineClamp}`,
+    `line-clamp: ${lineClamp}`,
+    "word-break: break-word",
+  ];
+  return `<div class="block text-block" style="${styleParts.join(
+    "; "
+  )}" data-block-id="${block.id}"><div class="text-block-export-flow" style="${clampParts.join(
+    "; "
+  )}">${html}</div></div>`;
+}
+
+function renderImageBlock(block) {
+  const src = block.content?.src || "";
+  return `<div class="block image-block" data-block-id="${block.id}"><img src="${escapeHtml(src)}" alt="Imagem" /></div>`;
+}
+
+function renderTableBlock(block) {
+  return renderTableBlockMarkup(block, escapeHtml);
+}
+
+function renderChartBlock(block) {
+  const preview = block.content?.previewDataUrl;
+  const idAttr = escapeHtml(block.id);
+  if (
+    preview &&
+    typeof preview === "string" &&
+    preview.trim().startsWith("data:image/")
+  ) {
+    return `<div class="block chart-block-export" data-block-id="${idAttr}"><img src="${escapeHtmlAttr(
+      preview,
+    )}" alt="Grafico" style="width:100%;height:100%;object-fit:contain;display:block;" /></div>`;
+  }
+  return `<div class="block chart-block-export chart-block-export-placeholder" data-block-id="${idAttr}" style="display:flex;align-items:center;justify-content:center;font-size:13px;color:#64748b;text-align:center;padding:8px;">Grafico nao configurado</div>`;
+}
+
+export function renderBlock(block, offset = { x: 0, y: 0 }) {
+  const style =
+    `left:${block.position.x + offset.x}px;` +
+    `top:${block.position.y + offset.y}px;` +
+    `width:${block.size.width}px;` +
+    `height:${block.size.height}px;`;
+
+  if (block.type === "image") {
+    return `<div class="block-wrapper" style="${style}">${renderImageBlock(block)}</div>`;
+  }
+  if (block.type === "table" || block.type === "linkedTable") {
+    return `<div class="block-wrapper" style="${style}">${renderTableBlock(block)}</div>`;
+  }
+  if (block.type === "chart") {
+    return `<div class="block-wrapper" style="${style}">${renderChartBlock(block)}</div>`;
+  }
+  return `<div class="block-wrapper" style="${style}">${renderTextBlock(block)}</div>`;
+}
+
+export function isExcludedFromPdfExport(block) {
+  return block?.metadata?.excludeFromPdfExport === true || block?.metadata?.hidden === true;
+}
+
+export function filterBlocksForPdfExport(blocks) {
+  if (!Array.isArray(blocks)) {
+    return [];
+  }
+  return blocks.filter((block) => !isExcludedFromPdfExport(block));
+}
+
+export function renderRegionBlocks(blocks, offset) {
+  if (!Array.isArray(blocks) || blocks.length === 0) {
+    return "";
+  }
+  return filterBlocksForPdfExport(blocks)
+    .map((block) => renderBlock(block, offset))
+    .join("");
+}
+
+export function renderPage(page, blocks, pageSize, regions) {
+  const blockMarkup = filterBlocksForPdfExport(blocks)
+    .map((block) => renderBlock(block))
+    .join("");
+  const headerEnabled = regions?.header?.enabled ?? true;
+  const footerEnabled = regions?.footer?.enabled ?? true;
+  const footerHeight = regions?.footer?.height ?? 0;
+  const headerBlocks = headerEnabled ? regions?.header?.blocks || [] : [];
+  const footerBlocks = footerEnabled ? regions?.footer?.blocks || [] : [];
+  const headerMarkup = renderRegionBlocks(headerBlocks, { x: 0, y: 0 });
+  const footerMarkup = renderRegionBlocks(footerBlocks, {
+    x: 0,
+    y: pageSize.height - footerHeight,
+  });
+  return `
+    <section class="page" data-page-id="${page.id}" style="width:${pageSize.width}px;height:${pageSize.height}px;">
+      ${blockMarkup}
+      ${headerMarkup}
+      ${footerMarkup}
+    </section>`;
+}

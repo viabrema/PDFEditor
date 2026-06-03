@@ -1,8 +1,25 @@
 import { getBlockTextStyle } from "./blockStyles";
-import { createTableElement, setTableEditable } from "./tableBlock";
+import {
+  createTableElement,
+  resolveTableDomMode,
+  type TableEditState,
+} from "./tableBlock";
 import { chartBlockHasExcelLink, isChartConfigured } from "./chartBlock";
 
-export function createBlockElement(block, { selected = false, editing = false } = {}) {
+export function createBlockElement(
+  block,
+  {
+    selected = false,
+    editing = false,
+    tableEdit = null as TableEditState | null,
+    onTableEditChange,
+  }: {
+    selected?: boolean;
+    editing?: boolean;
+    tableEdit?: TableEditState | null;
+    onTableEditChange?: (edit: Omit<TableEditState, "blockId">) => void;
+  } = {},
+) {
   const element = document.createElement("div");
   element.className =
     "block-shell absolute rounded-md border border-slate-200 bg-white shadow-sm";
@@ -35,18 +52,20 @@ export function createBlockElement(block, { selected = false, editing = false } 
     img.alt = "Imagem";
     img.src = block.content?.src || "";
     element.append(img);
-  } else if (block.type === "table") {
+  } else   if (block.type === "table" || block.type === "linkedTable") {
+    element.classList.add("table-block-shell");
+    if (block.type === "linkedTable") {
+      element.classList.add("linked-table-shell");
+    }
     const host = document.createElement("div");
     host.className = "table-block-host h-full w-full";
-    const table = createTableElement(block);
-    setTableEditable(table, editing);
-    host.append(table);
-    element.append(host);
-  } else if (block.type === "linkedTable") {
-    element.classList.add("linked-table-shell");
-    const host = document.createElement("div");
-    host.className = "table-block-host h-full w-full";
-    const table = createTableElement(block, { readOnly: !editing });
+    const mode = resolveTableDomMode(block.id, editing ? block.id : null, tableEdit);
+    const edit = tableEdit?.blockId === block.id ? tableEdit : null;
+    const table = createTableElement(block, {
+      readOnly: block.type === "linkedTable" && !editing,
+      domConfig: { mode, edit },
+      onTableEditChange,
+    });
     host.append(table);
     element.append(host);
   } else if (block.type === "chart") {
@@ -83,7 +102,7 @@ export function createBlockElement(block, { selected = false, editing = false } 
     editorHost.style.textAlign = style.textAlign;
   }
 
-  if (selected) {
+  if (selected && !editing) {
     ["nw", "ne", "se", "sw"].forEach((corner) => {
       const handle = document.createElement("span");
       handle.className = "resize-handle";

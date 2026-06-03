@@ -4,7 +4,15 @@ import { Schema } from "prosemirror-model";
 import { schema as basicSchema } from "prosemirror-schema-basic";
 import { addListNodes } from "prosemirror-schema-list";
 import { NodeSelection, TextSelection } from "prosemirror-state";
-import { createEditor, createEditorCommands, createEditorState } from "./editor";
+import {
+  createEditor,
+  createEditorCommands,
+  createEditorState,
+  editorHasPartialTextSelection,
+  runEditorCommandOnEntireBlock,
+  runSidebarEditorCommand,
+  selectEntireEditorDocument,
+} from "./editor";
 import { createEditorSchema } from "./schema";
 
 describe("editor", () => {
@@ -174,6 +182,102 @@ describe("editor", () => {
     const handled = view.props.handlePaste(view, event);
     expect(handled).toBe(false);
 
+    view.destroy();
+  });
+
+  it("runEditorCommandOnEntireBlock applies mark when view is not editable", () => {
+    const mount = document.createElement("div");
+    const onChange = vi.fn();
+    const view = createEditor({
+      mount,
+      content: {
+        type: "doc",
+        content: [{ type: "paragraph", content: [{ type: "text", text: "ola" }] }],
+      },
+      editable: () => false,
+      onChange,
+    });
+    const commands = createEditorCommands(view);
+
+    runEditorCommandOnEntireBlock(view, commands.toggleBold);
+    expect(onChange).toHaveBeenCalled();
+    let hasStrong = false;
+    view.state.doc.descendants((node) => {
+      if (node.marks.some((m) => m.type.name === "strong")) {
+        hasStrong = true;
+      }
+    });
+    expect(hasStrong).toBe(true);
+
+    view.destroy();
+  });
+
+  it("selectEntireEditorDocument is noop on empty block", () => {
+    const mount = document.createElement("div");
+    const view = createEditor({
+      mount,
+      content: { type: "doc", content: [{ type: "paragraph" }] },
+      editable: () => false,
+    });
+    selectEntireEditorDocument(view);
+    view.destroy();
+  });
+
+  it("runSidebarEditorCommand uses partial selection only in edit mode", () => {
+    const mount = document.createElement("div");
+    const onChange = vi.fn();
+    const view = createEditor({
+      mount,
+      content: {
+        type: "doc",
+        content: [{ type: "paragraph", content: [{ type: "text", text: "abcdef" }] }],
+      },
+      editable: () => true,
+      onChange,
+    });
+    const commands = createEditorCommands(view);
+    view.dispatch(
+      view.state.tr.setSelection(TextSelection.create(view.state.doc, 2, 4)),
+    );
+
+    expect(editorHasPartialTextSelection(view)).toBe(true);
+
+    runSidebarEditorCommand(view, { editMode: true }, commands.toggleBold);
+    let strongInRange = 0;
+    view.state.doc.nodesBetween(2, 4, (node) => {
+      if (node.marks.some((m) => m.type.name === "strong")) {
+        strongInRange += 1;
+      }
+    });
+    expect(strongInRange).toBeGreaterThan(0);
+
+    runSidebarEditorCommand(view, { editMode: false }, commands.toggleItalic);
+    let italicCount = 0;
+    view.state.doc.descendants((node) => {
+      if (node.marks.some((m) => m.type.name === "em")) {
+        italicCount += 1;
+      }
+    });
+    expect(italicCount).toBeGreaterThan(0);
+
+    view.destroy();
+  });
+
+  it("selectEntireEditorDocument spans multiple text nodes", () => {
+    const mount = document.createElement("div");
+    const view = createEditor({
+      mount,
+      content: {
+        type: "doc",
+        content: [
+          { type: "paragraph", content: [{ type: "text", text: "a" }] },
+          { type: "paragraph", content: [{ type: "text", text: "b" }] },
+        ],
+      },
+      editable: () => false,
+    });
+    selectEntireEditorDocument(view);
+    expect(view.state.selection.from).toBeLessThan(view.state.selection.to);
     view.destroy();
   });
 });

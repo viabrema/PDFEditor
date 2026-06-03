@@ -68,6 +68,18 @@ describe("block renderer", () => {
     expect(img.getAttribute("src")).toBe("");
   });
 
+  it("shows resize handles when selected but not editing", () => {
+    const block = {
+      id: "block-table-resize",
+      type: "table",
+      content: { rows: [["a"]] },
+      position: { x: 0, y: 0 },
+      size: { width: 200, height: 100 },
+    };
+    const { element } = createBlockElement(block, { selected: true, editing: false });
+    expect(element.querySelectorAll(".resize-handle").length).toBe(4);
+  });
+
   it("creates table block", () => {
     const block = {
       id: "block-4",
@@ -112,7 +124,30 @@ describe("block renderer", () => {
     expect(element.querySelector("tr")?.style.height).toBe("");
   });
 
-  it("linked table cells are editable when block is in editing mode", () => {
+  it("applies table selection chrome from tableEdit state", () => {
+    const block = {
+      id: "block-table-edit",
+      type: "table",
+      content: { rows: [["a", "b"]] },
+      position: { x: 0, y: 0 },
+      size: { width: 200, height: 100 },
+    };
+    const { element } = createBlockElement(block, {
+      editing: true,
+      tableEdit: {
+        blockId: "block-table-edit",
+        scope: "column",
+        row: 0,
+        col: 1,
+        typing: false,
+      },
+    });
+    expect(
+      element.querySelector('.table-col-select[data-table-col="1"]')?.classList.contains("is-selected"),
+    ).toBe(true);
+  });
+
+  it("linked table enters structure mode when block is editing", () => {
     const block = {
       id: "block-linked-editing",
       type: "linkedTable",
@@ -120,8 +155,11 @@ describe("block renderer", () => {
       position: { x: 0, y: 0 },
       size: { width: 200, height: 100 },
     };
-    const { element } = createBlockElement(block, { editing: true });
-    expect(element.querySelector("td")?.getAttribute("contenteditable")).toBe("true");
+    const { element } = createBlockElement(block, { selected: true, editing: true });
+    expect(element.classList.contains("table-block-shell")).toBe(true);
+    expect(element.querySelector("table")?.classList.contains("is-structure-mode")).toBe(true);
+    expect(element.querySelector("td")?.getAttribute("contenteditable")).toBe("false");
+    expect(element.querySelectorAll(".resize-handle").length).toBe(0);
   });
 
   it("applies text block styles", () => {

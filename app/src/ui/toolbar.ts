@@ -1,6 +1,7 @@
 export function createToolbar(commands: any, options: any = {}) {
   const {
     disabled = false,
+    layout = "inline",
     variant = "text",
     hiddenValue = false,
     onAlignChange,
@@ -19,7 +20,10 @@ export function createToolbar(commands: any, options: any = {}) {
     fontScaleValue = 1,
   } = options;
   const container = document.createElement("div");
-  container.className = "flex flex-wrap items-center gap-2";
+  container.className =
+    layout === "sidebar"
+      ? "flex w-full flex-col items-stretch gap-3"
+      : "flex flex-wrap items-center gap-2";
 
   function appendHiddenToggleButton() {
     if (!onToggleHidden) {
@@ -122,7 +126,9 @@ export function createToolbar(commands: any, options: any = {}) {
   const createSelect = ({ title, value, options, onChange }) => {
     const select = document.createElement("select");
     select.className =
-      "rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700";
+      layout === "sidebar"
+        ? "w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-sm text-slate-700"
+        : "rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700";
     select.title = title;
     select.setAttribute("aria-label", title);
     select.innerHTML = options
