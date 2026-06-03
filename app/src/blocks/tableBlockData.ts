@@ -1,4 +1,6 @@
 import { createBlock, BLOCK_TYPES } from "./blockModel";
+import { createLinkedTableContentFromExcel } from "./linkedTableModel";
+import type { ExcelTableMerge } from "../services/excelRange";
 
 const DEFAULT_CELL_WIDTH = 120;
 const DEFAULT_CELL_HEIGHT = 36;
@@ -121,22 +123,14 @@ export function createLinkedTableBlockFromRows(
     pageSize,
     metadata,
     merges = [],
-    cellStyles,
-    rowHeights,
   } = options;
 
   const normalized = normalizeRows(rows);
   const fallback = createEmptyTable();
   const safeRows = normalized.length > 0 ? normalized : fallback;
   const size = computeTableSize(safeRows, pageSize);
-  const safeMerges = Array.isArray(merges) ? merges : [];
-  const content: Record<string, unknown> = { rows: safeRows, merges: safeMerges };
-  if (cellStyles && typeof cellStyles === "object" && Object.keys(cellStyles).length > 0) {
-    content.cellStyles = cellStyles;
-  }
-  if (Array.isArray(rowHeights) && rowHeights.some((x) => x != null)) {
-    content.rowHeights = rowHeights;
-  }
+  const safeMerges = Array.isArray(merges) ? (merges as ExcelTableMerge[]) : [];
+  const content = createLinkedTableContentFromExcel({ rows: safeRows, merges: safeMerges });
 
   return createBlock({
     type: BLOCK_TYPES.LINKED_TABLE,

@@ -1,5 +1,6 @@
 import { Window } from "happy-dom";
 import { describe, expect, it, vi } from "vitest";
+import { BLOCK_TYPES } from "./blockModel";
 import {
   applyTableDomMode,
   attachTableHandlers,
@@ -80,6 +81,195 @@ describe("table block paste and handlers", () => {
 
     expect(cell.querySelector("br")).toBeNull();
     expect(cell.textContent).toBe("\u00a0");
+  });
+
+  it("linked table input updates dataSourceRows in typing cell", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: { dataSourceRows: [["x"]] },
+    };
+    const table = createTableElement(block);
+    applyTableDomMode(table, "cell-type", {
+      blockId: "b",
+      scope: "cell",
+      row: 0,
+      col: 0,
+      typing: true,
+    }, { block });
+    const cell = table.querySelector("td.is-typing-cell") as HTMLTableCellElement;
+    cell.textContent = "raw-value";
+    table.dispatchEvent(new window.Event("input"));
+
+    expect(block.content.dataSourceRows).toEqual([["raw-value"]]);
+  });
+
+  it("linked table paste in view mode refreshes body", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: { dataSourceRows: [["a"]] },
+    };
+    const table = createTableElement(block, { readOnly: false });
+    const event = new window.Event("paste");
+    event.clipboardData = { getData: () => "v\tw" };
+    event.preventDefault = vi.fn();
+    table.dispatchEvent(event);
+    expect(block.content.dataSourceRows).toEqual([["v", "w"]]);
+  });
+
+  it("linked table paste in structure mode refreshes body", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: { dataSourceRows: [["a"]] },
+    };
+    const table = createTableElement(block);
+    applyTableDomMode(table, "structure", {
+      blockId: "b",
+      scope: "cell",
+      row: 0,
+      col: 0,
+      typing: false,
+    }, { block });
+    const event = new window.Event("paste");
+    event.clipboardData = { getData: () => "z\tw" };
+    event.preventDefault = vi.fn();
+    table.dispatchEvent(event);
+    expect(block.content.dataSourceRows).toEqual([["z", "w"]]);
+  });
+
+  it("linked table paste in cell-type mode refreshes body", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: { dataSourceRows: [["a"]] },
+    };
+    const table = createTableElement(block);
+    applyTableDomMode(table, "cell-type", {
+      blockId: "b",
+      scope: "cell",
+      row: 0,
+      col: 0,
+      typing: true,
+    }, { block });
+    const event = new window.Event("paste");
+    event.clipboardData = { getData: () => "p\tq" };
+    event.preventDefault = vi.fn();
+    table.dispatchEvent(event);
+    expect(block.content.dataSourceRows).toEqual([["p", "q"]]);
+  });
+
+  it("linked table paste replaces dataSourceRows", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: { dataSourceRows: [["old"]] },
+    };
+    const table = createTableElement(block);
+    const event = new window.Event("paste");
+    event.clipboardData = { getData: () => "n1\tn2" };
+    event.preventDefault = vi.fn();
+    table.dispatchEvent(event);
+
+    expect(block.content.dataSourceRows).toEqual([["n1", "n2"]]);
+  });
+
+  it("linked table input no-op without typing cell", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: { dataSourceRows: [["x"]] },
+    };
+    const table = createTableElement(block);
+    table.dispatchEvent(new window.Event("input"));
+    expect(block.content.dataSourceRows).toEqual([["x"]]);
+  });
+
+  it("linked table input ignores invalid row index", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: { dataSourceRows: [["x"]] },
+    };
+    const table = createTableElement(block);
+    applyTableDomMode(table, "cell-type", {
+      blockId: "b",
+      scope: "cell",
+      row: 0,
+      col: 0,
+      typing: true,
+    }, { block });
+    const cell = table.querySelector("td.is-typing-cell") as HTMLTableCellElement;
+    cell.dataset.tableRow = "nope";
+    cell.dataset.tableCol = "0";
+    table.dispatchEvent(new window.Event("input"));
+    expect(block.content.dataSourceRows).toEqual([["x"]]);
+  });
+
+  it("linked table input ignores invalid column index", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: { dataSourceRows: [["x"]] },
+    };
+    const table = createTableElement(block);
+    applyTableDomMode(table, "cell-type", {
+      blockId: "b",
+      scope: "cell",
+      row: 0,
+      col: 0,
+      typing: true,
+    }, { block });
+    const cell = table.querySelector("td.is-typing-cell") as HTMLTableCellElement;
+    expect(cell).toBeTruthy();
+    cell.dataset.tableRow = "0";
+    cell.dataset.tableCol = "not-a-number";
+    table.dispatchEvent(new window.Event("input"));
+    expect(block.content.dataSourceRows).toEqual([["x"]]);
+    cell.dataset.tableCol = "0";
+    cell.textContent = "y";
+    table.dispatchEvent(new window.Event("input"));
+    expect(block.content.dataSourceRows).toEqual([["y"]]);
+  });
+
+  it("linked table input ignores invalid cell coordinates", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: { dataSourceRows: [["x"]] },
+    };
+    const table = createTableElement(block);
+    applyTableDomMode(table, "cell-type", {
+      blockId: "b",
+      scope: "cell",
+      row: 0,
+      col: 0,
+      typing: true,
+    }, { block });
+    const cell = table.querySelector("td.is-typing-cell") as HTMLTableCellElement;
+    delete cell.dataset.tableRow;
+    delete cell.dataset.tableCol;
+    table.dispatchEvent(new window.Event("input"));
+    expect(block.content.dataSourceRows).toEqual([["x"]]);
   });
 
   it("updates rows on input in cell-type mode", () => {

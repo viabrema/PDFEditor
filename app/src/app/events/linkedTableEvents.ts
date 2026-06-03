@@ -1,4 +1,5 @@
 import { createLinkedTableBlockFromRows } from "../../blocks/tableBlock";
+import { applyExcelSnapshotToLinkedTable } from "../../blocks/linkedTableModel";
 import { createLinkedChartBlockFromExcel } from "../../blocks/chartBlock";
 import { BLOCK_TYPES } from "../../blocks/blockModel";
 import { getLinkedExcelBlocksToRefresh, loadExcelLinkTableContent } from "../../services/excelLink";
@@ -87,17 +88,7 @@ export function bindLinkedTableEvents({
       return;
     }
     documentHistory?.checkpointBeforeChange();
-    block.content = { ...(block.content || {}), rows: result.rows, merges: result.merges };
-    if (result.cellStyles) {
-      block.content.cellStyles = result.cellStyles;
-    } else {
-      delete block.content.cellStyles;
-    }
-    if (result.rowHeights) {
-      block.content.rowHeights = result.rowHeights;
-    } else {
-      delete block.content.rowHeights;
-    }
+    applyExcelSnapshotToLinkedTable(block, result);
     block.metadata = {
       ...(block.metadata || {}),
       excelLink: {
@@ -141,8 +132,6 @@ export function bindLinkedTableEvents({
         pageSize: ctx.regionSize,
         metadata: ctx.isBody ? {} : { region: ctx.region },
         merges: result.merges,
-        cellStyles: result.cellStyles,
-        rowHeights: result.rowHeights,
       },
     );
     blocks.push(block);
@@ -207,17 +196,7 @@ export function bindLinkedTableEvents({
             configured: true,
           };
         } else {
-          block.content = { ...(block.content || {}), rows: data.rows, merges: data.merges };
-          if (data.cellStyles) {
-            block.content.cellStyles = data.cellStyles;
-          } else {
-            delete block.content.cellStyles;
-          }
-          if (data.rowHeights) {
-            block.content.rowHeights = data.rowHeights;
-          } else {
-            delete block.content.rowHeights;
-          }
+          applyExcelSnapshotToLinkedTable(block, data);
         }
       } catch (e) {
         const msg =

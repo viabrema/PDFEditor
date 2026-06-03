@@ -119,14 +119,18 @@ describe("toolbar", () => {
     expect(toolbar.querySelectorAll("button").length).toBe(0);
   });
 
-  it("renders linked table toolbar with scale slider and excel button", () => {
+  it("renders linked table toolbar with data source and excel buttons", () => {
     let scale = 0;
     let excel = 0;
+    let data = 0;
     const toolbar = createToolbar(null, {
       variant: "linkedTable",
       fontScaleValue: 1,
       onFontScaleChange: (v: number) => {
         scale = v;
+      },
+      onLinkedTableDataSource: () => {
+        data += 1;
       },
       onLinkedTableExcelConfigure: () => {
         excel += 1;
@@ -139,9 +143,11 @@ describe("toolbar", () => {
     range.dispatchEvent(new window.Event("input", { bubbles: true }));
     expect(scale).toBe(1.5);
 
-    const btn = toolbar.querySelector("button");
-    expect(btn).toBeTruthy();
-    btn?.click();
+    const buttons = toolbar.querySelectorAll("button");
+    expect(buttons.length).toBe(2);
+    buttons[0]?.click();
+    expect(data).toBe(1);
+    buttons[1]?.click();
     expect(excel).toBe(1);
   });
 

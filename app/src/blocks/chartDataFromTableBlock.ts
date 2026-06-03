@@ -1,4 +1,5 @@
 import type { ChartBlockContent } from "./chartBlockTypes";
+import { getTableDataRows, normalizeLinkedTableContent } from "./linkedTableModel";
 
 export type ResolvedTableData = {
   columnCount: number;
@@ -26,16 +27,15 @@ export function normalizeChartDataSourceRows(rows: unknown): string[][] {
   );
 }
 
-/**
- * Extrai `content.rows` de um bloco table/linkedTable (migracao legada).
- */
-export function getTableRowsFromBlock(block: { content?: { rows?: unknown } } | null): string[][] {
-  if (!block?.content || !Array.isArray(block.content.rows)) {
+/** Dados brutos de um bloco table/linkedTable (camada de dados no linkado). */
+export function getTableRowsFromBlock(
+  block: { type?: string; content?: import("./linkedTableModel").LinkedTableBlockContent } | null,
+): string[][] {
+  if (!block?.content) {
     return [];
   }
-  return block.content.rows.map((row: unknown) =>
-    Array.isArray(row) ? row.map((c) => (c == null ? "" : String(c))) : [],
-  );
+  normalizeLinkedTableContent(block);
+  return getTableDataRows(block);
 }
 
 /**

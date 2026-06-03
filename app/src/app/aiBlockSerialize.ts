@@ -1,3 +1,4 @@
+import { getTableDataRows } from "../blocks/linkedTableModel";
 import { extractTextFromNode } from "./textUtils";
 
 /** Snapshot completo de um bloco para o prompt da IA (conteúdo editável). */
@@ -18,7 +19,7 @@ export function serializeBlockForAi(block: any) {
     };
   }
   if (block.type === "table" || block.type === "linkedTable") {
-    const rows = Array.isArray(block.content?.rows) ? block.content.rows : [];
+    const rows = getTableDataRows(block);
     const base: Record<string, unknown> = {
       id: block.id,
       type: block.type,
@@ -67,7 +68,7 @@ export function summarizeBlockForLayout(block: any): string {
     return `[grafico; grelha ${r}x${c0}; tipo ${bt}]`;
   }
   if (block.type === "table" || block.type === "linkedTable") {
-    const rows = Array.isArray(block.content?.rows) ? block.content.rows : [];
+    const rows = getTableDataRows(block);
     const cols = rows[0]?.length ?? 0;
     const noPdf = block.metadata?.excludeFromPdfExport ? "; aux nao-export-pdf" : "";
     return `[tabela ${rows.length}x${cols}${noPdf}]`;

@@ -11,6 +11,7 @@ import {
 import type { ExcelTableCellStyle } from "../services/excelTableStyle";
 import { createTableFormatToolbar } from "../ui/tableFormatToolbar";
 import type { DocumentHistory } from "./documentHistory";
+import { openLinkedTableDataSource } from "./linkedTableDataModal";
 
 function buildLinkedTableExtras(
   block: any,
@@ -48,6 +49,15 @@ function buildLinkedTableExtras(
   });
 
   wrap.append(label, range);
+
+  const dataBtn = document.createElement("button");
+  dataBtn.type = "button";
+  dataBtn.className =
+    "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm";
+  dataBtn.title = "Fonte de dados";
+  dataBtn.innerHTML = `<i data-lucide="database"></i>`;
+  dataBtn.addEventListener("click", () => openLinkedTableDataSource(block));
+  wrap.append(dataBtn);
 
   if (linkedTableBridge?.reconfigure) {
     const btn = document.createElement("button");

@@ -1,5 +1,6 @@
 import { Window } from "happy-dom";
 import { describe, expect, it } from "vitest";
+import { BLOCK_TYPES } from "./blockModel";
 import { TABLE_CELL_EMPTY_PLACEHOLDER } from "./tableBlockData";
 import { updateTableBody } from "./tableBlockDomBuild";
 import {
@@ -141,6 +142,79 @@ describe("tableBlockInteraction", () => {
     td.textContent = "ok";
     normalizeTypingCellContent(td);
     expect(td.textContent).toBe("ok");
+  });
+
+  it("applyTableDomMode shows raw and visual values for linked table", () => {
+    const table = tableWithRows();
+    const block = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: {
+        dataSourceRows: [
+          ["1000", "b"],
+          ["c", "d"],
+        ],
+        cellStyles: {
+          "0,0": { numberFormat: { kind: "number", locale: "pt-BR", decimals: 0 } },
+        },
+      },
+    };
+    applyTableDomMode(table, "cell-type", {
+      blockId: "b1",
+      scope: "cell",
+      row: 0,
+      col: 0,
+      typing: true,
+    }, { block });
+    const typing = table.querySelector("td.is-typing-cell") as HTMLTableCellElement;
+    expect(typing.textContent).toBe("1000");
+
+    applyTableDomMode(table, "structure", {
+      blockId: "b1",
+      scope: "cell",
+      row: 0,
+      col: 0,
+      typing: false,
+    }, { block });
+    const viewCell = table.querySelector('td[data-table-row="0"][data-table-col="0"]') as HTMLTableCellElement;
+    expect(viewCell.textContent).not.toBe("1000");
+
+    applyTableDomMode(table, "structure", {
+      blockId: "b1",
+      scope: "cell",
+      row: 0,
+      col: 9,
+      typing: false,
+    }, { block });
+    const sparse = table.querySelector('td[data-table-row="0"][data-table-col="1"]') as HTMLTableCellElement;
+    expect(sparse.textContent).toBeTruthy();
+
+    const emptyLinked = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: { dataSourceRows: [] },
+    };
+    applyTableDomMode(table, "structure", {
+      blockId: "b1",
+      scope: "cell",
+      row: 0,
+      col: 0,
+      typing: false,
+    }, { block: emptyLinked });
+    expect(table.querySelector("td")?.textContent).toBeTruthy();
+
+    const narrow = {
+      type: BLOCK_TYPES.LINKED_TABLE,
+      content: { dataSourceRows: [["solo"]] },
+    };
+    const table2 = tableWithRows();
+    applyTableDomMode(table2, "structure", {
+      blockId: "b1",
+      scope: "cell",
+      row: 0,
+      col: 1,
+      typing: false,
+    }, { block: narrow });
+    const cell01 = table2.querySelector('td[data-table-col="1"]') as HTMLTableCellElement;
+    expect(cell01.textContent).toBeTruthy();
   });
 
   it("refreshTableSelectionChrome clears when edit is null", () => {

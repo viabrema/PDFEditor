@@ -65,7 +65,10 @@ export async function loadExcelLinkTableContent(
     );
   }
   const bytes = await readFileFn(link.filePath);
-  return extractRangeToTableContent(bytes, link.sheetName, link.range);
+  return extractRangeToTableContent(bytes, link.sheetName, link.range, {
+    includeCellStyles: false,
+    includeRowHeights: false,
+  });
 }
 
 /** Retorna apenas linhas; para mesclagens use `loadExcelLinkTableContent`. */

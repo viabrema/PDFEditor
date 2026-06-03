@@ -8,6 +8,7 @@ import { getBlockTextStyle } from "../blocks/blockStyles";
 import { chartBlockHasExcelLink } from "../blocks/chartBlock";
 import { clampLinkedTableFontScale } from "../blocks/tableBlock";
 import { openChartConfiguration } from "./chartModal";
+import { openLinkedTableDataSource } from "./linkedTableDataModal";
 import type { DocumentHistory } from "./documentHistory";
 
 export function findBlockElement(blockId: string): HTMLElement | null {
@@ -39,6 +40,36 @@ export function renderImagePanel(
   const toolbar = createToolbar(null, {
     variant: "table",
     layout: "sidebar",
+    hiddenValue: block.metadata?.hidden === true,
+    onToggleHidden: (hidden: boolean) => {
+      documentHistory?.checkpointBeforeChange();
+      block.metadata = { ...(block.metadata || {}), hidden };
+      requestRender();
+    },
+  });
+  host.append(toolbar);
+}
+
+export function renderLinkedTablePanel(
+  host: HTMLElement,
+  block: any,
+  documentHistory: DocumentHistory | undefined,
+  requestRender: () => void,
+  linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> },
+) {
+  const toolbar = createToolbar(null, {
+    variant: "linkedTable",
+    layout: "sidebar",
+    fontScaleValue: clampLinkedTableFontScale(block.metadata?.fontScale),
+    onFontScaleChange: (scale: number) => {
+      documentHistory?.checkpointBeforeChange();
+      block.metadata = { ...(block.metadata || {}), fontScale: scale };
+      requestRender();
+    },
+    onLinkedTableDataSource: () => openLinkedTableDataSource(block),
+    onLinkedTableExcelConfigure: linkedTableBridge?.reconfigure
+      ? () => linkedTableBridge.reconfigure!(block)
+      : undefined,
     hiddenValue: block.metadata?.hidden === true,
     onToggleHidden: (hidden: boolean) => {
       documentHistory?.checkpointBeforeChange();

@@ -1,4 +1,9 @@
-import { TABLE_CELL_EMPTY_PLACEHOLDER, cellValueFromDisplay } from "./tableBlockData";
+import {
+  getTableVisualRows,
+  getTypingCellRawValue,
+  isLinkedTableBlock,
+} from "./linkedTableModel";
+import { TABLE_CELL_EMPTY_PLACEHOLDER, cellValueForDisplay, cellValueFromDisplay } from "./tableBlockData";
 import type { TableFormatScope } from "./tableFormatting";
 
 export type TableEditState = {
@@ -40,7 +45,10 @@ export function applyTableDomMode(
   table: HTMLTableElement,
   mode: TableDomMode,
   edit: TableEditState | null | undefined,
+  options?: { block?: { type?: string; content?: unknown } },
 ) {
+  const block = options?.block;
+  const visualRows = block && isLinkedTableBlock(block) ? getTableVisualRows(block) : null;
   table.classList.toggle("is-view-mode", mode === "view");
   table.classList.toggle("is-structure-mode", mode === "structure" || mode === "cell-type");
   table.classList.toggle("is-cell-type-mode", mode === "cell-type");
@@ -60,7 +68,13 @@ export function applyTableDomMode(
       typingCell !== null && typingCell.row === r && typingCell.col === c;
     td.contentEditable = isTyping ? "true" : "false";
     td.classList.toggle("is-typing-cell", isTyping);
-    if (isTyping) {
+    if (isTyping && block && isLinkedTableBlock(block)) {
+      const raw = getTypingCellRawValue(block, r, c);
+      td.textContent = cellValueForDisplay(raw);
+      normalizeTypingCellContent(td);
+    } else if (!isTyping && visualRows && visualRows[r]) {
+      td.textContent = cellValueForDisplay(visualRows[r][c] ?? "");
+    } else if (isTyping) {
       normalizeTypingCellContent(td);
     }
   });

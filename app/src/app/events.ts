@@ -7,6 +7,7 @@ import { bindMiscEvents } from "./events/miscEvents";
 import { bindPageEvents } from "./events/pageEvents";
 import { bindUiEvents } from "./events/uiEvents";
 import { bindChartModal } from "./chartModal";
+import { bindLinkedTableDataModal } from "./linkedTableDataModal";
 
 export function bindEvents({
   documentData,
@@ -27,6 +28,7 @@ export function bindEvents({
   bindPageEvents({ documentData, state, blocks, refs, renderer, documentHistory });
   bindBlockEvents({ documentData, state, blocks, refs, renderer, documentHistory });
   bindChartModal({ refs, blocks, documentData, state, renderer, documentHistory });
+  bindLinkedTableDataModal(refs);
   bindLinkedTableEvents({
     documentData,
     state,

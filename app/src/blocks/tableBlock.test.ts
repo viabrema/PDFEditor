@@ -14,6 +14,7 @@ import {
   cellValueFromDisplay,
   readTableRows,
   setTableEditable,
+  syncTableElementWithBlock,
   TABLE_CELL_EMPTY_PLACEHOLDER,
   updateTableBody,
 } from "./tableBlock";
@@ -64,7 +65,7 @@ describe("table block", () => {
       { filePath: "p", sheetName: "s", range: "A1:A1" },
       {},
     );
-    expect(block.content.rows.length).toBeGreaterThan(0);
+    expect(block.content.dataSourceRows.length).toBeGreaterThan(0);
   });
 
   it("creates linked table block with excel link metadata", () => {
@@ -77,8 +78,9 @@ describe("table block", () => {
     expect(block.metadata.excelLink.filePath).toBe("C:\\dados\\book.xlsx");
     expect(block.metadata.excelLink.sheetName).toBe("Folha1");
     expect(block.metadata.excelLink.range).toBe("A1:B1");
-    expect(block.content.rows).toEqual([["a", "b"]]);
+    expect(block.content.dataSourceRows).toEqual([["a", "b"]]);
     expect(block.content.merges).toEqual([]);
+    expect(block.content.cellStyles).toEqual({});
   });
 
   it("linked table stores merges in content", () => {
@@ -256,6 +258,73 @@ describe("table block", () => {
     expect(block.content.rows.length).toBeGreaterThan(0);
   });
 
+  it("syncTableElementWithBlock supports legacy boolean editing flag", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = { content: { rows: [["v"]] } };
+    const table = window.document.createElement("table");
+    syncTableElementWithBlock(table, block, true);
+    expect(table.classList.contains("is-structure-mode")).toBe(true);
+  });
+
+  it("syncTableElementWithBlock uses linked visual rows and merges", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = createLinkedTableBlockFromRows(
+      [["1"]],
+      { filePath: "p", sheetName: "s", range: "A1:A1" },
+      { merges: [{ r: 0, c: 0, rowspan: 1, colspan: 1 }] },
+    );
+    const table = window.document.createElement("table");
+    syncTableElementWithBlock(table, block, { mode: "view", edit: null });
+    expect(table.querySelectorAll("td").length).toBe(1);
+  });
+
+  it("syncTableElementWithBlock uses plain merges array when present", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const merge = { r: 0, c: 0, rowspan: 1, colspan: 1 };
+    const block = {
+      type: BLOCK_TYPES.TABLE,
+      content: { rows: [["v"]], merges: [merge] },
+    };
+    const table = window.document.createElement("table");
+    syncTableElementWithBlock(table, block, { mode: "view", edit: null });
+    expect(table.querySelector("td")).toBeTruthy();
+  });
+
+  it("syncTableElementWithBlock handles table block without content", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const table = window.document.createElement("table");
+    syncTableElementWithBlock(table, { type: BLOCK_TYPES.TABLE }, { mode: "view", edit: null });
+    expect(table.querySelectorAll("td").length).toBeGreaterThan(0);
+  });
+
+  it("syncTableElementWithBlock uses empty merges when not an array", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = { content: { rows: [["v"]], merges: null } };
+    const table = window.document.createElement("table");
+    syncTableElementWithBlock(table, block, { mode: "view", edit: null });
+    expect(table.querySelectorAll("td").length).toBe(1);
+  });
+
+  it("syncTableElementWithBlock forwards rowHeights to updateTableBody", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = { content: { rows: [["v"]], rowHeights: [18] } };
+    const table = window.document.createElement("table");
+    syncTableElementWithBlock(table, block, { mode: "view", edit: null });
+    expect(table.querySelectorAll("td").length).toBe(1);
+  });
+
   it("creates table element with fallback rows", () => {
     const window = new Window();
     globalThis.document = window.document;
@@ -278,20 +347,19 @@ describe("table block", () => {
     expect(block.content.rows.length).toBeGreaterThan(0);
   });
 
-  it("linked table persists rowHeights without cellStyles", () => {
+  it("linked table does not import excel rowHeights or cellStyles at creation", () => {
     const b = createLinkedTableBlockFromRows([["a"]], { filePath: "p", sheetName: "s", range: "A1:A1" }, {
       rowHeights: [11],
-    });
-    expect(b.content.rowHeights).toEqual([11]);
-    expect(b.content.cellStyles).toBeUndefined();
-  });
-
-  it("linked table persists cellStyles without rowHeights", () => {
-    const b = createLinkedTableBlockFromRows([["b"]], { filePath: "p", sheetName: "s", range: "A1:A1" }, {
       cellStyles: { "0,0": { fontWeight: "bold" } },
     });
-    expect(b.content.cellStyles?.["0,0"]?.fontWeight).toBe("bold");
     expect(b.content.rowHeights).toBeUndefined();
+    expect(b.content.cellStyles).toEqual({});
+  });
+
+  it("linked table keeps editor cellStyles on content", () => {
+    const b = createLinkedTableBlockFromRows([["b"]], { filePath: "p", sheetName: "s", range: "A1:A1" }, {});
+    b.content.cellStyles = { "0,0": { fontWeight: "bold" } };
+    expect(b.content.cellStyles?.["0,0"]?.fontWeight).toBe("bold");
   });
 
   it("updateTableBody clears table font size when font scale is 1", () => {

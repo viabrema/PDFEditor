@@ -1,4 +1,10 @@
 import { TABLE_BLOCK_BASE_FONT_PX, clampLinkedTableFontScale } from "../blocks/tableBlock";
+import {
+  getTableStructureMerges,
+  getTableVisualRows,
+  isLinkedTableBlock,
+  normalizeLinkedTableContent,
+} from "../blocks/linkedTableModel";
 import { buildResolvedCellStylesMap } from "../blocks/tableFormatting";
 import {
   cellStyleToCssString,
@@ -29,8 +35,23 @@ export function renderTableBlockMarkup(
   },
   escapeHtml: (v: unknown) => string,
 ): string {
-  const rows = Array.isArray(block.content?.rows) ? (block.content!.rows as string[][]) : [];
-  const merges = (Array.isArray(block.content?.merges) ? block.content!.merges : []) as ExportTableMerge[];
+  const tableBlock = block as {
+    type?: string;
+    content?: import("../blocks/linkedTableModel").LinkedTableBlockContent;
+  };
+  normalizeLinkedTableContent(tableBlock);
+  const rows = isLinkedTableBlock(tableBlock)
+    ? getTableVisualRows(tableBlock)
+    : Array.isArray(block.content?.rows)
+      ? (block.content!.rows as string[][])
+      : [];
+  const merges = (
+    isLinkedTableBlock(tableBlock)
+      ? getTableStructureMerges(tableBlock)
+      : Array.isArray(block.content?.merges)
+        ? block.content!.merges
+        : []
+  ) as ExportTableMerge[];
   const cellStyles = buildResolvedCellStylesMap({
     rows: rows as string[][],
     cellStyles: block.content?.cellStyles as Record<string, ExcelTableCellStyle> | undefined,

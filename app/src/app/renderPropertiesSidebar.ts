@@ -5,9 +5,11 @@ import {
   appendHint,
   findBlockElement,
   renderChartPanel,
+  renderLinkedTablePanel,
   renderImagePanel,
   renderTextPanel,
 } from "./renderPropertiesSidebarPanels";
+import { openLinkedTableDataSource } from "./linkedTableDataModal";
 import { getPageSize } from "./textUtils";
 import type { DocumentHistory } from "./documentHistory";
 
@@ -113,7 +115,48 @@ export function renderPropertiesSidebar({
     subtitleEl.textContent = state.editingBlockId === block.id ? "A editar" : "Selecionado";
   }
 
-  if (block.type === "table" || block.type === "linkedTable") {
+  if (block.type === "linkedTable") {
+    const element = findBlockElement(block.id);
+    if (!element) {
+      appendHint(blockPanel, "Tabela nao visivel nesta pagina.");
+    } else if (state.editingBlockId !== block.id) {
+      appendHint(
+        blockPanel,
+        "Arraste as alcas para redimensionar. Duplo clique para editar estrutura e formato visual. Atualizar Excel so altera os dados.",
+      );
+      renderLinkedTablePanel(blockPanel, block, documentHistory, requestRender, linkedTableBridge);
+    } else {
+      if (state.tableEdit?.typing) {
+        appendHint(blockPanel, "A editar texto na celula. Formato aplica na selecao atual.");
+      } else {
+        appendHint(
+          blockPanel,
+          "Clique nos marcadores ou numa celula. Duplo clique na celula para digitar. Formato aplica na selecao.",
+        );
+      }
+      const toolbar = mountTableFormatToolbar({
+        block,
+        state,
+        element,
+        documentHistory,
+        requestRender,
+        linkedTableBridge,
+        layout: "sidebar",
+      });
+      blockPanel.append(toolbar);
+      const dataBtn = document.createElement("button");
+      dataBtn.type = "button";
+      dataBtn.className =
+        "mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:border-slate-400";
+      dataBtn.textContent = "Fonte de dados";
+      dataBtn.addEventListener("click", () => openLinkedTableDataSource(block));
+      blockPanel.append(dataBtn);
+    }
+    finishPropertiesSidebarIcons(refs);
+    return;
+  }
+
+  if (block.type === "table") {
     const element = findBlockElement(block.id);
     if (!element) {
       appendHint(blockPanel, "Tabela nao visivel nesta pagina.");

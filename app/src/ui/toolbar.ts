@@ -10,6 +10,7 @@ export function createToolbar(commands: any, options: any = {}) {
     onHeadingLevelChange,
     onFontScaleChange,
     onLinkedTableExcelConfigure,
+    onLinkedTableDataSource,
     onLinkedChartExcelConfigure,
     onLinkedChartDesignConfigure,
     onToggleHidden,
@@ -77,6 +78,18 @@ export function createToolbar(commands: any, options: any = {}) {
     });
 
     container.append(label, range, valueEl);
+
+    if (variant === "linkedTable" && onLinkedTableDataSource) {
+      const dataBtn = document.createElement("button");
+      dataBtn.type = "button";
+      dataBtn.className =
+        "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
+      dataBtn.title = "Fonte de dados";
+      dataBtn.setAttribute("aria-label", "Fonte de dados");
+      dataBtn.innerHTML = `<i data-lucide="database"></i>`;
+      dataBtn.addEventListener("click", () => onLinkedTableDataSource());
+      container.append(dataBtn);
+    }
 
     const onExcel =
       variant === "linkedTable" ? onLinkedTableExcelConfigure : onLinkedChartExcelConfigure;

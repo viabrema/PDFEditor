@@ -1,4 +1,5 @@
 import { createBlock } from "../blocks/blockModel";
+import { getTableDataRows, isLinkedTableBlock } from "../blocks/linkedTableModel";
 import { buildTextDocFromString, extractTextFromNode } from "./textUtils";
 import {
   translateTextBatch,
@@ -57,7 +58,7 @@ export async function translateBlockFromSource({
   }
 
   if (block.type === "table" || block.type === "linkedTable") {
-    const rows = Array.isArray(block.content?.rows) ? block.content.rows : [];
+    const rows = getTableDataRows(block);
     const flatCells = rows.flatMap((row) => row.map((cell) => String(cell || "")));
     const translatedCells = await translateTextBatch({
       translationService,
@@ -74,9 +75,16 @@ export async function translateBlockFromSource({
         return next;
       })
     );
+    const content = { ...(block.content || {}) };
+    if (isLinkedTableBlock(block)) {
+      content.dataSourceRows = translatedRows;
+      delete content.rows;
+    } else {
+      content.rows = translatedRows;
+    }
     return createBlock({
       ...base,
-      content: { ...(block.content || {}), rows: translatedRows },
+      content,
     });
   }
 

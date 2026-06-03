@@ -134,7 +134,7 @@ describe("excelLink", () => {
     expect(getLinkedExcelBlocksToRefresh(blocks, ["c"])).toEqual([blocks[1]]);
   });
 
-  it("loadExcelLinkTableContent returns cellStyles when workbook has styled cell", async () => {
+  it("loadExcelLinkTableContent omits excel cellStyles (data layer only)", async () => {
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet("S");
     const c = ws.getCell(1, 1);
@@ -145,7 +145,8 @@ describe("excelLink", () => {
       { filePath: "C:\\fake\\f.xlsx", sheetName: "S", range: "A1:A1" },
       async () => buf,
     );
-    expect(data.cellStyles?.["0,0"]?.fontWeight).toBe("bold");
+    expect(data.cellStyles).toBeUndefined();
+    expect(data.rows).toEqual([["x"]]);
   });
 
   it("loadExcelLinkTableContent returns merges from workbook", async () => {

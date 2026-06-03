@@ -1,8 +1,16 @@
 import type { ExcelTableMerge } from "../services/excelRange";
 import type { TableBlockStyleContent } from "./tableFormatting";
 import {
+  applyExcelSnapshotToLinkedTable,
+  getTableStructureMerges,
+  getTableVisualRows,
+  isLinkedTableBlock,
+  writeTypingCellRawValue,
+} from "./linkedTableModel";
+import {
   clampLinkedTableFontScale,
   createEmptyTable,
+  cellValueFromDisplay,
   normalizeRows,
   parseTabularText,
   readTableRows,
@@ -54,6 +62,24 @@ export function attachTableHandlers({
   onTableEditChange?: (edit: Omit<TableEditState, "blockId">) => void;
 }) {
   const handleInput = () => {
+    if (isLinkedTableBlock(block)) {
+      const typingTd = table.querySelector("td.is-typing-cell") as HTMLTableCellElement | null;
+      if (!typingTd) {
+        return;
+      }
+      const row = Number(typingTd.dataset.tableRow);
+      const col = Number(typingTd.dataset.tableCol);
+      if (!Number.isFinite(row)) {
+        return;
+      }
+      /* v8 ignore start */
+      if (!Number.isFinite(col)) {
+        return;
+      }
+      /* v8 ignore end */
+      writeTypingCellRawValue(block, row, col, cellValueFromDisplay(typingTd.textContent || ""));
+      return;
+    }
     block.content = block.content || {};
     block.content.rows = readTableRows(table);
   };
@@ -131,10 +157,20 @@ export function attachTableHandlers({
     event.preventDefault();
     const rows = normalizeRows(parseTabularText(text));
     const safeRows = rows.length > 0 ? rows : createEmptyTable();
-    updateTableBody(table, safeRows, null, block.content || null, null, {
-      fontScale: tableFontScaleForBlock(block),
+    if (isLinkedTableBlock(block)) {
+      applyExcelSnapshotToLinkedTable(block, { rows: safeRows, merges: [] });
+    } else {
+      block.content = block.content || {};
+      block.content.rows = safeRows;
+    }
+    syncTableElementWithBlock(table, block, {
+      mode: table.classList.contains("is-cell-type-mode")
+        ? "cell-type"
+        : table.classList.contains("is-structure-mode")
+          ? "structure"
+          : "view",
+      edit: null,
     });
-    handleInput();
   });
 }
 
@@ -143,8 +179,16 @@ export function syncTableElementWithBlock(
   block: { type?: string; content?: any; metadata?: { fontScale?: unknown } },
   config: TableDomConfig | boolean,
 ) {
-  const rows = normalizeRows(block.content?.rows || createEmptyTable());
-  const merges = Array.isArray(block.content?.merges) ? block.content.merges : [];
+  const rows = normalizeRows(
+    isLinkedTableBlock(block)
+      ? getTableVisualRows(block)
+      : block.content?.rows || createEmptyTable(),
+  );
+  const merges = isLinkedTableBlock(block)
+    ? getTableStructureMerges(block)
+    : Array.isArray(block.content?.merges)
+      ? block.content.merges
+      : [];
   const rowHeights = Array.isArray(block.content?.rowHeights)
     ? (block.content.rowHeights as (number | null)[])
     : null;
@@ -155,7 +199,7 @@ export function syncTableElementWithBlock(
   updateTableBody(table, rows, merges, block.content || null, rowHeights, {
     fontScale: tableFontScaleForBlock(block),
   });
-  applyTableDomMode(table, domConfig.mode, domConfig.edit);
+  applyTableDomMode(table, domConfig.mode, domConfig.edit, { block });
 }
 
 export function createTableElement(

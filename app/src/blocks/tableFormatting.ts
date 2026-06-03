@@ -4,6 +4,7 @@ export type TableFormatScope = "cell" | "row" | "column";
 
 export type TableBlockStyleContent = {
   rows?: string[][];
+  dataSourceRows?: string[][];
   cellStyles?: Record<string, Partial<ExcelTableCellStyle>>;
   rowStyles?: Record<string, Partial<ExcelTableCellStyle>>;
   colStyles?: Record<string, Partial<ExcelTableCellStyle>>;
@@ -54,10 +55,17 @@ export function resolveTableCellStyle(
   return mergePartialStyles(colStyle, rowStyle, cellStyle);
 }
 
+function tableGridDimensions(content: TableBlockStyleContent): string[][] {
+  if (Array.isArray(content.dataSourceRows)) {
+    return content.dataSourceRows;
+  }
+  return Array.isArray(content.rows) ? content.rows : [];
+}
+
 export function buildResolvedCellStylesMap(
   content: TableBlockStyleContent,
 ): Record<string, ExcelTableCellStyle> {
-  const rows = Array.isArray(content.rows) ? content.rows : [];
+  const rows = tableGridDimensions(content);
   const out: Record<string, ExcelTableCellStyle> = {};
   rows.forEach((row, r) => {
     row.forEach((_cell, c) => {
@@ -211,8 +219,8 @@ export function applyTableFormatPatch(
   const prev = map[key] || {};
   map[key] = mergePartialStyles(prev, patch) || patch;
 
-  if (patch.numberFormat !== undefined) {
-    const rows = Array.isArray(content.rows) ? content.rows : [];
+  if (patch.numberFormat !== undefined && Array.isArray(content.rows)) {
+    const rows = content.rows;
     for (const [r, c] of coordsInScope(scope, row, col, rows)) {
       const style = resolveTableCellStyle(content, r, c);
       rows[r][c] = formatNumberForDisplay(rows[r][c], style?.numberFormat);

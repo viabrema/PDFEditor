@@ -10,16 +10,18 @@ Funcionalidade para analistas que trabalham com **folhas Excel grandes** (vária
 ## Fluxo do utilizador
 
 1. **Inserir:** botão da folha (ícone de folha) → escolher ficheiro Excel → modal **Folha** + **Intervalo** (ex.: `A1:G5`) → confirmar → bloco `linkedTable` na página.
-2. **Atualizar links:** botão de atualizar (ícone refresh). Se um bloco `linkedTable` estiver **selecionado**, só esse bloco é atualizado; caso contrário, **todos** os blocos `linkedTable` do documento (todas as páginas e idiomas no array em memória). O **tamanho e a posição** da caixa do bloco mantêm-se (só `content` e mesclagens são atualizados).
-3. **Reconfigurar:** **duplo clique** no bloco → repete o fluxo ficheiro + modal; o conteúdo e `metadata.excelLink` são substituídos após confirmar; **tamanho e posição** do bloco mantêm-se.
+2. **Atualizar links:** botão de atualizar (ícone refresh). Se um bloco `linkedTable` estiver **selecionado**, só esse bloco é atualizado; caso contrário, **todos** os blocos `linkedTable` do documento. O **tamanho, posição e formatação visual** do bloco mantêm-se — só a **camada de dados** (`dataSourceRows` / mesclagens de dados) é substituída.
+3. **Reconfigurar:** painel de propriedades (ou toolbar em edição) → alterar ficheiro, folha ou intervalo; atualiza a camada de dados e o link, **sem** importar estilos do Excel.
+4. **Fonte de dados:** com a tabela selecionada, botão **Fonte de dados** abre um modal só-leitura com os valores brutos (números em formato internacional `en-US`). A grelha no canvas mostra a **camada visual** (formatação do editor).
+5. **Editar célula:** duplo clique na célula (modo estrutura) → o texto editável é o valor **bruto** dos dados; ao sair, volta a aparecer a formatação visual (incl. números e locale do editor).
 
 ## Formato no JSON do documento
 
 - `type`: `"linkedTable"`.
-- `content.rows`: matriz de strings (último snapshot para UI e exportação PDF). Células escravas de mesclagem no Excel ficam com string vazia; o valor aparece só na célula “mestre”.
-- `content.merges` (opcional): lista `{ r, c, rowspan, colspan }` em coordenadas **0-based** relativas ao canto superior esquerdo do intervalo. Só entram mesclagens **totalmente contidas** no intervalo escolhido (se o intervalo cortar uma mesclagem maior, essa mesclagem não é reproduzida).
-- `content.cellStyles` (opcional): mapa `"linha,col"` → estilo CSS (`color`, `backgroundColor`, `fontFamily`, `fontSize`, `fontWeight`, `fontStyle`, `textAlign`, `verticalAlign`, `borderTop`/`Right`/`Bottom`/`Left`) lido do Excel via ExcelJS. Cores de **tema** sem ARGB resolvido podem não aparecer.
-- `content.rowHeights` (opcional): alturas de linha em **pontos** (Excel), um valor por linha do intervalo (`null` = altura automática).
+- `content.dataSourceRows`: matriz de strings do Excel (valores brutos; não formatados para locale do editor). Documentos antigos com só `content.rows` são migrados automaticamente para `dataSourceRows`.
+- `content.dataSourceMerges` / `content.merges`: mesclagens do intervalo Excel (0-based no intervalo). Só entram mesclagens **totalmente contidas** no intervalo.
+- `content.cellStyles`, `content.rowStyles`, `content.colStyles`: formatação **visual** definida no editor (não vem do Excel na importação).
+- `content.rows` (legado): ignorado em blocos linkados novos; preferir `dataSourceRows`.
 - `metadata.excelLink`:
   - `filePath`: caminho absoluto no Windows/macOS/Linux (no browser, `__browser__:nome.xlsx`).
   - `sheetName`: nome da folha (não só índice).
@@ -27,7 +29,7 @@ Funcionalidade para analistas que trabalham com **folhas Excel grandes** (vária
 
 ## Erros comuns
 
-- **Ficheiro movido ou apagado:** ao atualizar, a leitura falha — mensagem de erro por bloco (alert) e as `rows` antigas mantêm-se.
+- **Ficheiro movido ou apagado:** ao atualizar, a leitura falha — mensagem de erro por bloco (alert) e os `dataSourceRows` antigos mantêm-se.
 - **Partilha do JSON:** paths absolutos são **máquina-local**; outro PC não resolve o mesmo path.
 - **Formato .xls legado:** não é OOXML (não é ZIP); a app deteta a assinatura e pede para guardar como `.xlsx`. Ficheiros corrompidos ou encriptados também falham com mensagem em português.
 
@@ -40,6 +42,7 @@ Funcionalidade para analistas que trabalham com **folhas Excel grandes** (vária
 | Tauri: picker + bytes | `app/src/services/tauriStorage.ts` (`pickExcelOpenPath`, `readBinaryFileFromPath`) |
 | Wizard + modal | `app/src/app/linkedTableWizard.ts` |
 | Eventos UI | `app/src/app/events/linkedTableEvents.ts` |
+| Dados vs visual | `app/src/blocks/linkedTableModel.ts`, modal `app/src/app/linkedTableDataModal.ts` |
 | Bloco / DOM | `app/src/blocks/blockModel.ts`, `tableBlock.ts`, `blockRenderer.ts` |
 | Duplo clique | `app/src/app/renderBlocks.ts` + `linkedTableBridge` em `main.ts` / `render.ts` |
 | PDF | `app/src/services/export.ts`, `exportTableMarkup.ts` |

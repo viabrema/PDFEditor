@@ -145,6 +145,34 @@ export const APP_TEMPLATE_MODALS_MARKUP = `
         </div>
       </div>
       <div
+        id="linked-table-data-modal"
+        class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/40 px-4"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <div class="text-lg font-semibold text-slate-900">Fonte de dados</div>
+              <div class="text-xs text-slate-500">
+                Valores do Excel (formato internacional). A tabela no editor mostra a camada visual com a formatacao aplicada.
+              </div>
+            </div>
+            <button
+              id="linked-table-data-close"
+              type="button"
+              class="rounded-md border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600"
+            >
+              Fechar
+            </button>
+          </div>
+          <div class="max-h-[min(60vh,400px)] overflow-auto rounded-lg border border-slate-200">
+            <div id="linked-table-data-grid" class="p-2"></div>
+          </div>
+        </div>
+      </div>
+      <div
         id="excel-link-modal"
         class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-900/40 px-4"
         aria-hidden="true"

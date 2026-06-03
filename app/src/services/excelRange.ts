@@ -177,6 +177,11 @@ export type ExcelTableContent = {
   rowHeights?: (number | null)[];
 };
 
+export type ExtractTableContentOptions = {
+  includeCellStyles?: boolean;
+  includeRowHeights?: boolean;
+};
+
 type SheetMergeRect = { top: number; left: number; bottom: number; right: number };
 
 function getWorksheetMergeRects(sheet: ExcelJS.Worksheet): SheetMergeRect[] {
@@ -219,7 +224,13 @@ function cellPlainForTableGrid(cell: ExcelJS.Cell): string {
 }
 
 /** Extrai linhas + mesclagens a partir de uma folha ja carregada (util para testes e reutilizacao). */
-export function extractTableContentFromWorksheet(sheet: ExcelJS.Worksheet, range: string): ExcelTableContent {
+export function extractTableContentFromWorksheet(
+  sheet: ExcelJS.Worksheet,
+  range: string,
+  options: ExtractTableContentOptions = {},
+): ExcelTableContent {
+  const includeCellStyles = options.includeCellStyles !== false;
+  const includeRowHeights = options.includeRowHeights !== false;
   const b = parseA1Range(range);
   const rows: string[][] = [];
   const cellStyles: Record<string, ExcelTableCellStyle> = {};
@@ -228,15 +239,19 @@ export function extractTableContentFromWorksheet(sheet: ExcelJS.Worksheet, range
   for (let r = b.top; r <= b.bottom; r++) {
     const row: string[] = [];
     const excelRow = sheet.getRow(r);
-    const h = excelRow.height;
-    rowHeights.push(typeof h === "number" && h > 0 ? h : null);
+    if (includeRowHeights) {
+      const h = excelRow.height;
+      rowHeights.push(typeof h === "number" && h > 0 ? h : null);
+    }
 
     for (let c = b.left; c <= b.right; c++) {
       const cell = sheet.getCell(r, c);
       row.push(cellPlainForTableGrid(cell));
-      const st = excelCellToTableStyle(cell);
-      if (st) {
-        cellStyles[`${r - b.top},${c - b.left}`] = st;
+      if (includeCellStyles) {
+        const st = excelCellToTableStyle(cell);
+        if (st) {
+          cellStyles[`${r - b.top},${c - b.left}`] = st;
+        }
       }
     }
     rows.push(row);
@@ -244,10 +259,10 @@ export function extractTableContentFromWorksheet(sheet: ExcelJS.Worksheet, range
 
   const merges = mergesForExtractedRange(sheet, b);
   const out: ExcelTableContent = { rows, merges };
-  if (Object.keys(cellStyles).length > 0) {
+  if (includeCellStyles && Object.keys(cellStyles).length > 0) {
     out.cellStyles = cellStyles;
   }
-  if (rowHeights.some((x) => x != null)) {
+  if (includeRowHeights && rowHeights.some((x) => x != null)) {
     out.rowHeights = rowHeights;
   }
   return out;
@@ -257,13 +272,14 @@ export async function extractRangeToTableContent(
   data: ArrayBuffer | Uint8Array,
   sheetName: string,
   range: string,
+  options: ExtractTableContentOptions = {},
 ): Promise<ExcelTableContent> {
   const workbook = await loadExcelWorkbook(data);
   const sheet = workbook.getWorksheet(sheetName);
   if (!sheet) {
     throw new Error(`Folha nao encontrada: "${sheetName}".`);
   }
-  return extractTableContentFromWorksheet(sheet, range);
+  return extractTableContentFromWorksheet(sheet, range, options);
 }
 
 export async function extractRangeToRows(

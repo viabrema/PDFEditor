@@ -153,7 +153,10 @@ export async function runExcelLinkSetup(options: {
     return null;
   }
   try {
-    const table = await extractRangeToTableContent(picked.bytes, cfg.sheetName, cfg.range);
+    const table = await extractRangeToTableContent(picked.bytes, cfg.sheetName, cfg.range, {
+      includeCellStyles: false,
+      includeRowHeights: false,
+    });
     return {
       filePath: picked.filePath,
       sheetName: cfg.sheetName,
