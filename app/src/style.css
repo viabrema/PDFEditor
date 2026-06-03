@@ -310,9 +310,14 @@ body {
   vertical-align: middle;
 }
 
+/* Marcadores de selecao (linha/coluna) so no modo estrutura — edicao visual da tabela. */
+.table-block:not(.is-structure-mode) thead,
+.table-block:not(.is-structure-mode) .table-row-select {
+  display: none;
+}
+
 /* Indicador visivel no topo de cada coluna (modo estrutura) */
-.table-block.is-structure-mode .table-col-select::before,
-.table-block.is-cell-type-mode .table-col-select::before {
+.table-block.is-structure-mode .table-col-select::before {
   content: "";
   display: block;
   width: 100%;
@@ -323,8 +328,7 @@ body {
   background: #94a3b8;
 }
 
-.table-block.is-structure-mode .table-col-select.is-selected::before,
-.table-block.is-cell-type-mode .table-col-select.is-selected::before {
+.table-block.is-structure-mode .table-col-select.is-selected::before {
   background: #0284c7;
 }
 
