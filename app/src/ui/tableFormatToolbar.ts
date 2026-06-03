@@ -53,6 +53,11 @@ export function createTableFormatToolbar(options: {
       options.onApply({ textAlign: "center" }, scope()),
     ),
     compactIconButton("align-right", "Alinhar direita", () => options.onApply({ textAlign: "right" }, scope())),
+    compactIconButton("align-vertical-justify-center", "Centralizar verticalmente", () => {
+      const st = currentStyle();
+      const next = st?.verticalAlign === "middle" ? "top" : "middle";
+      options.onApply({ verticalAlign: next }, scope());
+    }),
   );
 
   if (options.getMergeState && options.onMerge && options.onUnmerge) {

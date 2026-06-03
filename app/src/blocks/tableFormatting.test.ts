@@ -28,6 +28,15 @@ describe("tableFormatting", () => {
     expect(st?.color).toBe("#ff0000");
   });
 
+  it("merges verticalAlign from row and cell layers", () => {
+    const content = {
+      rows: [["1"]],
+      rowStyles: { "0": { verticalAlign: "top" as const } },
+      cellStyles: { "0,0": { verticalAlign: "middle" as const } },
+    };
+    expect(resolveTableCellStyle(content, 0, 0)?.verticalAlign).toBe("middle");
+  });
+
   it("applies number format to row", () => {
     const content = {
       rows: [["1234.5", "10"]],

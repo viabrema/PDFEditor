@@ -75,6 +75,9 @@ describe("tableFormatToolbar", () => {
     (toolbar.querySelector('[title="Alinhar direita"]') as HTMLButtonElement).click();
     expect(onApply).toHaveBeenCalledWith({ textAlign: "right" }, "cell");
 
+    (toolbar.querySelector('[title="Centralizar verticalmente"]') as HTMLButtonElement).click();
+    expect(onApply).toHaveBeenCalledWith({ verticalAlign: "middle" }, "cell");
+
     const colors = toolbar.querySelectorAll('input[type="color"]');
     (colors[0] as HTMLInputElement).value = "#112233";
     colors[0].dispatchEvent(new window.Event("input"));
@@ -119,6 +122,28 @@ describe("tableFormatToolbar", () => {
     });
     (toolbar.querySelector('[title="Italico"]') as HTMLButtonElement).click();
     expect(onApply).toHaveBeenCalledWith({ fontStyle: "italic" }, "cell");
+  });
+
+  it("toggles vertical align off when already centered", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = {
+      content: {
+        rows: [["1"]],
+        cellStyles: { "0,0": { verticalAlign: "middle" } },
+      },
+    };
+    const onApply = vi.fn();
+    const toolbar = createTableFormatToolbar({
+      block,
+      getFocus: () => ({ row: 0, col: 0 }),
+      getScope: () => "cell",
+      onApply,
+    });
+
+    (toolbar.querySelector('[title="Centralizar verticalmente"]') as HTMLButtonElement).click();
+    expect(onApply).toHaveBeenCalledWith({ verticalAlign: "top" }, "cell");
   });
 
   it("toggles bold off when already bold", () => {

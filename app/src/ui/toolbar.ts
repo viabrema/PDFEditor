@@ -156,8 +156,9 @@ export function createToolbar(commands: any, options: any = {}) {
     return select;
   };
 
+  let levelSelect: HTMLSelectElement | undefined;
   if (variant === "heading") {
-    const levelSelect = createSelect({
+    levelSelect = createSelect({
       title: "Nivel do titulo",
       value: String(headingLevelValue),
       options: headingLevels.map((level) => ({
@@ -166,17 +167,16 @@ export function createToolbar(commands: any, options: any = {}) {
       })),
       onChange: (value) => onHeadingLevelChange?.(Number(value)),
     });
-    container.append(levelSelect);
   }
 
+  let sizeSelect: HTMLSelectElement | undefined;
   if (variant === "text") {
-    const sizeSelect = createSelect({
+    sizeSelect = createSelect({
       title: "Tamanho da fonte",
       value: fontSizeValue,
       options: fontSizes.map((size) => ({ value: size, label: size })),
       onChange: (value) => onFontSizeChange?.(value),
     });
-    container.append(sizeSelect);
   }
 
   const fontSelect = createSelect({
@@ -185,8 +185,6 @@ export function createToolbar(commands: any, options: any = {}) {
     options: fontFamilies.map((font) => ({ value: font, label: font })),
     onChange: (value) => onFontFamilyChange?.(value),
   });
-
-  container.append(fontSelect);
 
   const items = [
     { id: "bold", label: "Negrito", icon: "bold", action: commands?.toggleBold },
@@ -223,24 +221,50 @@ export function createToolbar(commands: any, options: any = {}) {
     );
   }
 
-  items.forEach((item) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.dataset.action = item.id;
-    button.className =
-      "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
-    button.title = item.label;
-    button.setAttribute("aria-label", item.label);
-    if (disabled) {
-      button.disabled = true;
-      button.classList.add("opacity-40", "cursor-not-allowed");
-    }
-    button.innerHTML = `<i data-lucide="${item.icon}"></i>`;
-    button.addEventListener("click", () => item.action && item.action());
-    container.append(button);
-  });
+  const appendFormatButtons = (parent: HTMLElement) => {
+    items.forEach((item) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.action = item.id;
+      button.className =
+        "toolbar-icon-button shrink-0 rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
+      button.title = item.label;
+      button.setAttribute("aria-label", item.label);
+      if (disabled) {
+        button.disabled = true;
+        button.classList.add("opacity-40", "cursor-not-allowed");
+      }
+      button.innerHTML = `<i data-lucide="${item.icon}"></i>`;
+      button.addEventListener("click", () => item.action && item.action());
+      parent.append(button);
+    });
+    appendHiddenToggleButton(parent);
+  };
 
-  appendHiddenToggleButton();
+  if (layout === "sidebar") {
+    const root = createContextToolbarRoot();
+    const fields = createContextToolbarFieldsPanel();
+    const actions = createContextToolbarActionsRow();
+    if (levelSelect) {
+      fields.append(labeledField("Nivel do titulo", levelSelect));
+    }
+    if (sizeSelect) {
+      fields.append(labeledField("Tamanho da fonte", sizeSelect));
+    }
+    fields.append(labeledField("Fonte", fontSelect));
+    appendFormatButtons(actions);
+    root.append(fields, actions);
+    return root;
+  }
+
+  if (levelSelect) {
+    container.append(levelSelect);
+  }
+  if (sizeSelect) {
+    container.append(sizeSelect);
+  }
+  container.append(fontSelect);
+  appendFormatButtons(container);
 
   return container;
 }

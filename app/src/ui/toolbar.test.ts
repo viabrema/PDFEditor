@@ -238,9 +238,22 @@ describe("toolbar", () => {
       },
       { layout: "sidebar", variant: "text" },
     );
-    expect(toolbar.className).toContain("flex-col");
+    expect(toolbar.className).toContain("context-toolbar");
+    const actions = toolbar.querySelector(".context-toolbar__actions");
+    expect(actions).toBeTruthy();
+    expect(actions?.querySelectorAll("button").length).toBeGreaterThan(4);
     const select = toolbar.querySelector("select") as HTMLSelectElement;
     expect(select.className).toContain("w-full");
+  });
+
+  it("renders sidebar layout for heading toolbar with actions in a row", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+    const toolbar = createToolbar(
+      { toggleBold: vi.fn(), toggleItalic: vi.fn() },
+      { layout: "sidebar", variant: "heading", onHeadingLevelChange: vi.fn() },
+    );
+    expect(toolbar.querySelector(".context-toolbar__actions")?.childElementCount).toBeGreaterThan(4);
   });
 
   it("renders disabled toolbar", () => {
