@@ -1,5 +1,13 @@
 import type { Alignment, Border, Borders, Cell, Fill, Font } from "exceljs";
+import { appendBorderCssParts, cellStyleBaseToCssString } from "./excelTableCellCss";
 import { excelColorToCss, getWorkbookClrSchemeMap, type OoxmlColorSource } from "./excelThemeColors";
+
+export {
+  appendBorderCssParts,
+  cellStyleToEditorCssString,
+  clearPrintBorderSides,
+  printBorderToInsetShadow,
+} from "./excelTableCellCss";
 
 export type { OoxmlColorSource } from "./excelThemeColors";
 export {
@@ -224,42 +232,11 @@ export function scaleExcelCellStyleFontSize(
 
 export function cellStyleToCssString(style: ExcelTableCellStyle): string {
   const parts: string[] = [];
-  if (style.color) {
-    parts.push(`color:${style.color}`);
+  const base = cellStyleBaseToCssString(style);
+  if (base) {
+    parts.push(base);
   }
-  if (style.backgroundColor) {
-    parts.push(`background-color:${style.backgroundColor}`);
-  }
-  if (style.fontFamily) {
-    parts.push(`font-family:${style.fontFamily}`);
-  }
-  if (style.fontSize) {
-    parts.push(`font-size:${style.fontSize}`);
-  }
-  if (style.fontWeight) {
-    parts.push(`font-weight:${style.fontWeight}`);
-  }
-  if (style.fontStyle) {
-    parts.push(`font-style:${style.fontStyle}`);
-  }
-  if (style.textAlign) {
-    parts.push(`text-align:${style.textAlign}`);
-  }
-  if (style.verticalAlign) {
-    parts.push(`vertical-align:${style.verticalAlign}`);
-  }
-  if (style.borderTop) {
-    parts.push(`border-top:${style.borderTop}`);
-  }
-  if (style.borderRight) {
-    parts.push(`border-right:${style.borderRight}`);
-  }
-  if (style.borderBottom) {
-    parts.push(`border-bottom:${style.borderBottom}`);
-  }
-  if (style.borderLeft) {
-    parts.push(`border-left:${style.borderLeft}`);
-  }
+  appendBorderCssParts(parts, style);
   return parts.join(";");
 }
 

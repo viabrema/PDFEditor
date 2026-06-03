@@ -41,6 +41,94 @@ describe("tableFormatToolbar", () => {
     expect(onApply).toHaveBeenCalledWith({ textAlign: "center" }, "row");
   });
 
+  it("applies border presets when handler is provided", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+    const onApplyBorderPreset = vi.fn();
+
+    const toolbar = createTableFormatToolbar({
+      block: { content: { rows: [["1", "2"], ["3", "4"]] } },
+      getFocus: () => ({ row: 0, col: 0 }),
+      getScope: () => "cell",
+      onApply: vi.fn(),
+      onApplyBorderPreset,
+    });
+
+    (toolbar.querySelector('[data-border-preset="outside"]') as HTMLButtonElement).click();
+    expect(onApplyBorderPreset).toHaveBeenCalledWith("outside", expect.stringContaining("solid"));
+  });
+
+  it("reuses existing border color and updates it from picker", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+    const onApplyBorderPreset = vi.fn();
+
+    const toolbar = createTableFormatToolbar({
+      block: {
+        content: {
+          rows: [["1"]],
+          cellStyles: { "0,0": { borderTop: "2px solid #445566" } },
+        },
+      },
+      getFocus: () => ({ row: 0, col: 0 }),
+      getScope: () => "cell",
+      onApply: vi.fn(),
+      onApplyBorderPreset,
+    });
+
+    const colors = toolbar.querySelectorAll('input[type="color"]');
+    const borderColor = colors[0] as HTMLInputElement;
+    expect(borderColor.value.toLowerCase()).toBe("#445566");
+
+    borderColor.value = "#778899";
+    borderColor.dispatchEvent(new window.Event("input"));
+    (toolbar.querySelector('[data-border-preset="all"]') as HTMLButtonElement).click();
+    expect(onApplyBorderPreset).toHaveBeenCalledWith("all", "1px solid #778899");
+  });
+
+  it("defaults border color when existing border has no hex value", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+    const onApplyBorderPreset = vi.fn();
+
+    const toolbar = createTableFormatToolbar({
+      block: {
+        content: {
+          rows: [["1"]],
+          cellStyles: { "0,0": { borderTop: "none" } },
+        },
+      },
+      getFocus: () => ({ row: 0, col: 0 }),
+      getScope: () => "cell",
+      onApply: vi.fn(),
+      onApplyBorderPreset,
+    });
+
+    (toolbar.querySelector('[data-border-preset="all"]') as HTMLButtonElement).click();
+    expect(onApplyBorderPreset).toHaveBeenCalledWith("all", "1px solid #0f172a");
+  });
+
+  it("falls back to default picker color when border css has no hex", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const toolbar = createTableFormatToolbar({
+      block: {
+        content: {
+          rows: [["1"]],
+          cellStyles: { "0,0": { borderTop: "1px solid black" } },
+        },
+      },
+      getFocus: () => ({ row: 0, col: 0 }),
+      getScope: () => "cell",
+      onApply: vi.fn(),
+      onApplyBorderPreset: vi.fn(),
+    });
+
+    const borderColor = toolbar.querySelector('input[type="color"]') as HTMLInputElement;
+    expect(borderColor.value.toLowerCase()).toBe("#0f172a");
+  });
+
   it("toggles italic and alignment, colors, number format, linked extras and hidden", () => {
     const window = new Window();
     globalThis.document = window.document;

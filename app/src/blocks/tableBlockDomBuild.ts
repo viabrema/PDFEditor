@@ -1,6 +1,6 @@
 import type { ExcelTableMerge } from "../services/excelRange";
 import {
-  cellStyleToCssString,
+  cellStyleToEditorCssString,
   scaleExcelCellStyleFontSize,
 } from "../services/excelTableStyle";
 import {
@@ -116,7 +116,7 @@ export function updateTableBody(
       const st = styles?.[`${r},${c}`];
       if (st) {
         const scaled = fontScale !== 1 ? scaleExcelCellStyleFontSize(st, fontScale) : st;
-        const css = cellStyleToCssString(scaled);
+        const css = cellStyleToEditorCssString(scaled);
         if (css) {
           td.setAttribute("style", css);
         }

@@ -293,6 +293,15 @@ describe("excelTableStyle", () => {
     expect(css).toContain("border-left:");
   });
 
+  it("cellStyleToCssString ignores border sides set to none", () => {
+    expect(
+      cellStyleToCssString({
+        borderTop: "none",
+        borderRight: "1px solid #111",
+      }),
+    ).toBe("border-right:1px solid #111");
+  });
+
   it("escapeHtmlStyleAttr escapes quotes and ampersands", () => {
     expect(escapeHtmlStyleAttr('color:red;font:"Arial"')).toContain("&quot;");
     expect(escapeHtmlStyleAttr("a&b")).toContain("&amp;");

@@ -16,6 +16,8 @@ import {
   ensureTableStyleContent,
   type TableFormatScope,
 } from "../blocks/tableFormatting";
+import { applyBorderPresetToCells, selectionCellCoords } from "../blocks/tableBorderPresets";
+import type { TableBorderPreset } from "../blocks/tableBorderPresets";
 import type { ExcelTableCellStyle } from "../services/excelTableStyle";
 import { createTableFormatToolbar } from "../ui/tableFormatToolbar";
 import { compactIconButton, labeledField } from "../ui/contextToolbarLayout";
@@ -156,6 +158,20 @@ export function mountTableFormatToolbar({
       documentHistory?.checkpointBeforeChange();
       const edit = state.tableEdit?.blockId === block.id ? state.tableEdit : null;
       applyFormatPatchToEdit(block.content, edit, patch);
+      const table = element.querySelector("table.table-block") as HTMLTableElement | undefined;
+      if (table) {
+        syncTableElementWithBlock(table, block, {
+          mode: resolveTableDomMode(block.id, state.editingBlockId, state.tableEdit),
+          edit: state.tableEdit?.blockId === block.id ? state.tableEdit : null,
+        });
+      }
+    },
+    onApplyBorderPreset: (preset: TableBorderPreset, border?: string) => {
+      documentHistory?.checkpointBeforeChange();
+      const edit = state.tableEdit?.blockId === block.id ? state.tableEdit : null;
+      const rows = getTableDataRows(block);
+      const cells = selectionCellCoords(edit, rows);
+      applyBorderPresetToCells(block.content, cells, preset, border);
       const table = element.querySelector("table.table-block") as HTMLTableElement | undefined;
       if (table) {
         syncTableElementWithBlock(table, block, {

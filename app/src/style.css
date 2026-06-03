@@ -287,6 +287,28 @@ body {
   outline-offset: -2px;
 }
 
+.table-border-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.table-border-preset-btn {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+}
+
+.table-border-preset-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.table-border-controls .context-toolbar__field {
+  margin-top: 0.25rem;
+}
+
 .table-block.is-view-mode td {
   pointer-events: none;
   user-select: none;

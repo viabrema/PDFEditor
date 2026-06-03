@@ -10,12 +10,16 @@ import {
   toolbarSeparator,
 } from "./contextToolbarLayout";
 import { appendHiddenDataToggleButton } from "./hiddenDataToggle";
+import { createTableBorderControls } from "./tableBorderControls";
+import type { TableBorderPreset } from "../blocks/tableBorderPresets";
+import { DEFAULT_TABLE_BORDER } from "../blocks/tableBorderPresets";
 
 export function createTableFormatToolbar(options: {
   block: { content?: any };
   getFocus: () => { row: number; col: number };
   getScope: () => TableFormatScope;
   onApply: (patch: Partial<ExcelTableCellStyle>, scope: TableFormatScope) => void;
+  onApplyBorderPreset?: (preset: TableBorderPreset, border?: string) => void;
   getMergeState?: () => { canMerge: boolean; canUnmerge: boolean };
   onMerge?: () => void;
   onUnmerge?: () => void;
@@ -144,6 +148,28 @@ export function createTableFormatToolbar(options: {
 
   if (options.linkedFields?.length) {
     options.linkedFields.forEach((el) => fields.append(el));
+  }
+
+  let borderCss = DEFAULT_TABLE_BORDER;
+  const focusStyle = currentStyle();
+  const existingBorder =
+    focusStyle?.borderTop ||
+    focusStyle?.borderRight ||
+    focusStyle?.borderBottom ||
+    focusStyle?.borderLeft;
+  if (existingBorder && existingBorder !== "none") {
+    borderCss = existingBorder;
+  }
+
+  if (options.onApplyBorderPreset) {
+    const borderControls = createTableBorderControls({
+      borderColor: borderCss.match(/#[0-9a-f]{3,8}/i)?.[0] || "#0f172a",
+      onBorderColorChange: (color) => {
+        borderCss = `1px solid ${color}`;
+      },
+      onApplyPreset: (preset) => options.onApplyBorderPreset?.(preset, borderCss),
+    });
+    fields.append(labeledField("Bordas", borderControls));
   }
 
   fields.append(
