@@ -150,6 +150,102 @@ describe("translationFlow", () => {
     expect(out[44]).toBe("_c44");
   });
 
+  it("translates table cells with gaps without losing alignment", async () => {
+    const translationService = {
+      translatePrompt: async ({ prompt }: { prompt: string }) => {
+        const m = prompt.match(/Texto \(JSON array\):\n(.*)$/s);
+        const arr = JSON.parse(m![1]) as string[];
+        expect(arr).toEqual(["A", "B"]);
+        return { ok: true, text: JSON.stringify(["A-en", "B-en"]) };
+      },
+      translateText: async () => ({ ok: true, text: "x" }),
+    };
+
+    const block = {
+      id: "tbl-1",
+      type: "table",
+      position: { x: 0, y: 0 },
+      size: { width: 200, height: 100 },
+      pageId: "page-1",
+      languageId: "lang-pt",
+      metadata: {},
+      content: {
+        rows: [
+          ["A", ""],
+          ["", "B"],
+        ],
+      },
+    };
+
+    const translated = await translateBlockFromSource({
+      translationService,
+      documentData,
+      block,
+      sourceLanguageId: "lang-pt",
+      targetLanguageId: "lang-en",
+    });
+
+    expect(translated.content.rows).toEqual([
+      ["A-en", ""],
+      ["", "B-en"],
+    ]);
+  });
+
+  it("translates chart dataSourceRows, title and dataset labels", async () => {
+    const translationService = {
+      translatePrompt: async ({ prompt }: { prompt: string }) => {
+        const m = prompt.match(/Texto \(JSON array\):\n(.*)$/s);
+        const arr = JSON.parse(m![1]) as string[];
+        return { ok: true, text: JSON.stringify(arr.map((t) => `_${t}`)) };
+      },
+      translateText: async ({ text }: { text: string }) => ({ ok: true, text: `T:${text}` }),
+    };
+
+    const block = {
+      id: "ch-1",
+      type: "chart",
+      position: { x: 0, y: 0 },
+      size: { width: 400, height: 240 },
+      pageId: "page-1",
+      languageId: "lang-pt",
+      metadata: {},
+      content: {
+        configured: true,
+        firstRowIsHeader: true,
+        dataSourceRows: [
+          ["Cat", "Val"],
+          ["X", "1"],
+        ],
+        chart: {
+          version: 1,
+          baseType: "line",
+          title: { text: "Titulo" },
+          datasets: [
+            {
+              id: "ds-1",
+              label: "Serie",
+              mapping: { xColumnIndex: 0, yColumnIndex: 1 },
+            },
+          ],
+        },
+      },
+    };
+
+    const translated = await translateBlockFromSource({
+      translationService,
+      documentData,
+      block,
+      sourceLanguageId: "lang-pt",
+      targetLanguageId: "lang-en",
+    });
+
+    expect(translated.type).toBe("chart");
+    expect(translated.languageId).toBe("lang-en");
+    expect(translated.content.dataSourceRows[0][0]).toBe("_Cat");
+    expect(translated.content.chart.title.text).toBe("T:Titulo");
+    expect(translated.content.chart.datasets[0].label).toBe("T:Serie");
+  });
+
   it("translateTextBatch keeps originals when API returns fewer array entries", async () => {
     const translationService = {
       translatePrompt: async () => ({

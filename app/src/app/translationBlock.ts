@@ -1,11 +1,8 @@
-import { createBlock } from "../blocks/blockModel";
+import { createBlock, BLOCK_TYPES } from "../blocks/blockModel";
 import { getTableDataRows, isLinkedTableBlock } from "../blocks/linkedTableModel";
 import { buildTextDocFromString, extractTextFromNode } from "./textUtils";
-import {
-  translateTextBatch,
-  translateTextDoc,
-  translateTextValue,
-} from "./translationBatch";
+import { translateTextDoc, translateTextValue } from "./translationBatch";
+import { translateChartContent, translateStringMatrix } from "./translationGrid";
 
 export async function translateBlockFromSource({
   translationService,
@@ -13,7 +10,14 @@ export async function translateBlockFromSource({
   block,
   sourceLanguageId,
   targetLanguageId,
+  allBlocks,
 }) {
+  const translateOpts = {
+    translationService,
+    documentData,
+    sourceLanguageId,
+    targetLanguageId,
+  };
   const base = {
     type: block.type,
     position: { ...block.position },
@@ -59,22 +63,7 @@ export async function translateBlockFromSource({
 
   if (block.type === "table" || block.type === "linkedTable") {
     const rows = getTableDataRows(block);
-    const flatCells = rows.flatMap((row) => row.map((cell) => String(cell || "")));
-    const translatedCells = await translateTextBatch({
-      translationService,
-      documentData,
-      texts: flatCells,
-      sourceLanguageId,
-      targetLanguageId,
-    });
-    let cellIndex = 0;
-    const translatedRows = rows.map((row) =>
-      row.map(() => {
-        const next = translatedCells[cellIndex] ?? "";
-        cellIndex += 1;
-        return next;
-      })
-    );
+    const translatedRows = await translateStringMatrix(rows, translateOpts);
     const content = { ...(block.content || {}) };
     if (isLinkedTableBlock(block)) {
       content.dataSourceRows = translatedRows;
@@ -82,6 +71,17 @@ export async function translateBlockFromSource({
     } else {
       content.rows = translatedRows;
     }
+    return createBlock({
+      ...base,
+      content,
+    });
+  }
+
+  if (block.type === BLOCK_TYPES.CHART) {
+    const content = await translateChartContent(block.content, {
+      ...translateOpts,
+      allBlocks,
+    });
     return createBlock({
       ...base,
       content,

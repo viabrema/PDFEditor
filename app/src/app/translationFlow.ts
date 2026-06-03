@@ -46,6 +46,7 @@ export async function translateFromDefaultLanguage({
           block,
           sourceLanguageId,
           targetLanguageId,
+          allBlocks: blocks,
         })
       );
     }
