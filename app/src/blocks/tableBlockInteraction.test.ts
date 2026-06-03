@@ -126,6 +126,40 @@ describe("tableBlockInteraction", () => {
     expect(table.querySelectorAll("td.is-selected").length).toBe(1);
   });
 
+  it("refreshTableSelectionChrome highlights multiple cells and columns", () => {
+    const table = tableWithRows();
+    refreshTableSelectionChrome(table, {
+      blockId: "b1",
+      scope: "cell",
+      row: 1,
+      col: 1,
+      typing: false,
+      multi: { cells: [{ row: 0, col: 0 }, { row: 1, col: 1 }] },
+    });
+    expect(table.querySelectorAll("td.is-selected").length).toBe(2);
+
+    refreshTableSelectionChrome(table, {
+      blockId: "b1",
+      scope: "column",
+      row: 0,
+      col: 0,
+      typing: false,
+      multi: { cols: [0, 1] },
+    });
+    expect(table.querySelectorAll(".table-col-select.is-selected").length).toBe(2);
+    expect(table.querySelectorAll("td.is-selected").length).toBe(4);
+
+    refreshTableSelectionChrome(table, {
+      blockId: "b1",
+      scope: "row",
+      row: 1,
+      col: 0,
+      typing: false,
+      multi: { rows: [1] },
+    });
+    expect(table.querySelectorAll("td.is-selected").length).toBe(2);
+  });
+
   it("normalizeTypingCellContent removes lone br in empty cell", () => {
     const w = new Window();
     globalThis.document = w.document;

@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyFormatPatchToEdit,
   applyTableFormatPatch,
   buildResolvedCellStylesMap,
   coordsInScope,
   currencyCodeForLocale,
+  effectiveFormatScope,
   ensureTableStyleContent,
   formatNumberForDisplay,
+  formatTargetsFromEdit,
   mergePartialStyles,
   parseNumericCellText,
   resolveTableCellStyle,
@@ -252,6 +255,92 @@ describe("tableFormatting", () => {
 
   it("parseNumericCellText accepts dot-only decimals", () => {
     expect(parseNumericCellText("1234.56")).toBe(1234.56);
+  });
+
+  it("formatTargetsFromEdit and applyFormatPatchToEdit handle multi selection", () => {
+    const content = { rows: [["a", "b"], ["c", "d"]], cellStyles: {}, rowStyles: {}, colStyles: {} };
+    applyFormatPatchToEdit(
+      content,
+      {
+        blockId: "b",
+        scope: "column",
+        row: 0,
+        col: 0,
+        typing: false,
+        multi: { cols: [0, 1] },
+      },
+      { color: "#222" },
+    );
+    expect(content.colStyles?.["0"]?.color).toBe("#222");
+    expect(formatTargetsFromEdit(null)).toEqual([{ scope: "cell", row: 0, col: 0 }]);
+    expect(effectiveFormatScope({ blockId: "b", scope: "cell", row: 0, col: 0, typing: false })).toBe(
+      "cell",
+    );
+    expect(
+      effectiveFormatScope({
+        blockId: "b",
+        scope: "row",
+        row: 2,
+        col: 0,
+        typing: false,
+        multi: { rows: [2] },
+      }),
+    ).toBe("row");
+    expect(
+      effectiveFormatScope({
+        blockId: "b",
+        scope: "column",
+        row: 0,
+        col: 1,
+        typing: false,
+        multi: { cols: [1] },
+      }),
+    ).toBe("column");
+    expect(
+      effectiveFormatScope({
+        blockId: "b",
+        scope: "row",
+        row: 0,
+        col: 0,
+        typing: false,
+        multi: { cells: [{ row: 0, col: 0 }] },
+      }),
+    ).toBe("row");
+    expect(
+      effectiveFormatScope({
+        blockId: "b",
+        scope: "cell",
+        row: 0,
+        col: 0,
+        typing: false,
+        multi: { cols: [0, 1] },
+      }),
+    ).toBe("column");
+    expect(
+      effectiveFormatScope({
+        blockId: "b",
+        scope: "row",
+        row: 0,
+        col: 0,
+        typing: false,
+        multi: {
+          cells: [
+            { row: 0, col: 0 },
+            { row: 1, col: 1 },
+          ],
+        },
+      }),
+    ).toBe("cell");
+    expect(
+      formatTargetsFromEdit({
+        blockId: "b",
+        scope: "cell",
+        row: 0,
+        col: 0,
+        typing: false,
+        multi: { cells: [] },
+      }),
+    ).toEqual([{ scope: "cell", row: 0, col: 0 }]);
   });
 
   it("applyTableFormatPatch merges into existing cellStyles map", () => {

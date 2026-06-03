@@ -378,6 +378,47 @@ describe("table block paste and handlers", () => {
     expect(readTableRows(table)).toEqual([["x"]]);
   });
 
+  it("extends selection with shift+click on cells", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+
+    const block = { content: { rows: [["a", "b"], ["c", "d"]] } };
+    const change = vi.fn();
+    const table = createTableElement(block, {
+      getTableEdit: () => ({
+        blockId: "b",
+        scope: "cell",
+        row: 0,
+        col: 0,
+        typing: false,
+        anchor: { scope: "cell", row: 0, col: 0 },
+      }),
+      onTableEditChange: change,
+    });
+    applyTableDomMode(table, "structure", {
+      blockId: "b",
+      scope: "cell",
+      row: 0,
+      col: 0,
+      typing: false,
+    });
+    const cell = table.querySelector("td[data-table-row='1'][data-table-col='1']") as HTMLTableCellElement;
+    cell.dispatchEvent(
+      new window.MouseEvent("click", { bubbles: true, cancelable: true, shiftKey: true }),
+    );
+
+    expect(change).toHaveBeenCalledWith(
+      expect.objectContaining({
+        multi: expect.objectContaining({
+          cells: expect.arrayContaining([
+            expect.objectContaining({ row: 0, col: 0 }),
+            expect.objectContaining({ row: 1, col: 1 }),
+          ]),
+        }),
+      }),
+    );
+  });
+
   it("notifies onTableEditChange when a cell is clicked in structure mode", () => {
     const window = new Window();
     globalThis.document = window.document;
@@ -395,7 +436,9 @@ describe("table block paste and handlers", () => {
     const cell = table.querySelector("td[data-table-col='1']") as HTMLTableCellElement;
     cell.click();
 
-    expect(change).toHaveBeenCalledWith({ scope: "cell", row: 0, col: 1, typing: false });
+    expect(change).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: "cell", row: 0, col: 1, typing: false }),
+    );
   });
 
   it("notifies onTableEditChange when column header is clicked", () => {
@@ -415,7 +458,9 @@ describe("table block paste and handlers", () => {
     const colHead = table.querySelector(".table-col-select[data-table-col='1']") as HTMLElement;
     colHead.click();
 
-    expect(change).toHaveBeenCalledWith({ scope: "column", row: 0, col: 1, typing: false });
+    expect(change).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: "column", row: 0, col: 1, typing: false }),
+    );
   });
 
   it("enters typing on cell double-click in structure mode", () => {
@@ -435,7 +480,9 @@ describe("table block paste and handlers", () => {
     const cell = table.querySelector("td") as HTMLTableCellElement;
     cell.dispatchEvent(new window.Event("dblclick", { bubbles: true }));
 
-    expect(change).toHaveBeenCalledWith({ scope: "cell", row: 0, col: 0, typing: true });
+    expect(change).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: "cell", row: 0, col: 0, typing: true }),
+    );
   });
 
   it("notifies onTableEditChange when row header is clicked", () => {
@@ -455,7 +502,9 @@ describe("table block paste and handlers", () => {
     const rowHead = table.querySelector(".table-row-select[data-table-row='1']") as HTMLElement;
     rowHead.click();
 
-    expect(change).toHaveBeenCalledWith({ scope: "row", row: 1, col: 0, typing: false });
+    expect(change).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: "row", row: 1, col: 0, typing: false }),
+    );
   });
 
   it("ignores double-click in view mode", () => {

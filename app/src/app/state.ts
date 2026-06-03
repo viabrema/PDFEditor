@@ -30,6 +30,16 @@ export function createInitialState(documentData) {
       row: number;
       col: number;
       typing: boolean;
+      multi?: {
+        cells?: Array<{ row: number; col: number }>;
+        rows?: number[];
+        cols?: number[];
+      };
+      anchor?: {
+        scope: "cell" | "row" | "column";
+        row: number;
+        col: number;
+      };
     },
     translation: {
       loading: false,

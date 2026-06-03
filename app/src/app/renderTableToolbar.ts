@@ -4,7 +4,8 @@ import {
   syncTableElementWithBlock,
 } from "../blocks/tableBlock";
 import {
-  applyTableFormatPatch,
+  applyFormatPatchToEdit,
+  effectiveFormatScope,
   ensureTableStyleContent,
   type TableFormatScope,
 } from "../blocks/tableFormatting";
@@ -108,14 +109,14 @@ export function mountTableFormatToolbar({
     },
     getScope: (): TableFormatScope => {
       if (state.tableEdit?.blockId === block.id) {
-        return state.tableEdit.scope;
+        return effectiveFormatScope(state.tableEdit);
       }
       return "cell";
     },
-    onApply: (patch: Partial<ExcelTableCellStyle>, scope: TableFormatScope) => {
+    onApply: (patch: Partial<ExcelTableCellStyle>, _scope: TableFormatScope) => {
       documentHistory?.checkpointBeforeChange();
-      const focus = state.tableEdit?.blockId === block.id ? state.tableEdit : { row: 0, col: 0 };
-      applyTableFormatPatch(block.content, scope, focus.row, focus.col, patch);
+      const edit = state.tableEdit?.blockId === block.id ? state.tableEdit : null;
+      applyFormatPatchToEdit(block.content, edit, patch);
       const table = element.querySelector("table.table-block") as HTMLTableElement | undefined;
       if (table) {
         syncTableElementWithBlock(table, block, {

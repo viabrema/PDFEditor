@@ -64,10 +64,14 @@ export function renderBlocksInContainer({
         }
       : undefined;
 
+    const getTableEdit = () =>
+      state.tableEdit?.blockId === block.id ? state.tableEdit : null;
+
     const { element, editorHost } = createBlockElement(block, {
       selected: isSelected,
       editing: isEditing,
       tableEdit,
+      getTableEdit: isTableBlock && isEditing ? getTableEdit : undefined,
       onTableEditChange,
     });
     container.append(element);

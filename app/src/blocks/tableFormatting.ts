@@ -1,4 +1,5 @@
 import type { ExcelTableCellStyle, TableNumberFormat } from "../services/excelTableStyle";
+import type { TableEditState } from "./tableBlockInteraction";
 
 export type TableFormatScope = "cell" | "row" | "column";
 
@@ -225,6 +226,62 @@ export function applyTableFormatPatch(
       const style = resolveTableCellStyle(content, r, c);
       rows[r][c] = formatNumberForDisplay(rows[r][c], style?.numberFormat);
     }
+  }
+}
+
+export type TableFormatTarget = {
+  scope: TableFormatScope;
+  row: number;
+  col: number;
+};
+
+export function formatTargetsFromEdit(
+  edit: Pick<TableEditState, "scope" | "row" | "col" | "multi"> | null | undefined,
+): TableFormatTarget[] {
+  if (!edit) {
+    return [{ scope: "cell", row: 0, col: 0 }];
+  }
+
+  const m = edit.multi;
+  if (m?.cells?.length) {
+    return m.cells.map((c) => ({ scope: "cell", row: c.row, col: c.col }));
+  }
+  if (m?.rows?.length) {
+    return m.rows.map((r) => ({ scope: "row", row: r, col: 0 }));
+  }
+  if (m?.cols?.length) {
+    return m.cols.map((c) => ({ scope: "column", row: 0, col: c }));
+  }
+
+  return [{ scope: edit.scope, row: edit.row, col: edit.col }];
+}
+
+export function effectiveFormatScope(
+  edit: Pick<TableEditState, "scope" | "multi"> | null | undefined,
+): TableFormatScope {
+  if (!edit) {
+    return "cell";
+  }
+  const m = edit.multi;
+  if (m?.cells && m.cells.length > 1) {
+    return "cell";
+  }
+  if (m?.rows && m.rows.length > 1) {
+    return "row";
+  }
+  if (m?.cols && m.cols.length > 1) {
+    return "column";
+  }
+  return edit.scope;
+}
+
+export function applyFormatPatchToEdit(
+  content: TableBlockStyleContent,
+  edit: Pick<TableEditState, "scope" | "row" | "col" | "multi"> | null | undefined,
+  patch: Partial<ExcelTableCellStyle>,
+) {
+  for (const target of formatTargetsFromEdit(edit)) {
+    applyTableFormatPatch(content, target.scope, target.row, target.col, patch);
   }
 }
 

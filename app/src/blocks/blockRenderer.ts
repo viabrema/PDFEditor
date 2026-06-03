@@ -12,11 +12,13 @@ export function createBlockElement(
     selected = false,
     editing = false,
     tableEdit = null as TableEditState | null,
+    getTableEdit,
     onTableEditChange,
   }: {
     selected?: boolean;
     editing?: boolean;
     tableEdit?: TableEditState | null;
+    getTableEdit?: () => TableEditState | null;
     onTableEditChange?: (edit: Omit<TableEditState, "blockId">) => void;
   } = {},
 ) {
@@ -64,6 +66,7 @@ export function createBlockElement(
     const table = createTableElement(block, {
       readOnly: block.type === "linkedTable" && !editing,
       domConfig: { mode, edit },
+      getTableEdit,
       onTableEditChange,
     });
     host.append(table);

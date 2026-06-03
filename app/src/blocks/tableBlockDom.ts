@@ -23,6 +23,7 @@ import {
   type TableDomMode,
   type TableEditState,
 } from "./tableBlockInteraction";
+import { attachTableStructureSelection } from "./tableBlockDomSelection";
 
 export { updateTableBody, type UpdateTableBodyOptions } from "./tableBlockDomBuild";
 export {
@@ -55,10 +56,12 @@ export function setTableEditable(table: HTMLTableElement, editing: boolean) {
 export function attachTableHandlers({
   table,
   block,
+  getTableEdit,
   onTableEditChange,
 }: {
   table: HTMLTableElement;
   block: { content?: TableBlockStyleContent; type?: string; metadata?: { fontScale?: unknown } };
+  getTableEdit?: () => TableEditState | null;
   onTableEditChange?: (edit: Omit<TableEditState, "blockId">) => void;
 }) {
   const handleInput = () => {
@@ -93,60 +96,7 @@ export function attachTableHandlers({
     }
   });
 
-  table.addEventListener("click", (event) => {
-    if (!table.classList.contains("is-structure-mode") && !table.classList.contains("is-cell-type-mode")) {
-      return;
-    }
-    const target = event.target as HTMLElement;
-    const colHead = target.closest(".table-col-select");
-    if (colHead) {
-      event.stopPropagation();
-      onTableEditChange?.({
-        scope: "column",
-        row: 0,
-        col: Number((colHead as HTMLElement).dataset.tableCol),
-        typing: false,
-      });
-      return;
-    }
-    const rowHead = target.closest(".table-row-select");
-    if (rowHead) {
-      event.stopPropagation();
-      onTableEditChange?.({
-        scope: "row",
-        row: Number((rowHead as HTMLElement).dataset.tableRow),
-        col: 0,
-        typing: false,
-      });
-      return;
-    }
-    const td = target.closest("td[data-table-row]");
-    if (td && table.contains(td)) {
-      event.stopPropagation();
-      const row = Number((td as HTMLElement).dataset.tableRow);
-      const col = Number((td as HTMLElement).dataset.tableCol);
-      if (Number.isFinite(row) && Number.isFinite(col)) {
-        onTableEditChange?.({ scope: "cell", row, col, typing: false });
-      }
-    }
-  });
-
-  table.addEventListener("dblclick", (event) => {
-    if (!table.classList.contains("is-structure-mode")) {
-      return;
-    }
-    const td = (event.target as HTMLElement).closest("td[data-table-row]");
-    if (!td || !table.contains(td)) {
-      return;
-    }
-    event.stopPropagation();
-    event.preventDefault();
-    const row = Number((td as HTMLElement).dataset.tableRow);
-    const col = Number((td as HTMLElement).dataset.tableCol);
-    if (Number.isFinite(row) && Number.isFinite(col)) {
-      onTableEditChange?.({ scope: "cell", row, col, typing: true });
-    }
-  });
+  attachTableStructureSelection(table, { getTableEdit, onTableEditChange });
 
   table.addEventListener("paste", (event) => {
     const text = event.clipboardData?.getData("text/plain");
@@ -207,6 +157,7 @@ export function createTableElement(
   options: {
     readOnly?: boolean;
     domConfig?: TableDomConfig;
+    getTableEdit?: () => TableEditState | null;
     onTableEditChange?: (edit: Omit<TableEditState, "blockId">) => void;
   } = {},
 ) {
@@ -221,7 +172,12 @@ export function createTableElement(
   const edit = options.domConfig?.edit ?? null;
   syncTableElementWithBlock(table, block, { mode, edit });
   if (!options.readOnly) {
-    attachTableHandlers({ table, block, onTableEditChange: options.onTableEditChange });
+    attachTableHandlers({
+      table,
+      block,
+      getTableEdit: options.getTableEdit,
+      onTableEditChange: options.onTableEditChange,
+    });
   }
   return table;
 }

@@ -6,12 +6,26 @@ import {
 import { TABLE_CELL_EMPTY_PLACEHOLDER, cellValueForDisplay, cellValueFromDisplay } from "./tableBlockData";
 import type { TableFormatScope } from "./tableFormatting";
 
+export type TableMultiSelection = {
+  cells?: Array<{ row: number; col: number }>;
+  rows?: number[];
+  cols?: number[];
+};
+
+export type TableSelectionAnchor = {
+  scope: TableFormatScope;
+  row: number;
+  col: number;
+};
+
 export type TableEditState = {
   blockId: string;
   scope: TableFormatScope;
   row: number;
   col: number;
   typing: boolean;
+  multi?: TableMultiSelection;
+  anchor?: TableSelectionAnchor;
 };
 
 export type TableDomMode = "view" | "structure" | "cell-type";
@@ -82,6 +96,26 @@ export function applyTableDomMode(
   refreshTableSelectionChrome(table, mode === "view" ? null : edit);
 }
 
+function highlightColumn(table: HTMLTableElement, col: number) {
+  table.querySelector(`.table-col-select[data-table-col="${col}"]`)?.classList.add("is-selected");
+  table.querySelectorAll(`td[data-table-col="${col}"]`).forEach((el) => {
+    el.classList.add("is-selected");
+  });
+}
+
+function highlightRow(table: HTMLTableElement, row: number) {
+  table.querySelector(`.table-row-select[data-table-row="${row}"]`)?.classList.add("is-selected");
+  table.querySelectorAll(`td[data-table-row="${row}"]`).forEach((el) => {
+    el.classList.add("is-selected");
+  });
+}
+
+function highlightCell(table: HTMLTableElement, row: number, col: number) {
+  table
+    .querySelector(`td[data-table-row="${row}"][data-table-col="${col}"]`)
+    ?.classList.add("is-selected");
+}
+
 export function refreshTableSelectionChrome(
   table: HTMLTableElement,
   edit: TableEditState | null | undefined,
@@ -100,27 +134,35 @@ export function refreshTableSelectionChrome(
     return;
   }
 
+  const m = edit.multi;
+  if (m?.cols?.length) {
+    for (const col of m.cols) {
+      highlightColumn(table, col);
+    }
+    return;
+  }
+  if (m?.rows?.length) {
+    for (const row of m.rows) {
+      highlightRow(table, row);
+    }
+    return;
+  }
+  if (m?.cells?.length) {
+    for (const { row, col } of m.cells) {
+      highlightCell(table, row, col);
+    }
+    return;
+  }
+
   if (edit.scope === "column") {
-    table
-      .querySelector(`.table-col-select[data-table-col="${edit.col}"]`)
-      ?.classList.add("is-selected");
-    table.querySelectorAll(`td[data-table-col="${edit.col}"]`).forEach((el) => {
-      el.classList.add("is-selected");
-    });
+    highlightColumn(table, edit.col);
     return;
   }
 
   if (edit.scope === "row") {
-    table
-      .querySelector(`.table-row-select[data-table-row="${edit.row}"]`)
-      ?.classList.add("is-selected");
-    table.querySelectorAll(`td[data-table-row="${edit.row}"]`).forEach((el) => {
-      el.classList.add("is-selected");
-    });
+    highlightRow(table, edit.row);
     return;
   }
 
-  table
-    .querySelector(`td[data-table-row="${edit.row}"][data-table-col="${edit.col}"]`)
-    ?.classList.add("is-selected");
+  highlightCell(table, edit.row, edit.col);
 }
