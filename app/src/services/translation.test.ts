@@ -33,8 +33,8 @@ describe("translation service", () => {
 
     expect(result.ok).toBe(true);
     expect(result.text).toBe("Ola");
-    expect(requestBody.provider).toBe("GEMINI-2");
-    expect(requestBody.model).toBe("gemini-2.5-flash-lite");
+    expect(requestBody.provider).toBe("openai");
+    expect(requestBody.model).toBe("gpt-4o-mini");
   });
 
   it("sends custom prompt", async () => {
@@ -108,6 +108,31 @@ describe("translation service", () => {
     });
 
     expect(result.text).toBe("Hola");
+  });
+
+  it("uses resolveHubAi at request time", async () => {
+    let requestBody;
+    const fetcher = async (_url, options) => {
+      requestBody = JSON.parse(options.body);
+      return { ok: true, json: async () => ({ text: "Ok" }) };
+    };
+
+    const service = createTranslationService({
+      endpoint: "/translate",
+      apiKey: "key",
+      fetcher,
+      provider: "openai",
+      model: "gpt-4o-mini",
+      resolveHubAi: () => ({ provider: "gemini", model: "gemini-2.5-flash" }),
+    });
+    await service.translateText({
+      text: "Oi",
+      sourceLang: "pt",
+      targetLang: "en",
+    });
+
+    expect(requestBody.provider).toBe("gemini");
+    expect(requestBody.model).toBe("gemini-2.5-flash");
   });
 
   it("supports custom provider and model", async () => {

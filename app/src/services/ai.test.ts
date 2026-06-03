@@ -26,8 +26,8 @@ describe("ai service", () => {
     expect(result.ok).toBe(true);
     expect(result.text).toBe("Oi");
     expect(result.chatId).toBe("chat-1");
-    expect(requestBody.provider).toBe("GEMINI-2");
-    expect(requestBody.model).toBe("gemini-2.5-flash-lite");
+    expect(requestBody.provider).toBe("openai");
+    expect(requestBody.model).toBe("gpt-4o-mini");
   });
 
   it("sends chatId when provided", async () => {
@@ -45,6 +45,27 @@ describe("ai service", () => {
 
     expect(result.ok).toBe(true);
     expect(requestBody.chatId).toBe("chat-2");
+  });
+
+  it("uses resolveHubAi at request time", async () => {
+    let requestBody;
+    const fetcher = async (_url, options) => {
+      requestBody = JSON.parse(options.body);
+      return { ok: true, json: async () => ({ text: "Ok" }) };
+    };
+
+    const service = createAiService({
+      endpoint: "/ai",
+      apiKey: "key",
+      fetcher,
+      provider: "openai",
+      model: "gpt-4o-mini",
+      resolveHubAi: () => ({ provider: "GEMINI-2", model: "gemini-2.5-flash" }),
+    });
+    await service.sendPrompt({ prompt: "Teste" });
+
+    expect(requestBody.provider).toBe("GEMINI-2");
+    expect(requestBody.model).toBe("gemini-2.5-flash");
   });
 
   it("supports custom provider and model", async () => {

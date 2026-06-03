@@ -74,6 +74,8 @@ export function getDomRefs() {
     snapToggle: document.querySelector("#grid-snap"),
     headerToggle: document.querySelector("#page-header-toggle"),
     footerToggle: document.querySelector("#page-footer-toggle"),
+    hubAiProviderSelect: document.querySelector("#hub-ai-provider"),
+    hubAiModelSelect: document.querySelector("#hub-ai-model"),
     aiPanelToggle: document.querySelector("#ai-panel-toggle"),
     aiPanel: document.querySelector("#ai-panel"),
     aiPanelClose: document.querySelector("#ai-panel-close"),

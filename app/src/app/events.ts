@@ -6,6 +6,7 @@ import { bindLinkedTableEvents } from "./events/linkedTableEvents";
 import { bindMiscEvents } from "./events/miscEvents";
 import { bindPageEvents } from "./events/pageEvents";
 import { bindUiEvents } from "./events/uiEvents";
+import { bindHubAiSettingsEvents } from "./hubAiSettingsEvents";
 import { bindChartModal } from "./chartModal";
 import { bindLinkedTableDataModal } from "./linkedTableDataModal";
 
@@ -22,9 +23,11 @@ export function bindEvents({
   linkedTableBridge,
   linkedChartBridge,
   documentHistory,
+  hubAiRuntime,
 }) {
   bindHistoryEvents({ refs, state, documentHistory, renderer });
   bindUiEvents({ documentData, state, blocks, refs, renderer, documentHistory });
+  bindHubAiSettingsEvents({ refs, state, hubAiRuntime });
   bindPageEvents({ documentData, state, blocks, refs, renderer, documentHistory });
   bindBlockEvents({ documentData, state, blocks, refs, renderer, documentHistory });
   bindChartModal({ refs, blocks, documentData, state, renderer, documentHistory });

@@ -26,8 +26,8 @@ export const AI_API_ORIGIN = (
 export const TRANSLATION_KEY = viteEnvString("VITE_HUB_API_KEY");
 
 /** Provider/model do POST Hub IA (`provider` / `model` no JSON). */
-export const HUB_AI_PROVIDER = viteEnvString("VITE_HUB_AI_PROVIDER") || "GEMINI-2";
-export const HUB_AI_MODEL = viteEnvString("VITE_HUB_AI_MODEL") || "gemini-2.5-flash-lite";
+export const HUB_AI_PROVIDER = viteEnvString("VITE_HUB_AI_PROVIDER") || "openai";
+export const HUB_AI_MODEL = viteEnvString("VITE_HUB_AI_MODEL") || "gpt-4o-mini";
 
 const DEFAULT_PROMPT_PATH = "/ai/prompt";
 

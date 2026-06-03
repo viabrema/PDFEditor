@@ -163,6 +163,20 @@ export type AiTableFormatPatch = {
   color?: string;
 };
 
+export function resolveTableFormatPatchesFromAction(
+  action: Record<string, unknown>,
+): AiTableFormatPatch | AiTableFormatPatch[] | undefined {
+  const raw =
+    action.tableFormats ??
+    action.tableFormat ??
+    action.tableStyles ??
+    action.formats;
+  if (raw == null) {
+    return undefined;
+  }
+  return raw as AiTableFormatPatch | AiTableFormatPatch[];
+}
+
 export function applyAiTableFormatPatches(
   content: TableBlockStyleContent,
   patches: AiTableFormatPatch | AiTableFormatPatch[] | undefined,
@@ -215,12 +229,7 @@ export function applyTableUpdateFromAiAction(
     changed = true;
   }
 
-  if (
-    applyAiTableFormatPatches(
-      content,
-      (action.tableFormat ?? action.tableFormats) as AiTableFormatPatch | AiTableFormatPatch[],
-    )
-  ) {
+  if (applyAiTableFormatPatches(content, resolveTableFormatPatchesFromAction(action))) {
     changed = true;
   }
 

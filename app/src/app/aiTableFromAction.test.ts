@@ -22,6 +22,31 @@ describe("aiTableFromAction", () => {
     expect(parsed?.rows?.[0]).toEqual(["A", "B"]);
   });
 
+  it("applies multiple row patches when tableFormat is an array", () => {
+    const block = {
+      type: "table",
+      content: {
+        rows: [
+          ["H", "A"],
+          ["1", "2"],
+          ["3", "4"],
+        ],
+        cellStyles: {},
+        rowStyles: {},
+        colStyles: {},
+      },
+    };
+    const ok = applyTableUpdateFromAiAction(block, {
+      tableFormat: [
+        { scope: "row", row: 0, style: { backgroundColor: "#f0f0f0", fontWeight: "bold" } },
+        { scope: "row", row: 1, style: { backgroundColor: "#d9edf7" } },
+      ],
+    });
+    expect(ok).toBe(true);
+    expect(block.content.rowStyles?.["0"]?.fontWeight).toBe("bold");
+    expect(block.content.rowStyles?.["1"]?.backgroundColor).toBe("#d9edf7");
+  });
+
   it("applies row background via tableFormat without rewriting data", () => {
     const block = {
       type: "table",

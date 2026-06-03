@@ -13,7 +13,7 @@ export const APP_TEMPLATE_PROPERTIES_SIDEBAR_MARKUP = `
               Pagina
             </h2>
             <p id="properties-sidebar-subtitle" class="mt-0.5 text-xs text-slate-500">
-              Formato, orientacao e grelha
+              Formato, grelha e IA (Hub)
             </p>
           </div>
           <div class="min-h-0 flex-1 overflow-y-auto">
@@ -80,6 +80,26 @@ export const APP_TEMPLATE_PROPERTIES_SIDEBAR_MARKUP = `
               <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
                 <span class="text-xs font-medium uppercase tracking-wide text-slate-500">Pagina ativa</span>
                 <div id="page-meta" class="mt-1 text-xs leading-relaxed"></div>
+              </div>
+              <div class="flex flex-col gap-2 border-t border-slate-100 pt-3">
+                <span class="text-xs font-medium uppercase tracking-wide text-slate-500">IA (Hub)</span>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs text-slate-600" for="hub-ai-provider">Provider</label>
+                  <select
+                    id="hub-ai-provider"
+                    class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                  ></select>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs text-slate-600" for="hub-ai-model">Modelo</label>
+                  <select
+                    id="hub-ai-model"
+                    class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                  ></select>
+                </div>
+                <p class="text-xs text-slate-500">
+                  Usado na traducao e no painel de IA. Preferencia guardada neste browser.
+                </p>
               </div>
             </div>
             <div

@@ -6,6 +6,7 @@ export function createTranslationService({
   fetcher,
   provider,
   model,
+  resolveHubAi,
 } = {} as any) {
   if (!endpoint) {
     throw new Error("Translation endpoint is required.");
@@ -15,8 +16,14 @@ export function createTranslationService({
   }
 
   const request = fetcher || fetch;
-  const resolvedProvider = provider || "GEMINI-2";
-  const resolvedModel = model || "gemini-2.5-flash-lite";
+
+  function resolveProviderModel() {
+    const runtime = typeof resolveHubAi === "function" ? resolveHubAi() : null;
+    return {
+      provider: runtime?.provider || provider || "openai",
+      model: runtime?.model || model || "gpt-4o-mini",
+    };
+  }
 
   function buildPrompt({ text, sourceLang, targetLang }) {
     return [
@@ -28,6 +35,7 @@ export function createTranslationService({
   }
 
   async function sendPrompt(prompt) {
+    const { provider: resolvedProvider, model: resolvedModel } = resolveProviderModel();
     const response = await request(endpoint, {
       method: "POST",
       headers: {

@@ -6,6 +6,7 @@ export function createAiService({
   fetcher,
   provider,
   model,
+  resolveHubAi,
 } = {} as any) {
   if (!endpoint) {
     throw new Error("AI endpoint is required.");
@@ -15,10 +16,17 @@ export function createAiService({
   }
 
   const request = fetcher || fetch;
-  const resolvedProvider = provider || "GEMINI-2";
-  const resolvedModel = model || "gemini-2.5-flash-lite";
+
+  function resolveProviderModel() {
+    const runtime = typeof resolveHubAi === "function" ? resolveHubAi() : null;
+    return {
+      provider: runtime?.provider || provider || "openai",
+      model: runtime?.model || model || "gpt-4o-mini",
+    };
+  }
 
   async function postPrompt(prompt: string, chatId: string | null | undefined) {
+    const { provider: resolvedProvider, model: resolvedModel } = resolveProviderModel();
     const payload: Record<string, unknown> = {
       prompt,
       provider: resolvedProvider,
