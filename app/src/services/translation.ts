@@ -13,7 +13,7 @@ export function createTranslationService({
   }
 
   const request = fetcher || fetch;
-  const resolvedProvider = provider || "gemini";
+  const resolvedProvider = provider || "GEMINI-2";
   const resolvedModel = model || "gemini-2.5-flash-lite";
 
   function buildPrompt({ text, sourceLang, targetLang }) {

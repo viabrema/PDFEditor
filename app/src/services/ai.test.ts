@@ -26,7 +26,7 @@ describe("ai service", () => {
     expect(result.ok).toBe(true);
     expect(result.text).toBe("Oi");
     expect(result.chatId).toBe("chat-1");
-    expect(requestBody.provider).toBe("gemini");
+    expect(requestBody.provider).toBe("GEMINI-2");
     expect(requestBody.model).toBe("gemini-2.5-flash-lite");
   });
 

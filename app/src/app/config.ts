@@ -3,6 +3,13 @@ export const PAGE_SIZES = {
   Letter: { width: 816, height: 1056 },
 };
 
+function viteEnvString(key: string) {
+  if (typeof import.meta === "undefined" || import.meta.env?.[key] == null) {
+    return "";
+  }
+  return String(import.meta.env[key]).trim();
+}
+
 /**
  * Base do Hub IA (sem barra final).
  * Usa **https** por defeito: se apontares para `http://...` e o servidor redireccionar para HTTPS
@@ -12,22 +19,19 @@ export const PAGE_SIZES = {
 export const AI_API_ORIGIN = (
   typeof import.meta !== "undefined" && import.meta.env?.VITE_AI_API_ORIGIN
     ? String(import.meta.env.VITE_AI_API_ORIGIN)
-    : "https://backend-hubia.cmadev.io"
+    : "https://hubia.cma.com.br/api"
 ).replace(/\/$/, "");
 
-export const TRANSLATION_KEY = "JygheDTXbNKNwA0DKL94riGK8AqxwtpyvCr2sfoQVfY";
+/** Chave Hub IA — definir em `app/.env.local` como `VITE_HUB_API_KEY` (não versionar). */
+export const TRANSLATION_KEY = viteEnvString("VITE_HUB_API_KEY");
+
+/** Provider/model do POST Hub IA (`provider` / `model` no JSON). */
+export const HUB_AI_PROVIDER = viteEnvString("VITE_HUB_AI_PROVIDER") || "GEMINI-2";
+export const HUB_AI_MODEL = viteEnvString("VITE_HUB_AI_MODEL") || "gemini-2.5-flash-lite";
 
 const DEFAULT_PROMPT_PATH = "/ai/prompt";
 
-function viteEnvString(key) {
-  if (typeof import.meta === "undefined" || import.meta.env?.[key] == null) {
-    return "";
-  }
-  const s = String(import.meta.env[key]).trim();
-  return s;
-}
-
-function normalizePromptPath(raw) {
+function normalizePromptPath(raw: string) {
   const p = raw || DEFAULT_PROMPT_PATH;
   return p.startsWith("/") ? p : `/${p}`;
 }

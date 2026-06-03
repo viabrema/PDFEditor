@@ -41,8 +41,8 @@ Build a Notion-style PDF editor for Windows (desktop) using a web UI. Users crea
 - Support translate selection, block, or entire document.
 - Always expose loading and error states in the UI.
 - API endpoint: URL absoluta do POST (default `AI_API_ORIGIN` + `/ai/prompt`). Sobrescrever com `VITE_AI_PROMPT_URL` ou só o path com `VITE_AI_PROMPT_PATH` se o backend usar outro caminho. Em Tauri o POST pode ir via Rust (`hub_ia_prompt`).
-- API key: JygheDTXbNKNwA0DKL94riGK8AqxwtpyvCr2sfoQVfY
-- Payload: { "prompt": "...", "provider": "gemini", "model": "gemini-2.5-flash-lite" }
+- API key: `VITE_HUB_API_KEY` em `app/.env.local` (não commitar)
+- Payload: { "prompt": "...", "provider": "GEMINI-2", "model": "gemini-2.5-flash-lite" }
 - Idiomas suportados inicialmente: portugues (padrao), ingles e espanhol.
 - Em abas EN/ES, deve existir botao "Atualizar" para resetar traducao.
 - O botao clona o PDF em PT e traduz, recriando conteudo, posicao e tamanho dos blocos.

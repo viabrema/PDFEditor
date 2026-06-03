@@ -2,7 +2,12 @@ import "./style.css";
 import { createAiService } from "./services/ai";
 import { createTranslationService } from "./services/translation";
 import { renderAppTemplate } from "./app/appTemplate";
-import { getTranslationEndpoint, TRANSLATION_KEY } from "./app/config";
+import {
+  getTranslationEndpoint,
+  HUB_AI_MODEL,
+  HUB_AI_PROVIDER,
+  TRANSLATION_KEY,
+} from "./app/config";
 import { createTauriHubFetcher } from "./services/tauriHubFetch";
 import { bindEvents } from "./app/events";
 import { createAiFlow } from "./app/aiFlow";
@@ -26,11 +31,15 @@ const translationService = createTranslationService({
   endpoint,
   apiKey: TRANSLATION_KEY,
   fetcher: hubFetch || undefined,
+  provider: HUB_AI_PROVIDER,
+  model: HUB_AI_MODEL,
 });
 const aiService = createAiService({
   endpoint,
   apiKey: TRANSLATION_KEY,
   fetcher: hubFetch || undefined,
+  provider: HUB_AI_PROVIDER,
+  model: HUB_AI_MODEL,
 });
 
 const documentHistory = createDocumentHistory({
