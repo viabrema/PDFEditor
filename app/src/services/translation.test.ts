@@ -138,7 +138,7 @@ describe("translation service", () => {
     expect(requestBody.model).toBe("custom-model");
   });
 
-  it("returns empty text when payload is not object", async () => {
+  it("returns plain string JSON bodies as text", async () => {
     const fetcher = async () => ({
       ok: true,
       json: async () => "nope",
@@ -151,7 +151,7 @@ describe("translation service", () => {
       targetLang: "ingles",
     });
 
-    expect(result.text).toBe("");
+    expect(result.text).toBe("nope");
   });
 
   it("reads message field when present", async () => {

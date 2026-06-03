@@ -1,3 +1,5 @@
+import { resolveHubChatId, resolveHubResponseText } from "./hubResponse";
+
 export function createAiService({
   endpoint,
   apiKey,
@@ -16,57 +18,62 @@ export function createAiService({
   const resolvedProvider = provider || "GEMINI-2";
   const resolvedModel = model || "gemini-2.5-flash-lite";
 
-  function resolveText(data) {
-    if (!data || typeof data !== "object") {
-      return "";
+  async function postPrompt(prompt: string, chatId: string | null | undefined) {
+    const payload: Record<string, unknown> = {
+      prompt,
+      provider: resolvedProvider,
+      model: resolvedModel,
+    };
+    if (chatId) {
+      payload.chatId = chatId;
     }
-    return (
-      data.answer ||
-      data.text ||
-      data.response ||
-      data.output ||
-      data.message ||
-      data.result ||
-      ""
-    );
+
+    const response = await request(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data,
+      text: resolveHubResponseText(data),
+      chatId: resolveHubChatId(data, chatId),
+      retriedWithoutChat: false as boolean,
+    };
   }
 
   return {
     async sendPrompt({ prompt, chatId }) {
-      const payload: Record<string, unknown> = {
-        prompt,
-        provider: resolvedProvider,
-        model: resolvedModel,
-      };
-      if (chatId) {
-        payload.chatId = chatId;
+      let attempt = await postPrompt(prompt, chatId);
+      if (!attempt.ok && chatId) {
+        const retry = await postPrompt(prompt, null);
+        if (retry.ok) {
+          attempt = { ...retry, retriedWithoutChat: true };
+        }
       }
 
-      const response = await request(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
+      if (!attempt.ok) {
         return {
           ok: false,
           error: {
             message: "AI request failed",
-            status: response.status,
+            status: attempt.status,
           },
         };
       }
 
-      const data = await response.json();
       return {
         ok: true,
-        data,
-        text: resolveText(data),
-        chatId: data?.chatId || chatId || null,
+        data: attempt.data,
+        text: attempt.text,
+        chatId: attempt.chatId,
+        retriedWithoutChat: attempt.retriedWithoutChat || false,
       };
     },
   };

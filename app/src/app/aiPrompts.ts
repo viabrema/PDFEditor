@@ -9,7 +9,17 @@ export const AI_CREATABLE_BLOCK_TYPES = [
 
 export type AiCreatableBlockType = (typeof AI_CREATABLE_BLOCK_TYPES)[number];
 
+/** Pedidos que alteram o documento (criar blocos, etc.) — têm prioridade sobre modo analise. */
+export function isDocumentEditInstruction(instruction: string) {
+  return /(cri(e|ar|ou)|adicion|inserir|novo|box|bloco|grafico|gráfico|apague|elimine|delete|remov|mova|altere|atualize|modifique|substitu)/i.test(
+    instruction,
+  );
+}
+
 export function isAnalysisInstruction(instruction: string) {
+  if (isDocumentEditInstruction(instruction)) {
+    return false;
+  }
   return /(analise|analisar|resuma|resumir|interprete|interpretar|inspecione|inspecionar)/i.test(
     instruction,
   );
@@ -52,6 +62,8 @@ function actionSchemaLines(options: { formatMode: boolean; pageSizeLine: string;
     "  pageId: so necessario se estiver a mover o bloco para outra pagina (mesmo idioma).",
     "create: {type:'create', blockType, pageId?, region?, headingLevel?, contentText?, tableRows?, content?, imageSrc?, position?, size?, excludeFromPdfExport?, dataSourceRows?, firstRowIsHeader?, chart?}",
     `  blockType permitido para criar: ${AI_CREATABLE_BLOCK_TYPES.map((t) => `'${t}'`).join(", ")}.`,
+    "  Para blockType text ou heading: contentText e OBRIGATORIO (use string vazia \"\" para caixa vazia).",
+    "  Para resumir tabela selecionada num novo texto: create text com contentText = resumo; copie dados do snapshot content da tabela em foco.",
     "  pageId: omita para usar a pagina ativa do utilizador.",
     "  region: 'body' (padrao), 'header' ou 'footer' quando fizer sentido.",
     "  imageSrc: URL ou data URL para blocos image.",
@@ -137,6 +149,7 @@ export function buildDocumentAiPrompt({
     `Idioma ativo na UI: ${activeLanguageLabel}. So deve editar blocos desse idioma (ids do layout).`,
     "O utilizador pode pedir para criar blocos, alterar qualquer bloco por id, ou referir-se aos blocos selecionados.",
     "Prioridade: instrucoes que citam 'selecionado', ordem (primeiro/segundo), ou ids explicitos.",
+    "Se o utilizador pedir criar caixa/bloco com resumo de tabela selecionada: modo edicao — JSON com create text e contentText preenchido (nao apenas analise em texto livre).",
     "Primeiro bloco selecionado = focusOrder 1, segundo = 2, etc.",
     "Nao limite-se ao foco: use o layout para localizar qualquer bloco ou pagina.",
     "Em create, sem pageId valido no JSON: o bloco novo vai para a pagina ativa (ultima em que o utilizador clicou na area do documento).",

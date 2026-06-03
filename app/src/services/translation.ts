@@ -1,3 +1,5 @@
+import { resolveHubResponseText } from "./hubResponse";
+
 export function createTranslationService({
   endpoint,
   apiKey,
@@ -23,21 +25,6 @@ export function createTranslationService({
       "Texto:",
       text,
     ].join("\n");
-  }
-
-  function resolveText(data) {
-    if (!data || typeof data !== "object") {
-      return "";
-    }
-    return (
-      data.text ||
-      data.answer ||
-      data.response ||
-      data.output ||
-      data.message ||
-      data.result ||
-      ""
-    );
   }
 
   async function sendPrompt(prompt) {
@@ -68,7 +55,7 @@ export function createTranslationService({
     return {
       ok: true,
       data,
-      text: resolveText(data),
+      text: resolveHubResponseText(data),
     };
   }
 

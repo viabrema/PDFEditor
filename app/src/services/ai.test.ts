@@ -85,7 +85,7 @@ describe("ai service", () => {
     expect(result.error.status).toBe(500);
   });
 
-  it("returns empty text for non object payload", async () => {
+  it("returns plain string JSON bodies as text", async () => {
     const fetcher = async () => ({
       ok: true,
       json: async () => "nope",
@@ -94,7 +94,7 @@ describe("ai service", () => {
     const service = createAiService({ endpoint: "/ai", apiKey: "key", fetcher });
     const result = await service.sendPrompt({ prompt: "Teste" });
 
-    expect(result.text).toBe("");
+    expect(result.text).toBe("nope");
   });
 
   it("returns empty text for empty object", async () => {
@@ -161,6 +161,55 @@ describe("ai service", () => {
     const result = await service.sendPrompt({ prompt: "Teste" });
 
     expect(result.text).toBe("Tudo bem");
+  });
+
+  it("reads actions array at top level of JSON body", async () => {
+    const fetcher = async () => ({
+      ok: true,
+      json: async () => ({
+        actions: [{ type: "create", blockType: "text", contentText: "Hi" }],
+      }),
+    });
+
+    const service = createAiService({ endpoint: "/ai", apiKey: "key", fetcher });
+    const result = await service.sendPrompt({ prompt: "Teste" });
+
+    expect(result.text).toContain('"actions"');
+    expect(JSON.parse(result.text).actions[0].contentText).toBe("Hi");
+  });
+
+  it("keeps failure when retry without chatId also fails", async () => {
+    const fetcher = async () => ({
+      ok: false,
+      status: 502,
+      json: async () => ({ message: "down" }),
+    });
+
+    const service = createAiService({ endpoint: "/ai", apiKey: "key", fetcher });
+    const result = await service.sendPrompt({ prompt: "Teste", chatId: "stale" });
+
+    expect(result.ok).toBe(false);
+    expect(result.error.status).toBe(502);
+  });
+
+  it("retries without chatId when first request fails", async () => {
+    let calls = 0;
+    const fetcher = async (_url, options) => {
+      calls += 1;
+      const body = JSON.parse(options.body);
+      if (body.chatId) {
+        return { ok: false, status: 400, json: async () => ({ message: "bad chat" }) };
+      }
+      return { ok: true, json: async () => ({ answer: "Ok" }) };
+    };
+
+    const service = createAiService({ endpoint: "/ai", apiKey: "key", fetcher });
+    const result = await service.sendPrompt({ prompt: "Teste", chatId: "stale" });
+
+    expect(calls).toBe(2);
+    expect(result.ok).toBe(true);
+    expect(result.text).toBe("Ok");
+    expect(result.retriedWithoutChat).toBe(true);
   });
 
   it("falls back to result field", async () => {

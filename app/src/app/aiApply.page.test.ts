@@ -122,6 +122,43 @@ describe("applyAiResultToPage", () => {
     expect(blocks[0].content.chart.baseType).toBe("bar");
   });
 
+  it("creates empty text box when contentText is omitted", () => {
+    const blocks: any[] = [];
+    const state = { activePageId: "page-1", activeLanguageId: "lang-pt" };
+    const ok = applyAiResultToPage({
+      resultText: JSON.stringify({
+        actions: [
+          {
+            type: "create",
+            blockType: "text",
+            position: { x: 15, y: 15 },
+            size: { width: 760, height: 100 },
+          },
+        ],
+      }),
+      blocks,
+      state,
+      documentData,
+    });
+    expect(ok).toBe(true);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].type).toBe("text");
+  });
+
+  it("returns false when actions do not change the document", () => {
+    const blocks: any[] = [];
+    const state = { activePageId: "page-1", activeLanguageId: "lang-pt" };
+    const ok = applyAiResultToPage({
+      resultText: JSON.stringify({
+        actions: [{ type: "update", id: "missing", contentText: "x" }],
+      }),
+      blocks,
+      state,
+      documentData,
+    });
+    expect(ok).toBe(false);
+  });
+
   it("creates chart with configured false when dataSourceRows invalid for spec", () => {
     const blocks: any[] = [];
     const state = { activePageId: "page-1", activeLanguageId: "lang-pt" };
