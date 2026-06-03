@@ -11,7 +11,7 @@ export type AiCreatableBlockType = (typeof AI_CREATABLE_BLOCK_TYPES)[number];
 
 /** Pedidos que alteram o documento (criar blocos, etc.) — têm prioridade sobre modo analise. */
 export function isDocumentEditInstruction(instruction: string) {
-  return /(cri(e|ar|ou)|adicion|inserir|novo|box|bloco|grafico|gráfico|apague|elimine|delete|remov|mova|altere|atualize|modifique|substitu)/i.test(
+  return /(cri(e|ar|ou)|adicion|inserir|novo|box|bloco|grafico|gráfico|apague|elimine|delete|remov|exclu|mova|altere|atualize|modifique|substitu)/i.test(
     instruction,
   );
 }
@@ -26,6 +26,9 @@ export function isAnalysisInstruction(instruction: string) {
 }
 
 export function isFormattingInstruction(instruction: string) {
+  if (/(tabela|linha|coluna|celula|célula|fundo|cor de fundo)/i.test(instruction)) {
+    return false;
+  }
   return /(formatacao|formatação|fonte|tamanho|negrito|italico|it[aá]lico|sublinhado|alinhamento|alinhar|centralizar|titulo|subtitulo|paragrafo)/i.test(
     instruction,
   );
@@ -57,7 +60,15 @@ function actionSchemaLines(options: { formatMode: boolean; pageSizeLine: string;
     'Formato obrigatorio: {"actions":[...]}.',
     "Tipos de acao: update, create, delete.",
     "update: {type:'update', id, contentText?, tableRows?, content?, position?, size?, pageId?, excludeFromPdfExport?, ...}",
-    "  Para tabelas: tableRows OU content (array de arrays; uma celula = string). excludeFromPdfExport?: boolean aplica-se a table/linkedTable.",
+    "  Para tabelas (dados): deleteRows:[0] remove linhas 0-based na camada de dados (linkedTable e table). Preferir a reescrever tableRows inteira.",
+    "  tableRows/content (array de arrays de strings) substitui a grelha de dados quando nao ha tableFormat/rowStyles/cellStyles no mesmo update.",
+    "  Exemplo excluir primeira linha: { type:'update', id, deleteRows:[0] }.",
+    "  Para tabelas (visual/cor/fundo/fonte): use tableFormat ou rowStyles/cellStyles/colStyles — NAO envie tableRows com objetos {text, backgroundColor} por celula.",
+    "  tableFormat: { scope:'row'|'column'|'cell', row?, col?, style?: { backgroundColor?, color?, fontWeight?, ... } } ou array tableFormats[].",
+    "  Exemplo fundo vermelho na linha 0: { type:'update', id, tableFormat:{ scope:'row', row:0, style:{ backgroundColor:'#FF0000' } } }.",
+    "  rowStyles: { '0': { backgroundColor:'#foo' } }; cellStyles: { '0,1': { color:'#fff' } } (chaves row = indice linha; cell = 'linha,coluna' 0-based).",
+    "  linkedTable: cores/fontes = camada visual; deleteRows ou tableRows (so strings) = camada de dados (dataSourceRows).",
+    "  excludeFromPdfExport?: boolean aplica-se a table/linkedTable.",
     "  Para blocos chart: dataSourceRows?, tableRows?, content? (rows), dataSourceBlockId? (legado), firstRowIsHeader?, chart?, configured?",
     "  pageId: so necessario se estiver a mover o bloco para outra pagina (mesmo idioma).",
     "create: {type:'create', blockType, pageId?, region?, headingLevel?, contentText?, tableRows?, content?, imageSrc?, position?, size?, excludeFromPdfExport?, dataSourceRows?, firstRowIsHeader?, chart?}",

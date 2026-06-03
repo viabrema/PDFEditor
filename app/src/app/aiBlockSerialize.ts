@@ -20,12 +20,16 @@ export function serializeBlockForAi(block: any) {
   }
   if (block.type === "table" || block.type === "linkedTable") {
     const rows = getTableDataRows(block);
+    const c = block.content || {};
     const base: Record<string, unknown> = {
       id: block.id,
       type: block.type,
       position: block.position,
       size: block.size,
       content: rows,
+      rowStyles: c.rowStyles || {},
+      cellStyles: c.cellStyles || {},
+      colStyles: c.colStyles || {},
     };
     if (block.type === "linkedTable" && block.metadata?.excelLink) {
       const link = block.metadata.excelLink;

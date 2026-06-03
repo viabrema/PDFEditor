@@ -13,3 +13,10 @@ describe("AI instruction modes", () => {
     expect(isDocumentEditInstruction("resuma o documento")).toBe(false);
   });
 });
+
+describe("isFormattingInstruction", () => {
+  it("does not treat table visual edits as text format mode", async () => {
+    const { isFormattingInstruction } = await import("./aiPrompts");
+    expect(isFormattingInstruction("altere a primeira linha com fundo vermelho")).toBe(false);
+  });
+});

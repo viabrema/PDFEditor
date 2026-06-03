@@ -8,6 +8,7 @@ import {
   mergeChartBlockFromAiUpdate,
 } from "./aiChartFromAction";
 import { parseAiJson, tableRowsFromAiAction } from "./aiApplyParsing";
+import { applyTableUpdateFromAiAction } from "./aiTableFromAction";
 import { applyTextStyleToDoc, applyBlockFormatToDoc } from "./aiApplyDocFormat";
 
 function resolvePageIdForAi(actionPageId: unknown, documentData: any, state: any) {
@@ -117,19 +118,14 @@ export function applyAiResultToPage({
         }
 
         if (target.type === "table" || target.type === "linkedTable") {
-          const normalized = tableRowsFromAiAction(action);
-          if (normalized) {
-            target.content = { ...(target.content || {}), rows: normalized };
-            markUpdate();
+          if (applyTableUpdateFromAiAction(target, action as Record<string, unknown>)) {
+            markApplied();
           }
           if (typeof (action as { excludeFromPdfExport?: unknown }).excludeFromPdfExport === "boolean") {
             target.metadata = {
               ...(target.metadata || {}),
               excludeFromPdfExport: (action as { excludeFromPdfExport: boolean }).excludeFromPdfExport,
             };
-            markUpdate();
-          }
-          if (updated) {
             markApplied();
           }
           return;

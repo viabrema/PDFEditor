@@ -41,9 +41,11 @@ export function normalizeTableRows(tableRows) {
     return tableRows.map((row) => (Array.isArray(row) ? row : []));
   }
   if (typeof tableRows[0] === "object" && tableRows[0] !== null) {
-    return tableRows.map((row) =>
-      Array.isArray(row?.cells) ? row.cells.map((cell) => String(cell ?? "")) : []
-    );
+    const first = tableRows[0] as { cells?: unknown[] };
+    if (Array.isArray(first.cells)) {
+      return null;
+    }
+    return tableRows.map((row) => (Array.isArray(row) ? row.map((cell) => String(cell ?? "")) : []));
   }
   return null;
 }

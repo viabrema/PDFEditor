@@ -145,6 +145,87 @@ describe("applyAiResultToPage", () => {
     expect(blocks[0].type).toBe("text");
   });
 
+  it("applies red row background from structured tableRows IA payload", () => {
+    const blocks = [
+      {
+        id: "tbl-1",
+        type: "table",
+        pageId: "page-1",
+        content: {
+          rows: [
+            ["Title", "B"],
+            ["a", "b"],
+          ],
+          cellStyles: {},
+          rowStyles: {},
+          colStyles: {},
+        },
+        position: { x: 0, y: 0 },
+        size: { width: 400, height: 200 },
+      },
+    ];
+    const state = { activePageId: "page-1", activeLanguageId: "lang-pt" };
+    const ok = applyAiResultToPage({
+      resultText: JSON.stringify({
+        actions: [
+          {
+            type: "update",
+            id: "tbl-1",
+            tableRows: [
+              {
+                row: 0,
+                cells: [
+                  { text: "Title", backgroundColor: "#FF0000" },
+                  { text: "B", backgroundColor: "#FF0000" },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+      blocks,
+      state,
+      documentData,
+    });
+    expect(ok).toBe(true);
+    expect(blocks[0].content.rowStyles?.["0"]?.backgroundColor || blocks[0].content.cellStyles?.["0,0"]?.backgroundColor).toBe(
+      "#FF0000",
+    );
+    expect(blocks[0].content.rows[0][0]).toBe("Title");
+  });
+
+  it("deletes first table row via deleteRows on linkedTable", () => {
+    const blocks = [
+      {
+        id: "tbl-1",
+        type: "linkedTable",
+        pageId: "page-1",
+        content: {
+          dataSourceRows: [
+            ["SOJA", "x"],
+            ["PRAÇA", "COMPRA"],
+          ],
+          cellStyles: {},
+          rowStyles: {},
+          colStyles: {},
+        },
+        position: { x: 0, y: 0 },
+        size: { width: 400, height: 200 },
+      },
+    ];
+    const state = { activePageId: "page-1", activeLanguageId: "lang-pt" };
+    const ok = applyAiResultToPage({
+      resultText: JSON.stringify({
+        actions: [{ type: "update", id: "tbl-1", deleteRows: [0] }],
+      }),
+      blocks,
+      state,
+      documentData,
+    });
+    expect(ok).toBe(true);
+    expect(blocks[0].content.dataSourceRows).toEqual([["PRAÇA", "COMPRA"]]);
+  });
+
   it("returns false when actions do not change the document", () => {
     const blocks: any[] = [];
     const state = { activePageId: "page-1", activeLanguageId: "lang-pt" };
