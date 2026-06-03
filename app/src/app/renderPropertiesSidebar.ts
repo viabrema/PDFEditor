@@ -9,7 +9,6 @@ import {
   renderImagePanel,
   renderTextPanel,
 } from "./renderPropertiesSidebarPanels";
-import { openLinkedTableDataSource } from "./linkedTableDataModal";
 import { getPageSize } from "./textUtils";
 import type { DocumentHistory } from "./documentHistory";
 
@@ -144,13 +143,6 @@ export function renderPropertiesSidebar({
         layout: "sidebar",
       });
       blockPanel.append(toolbar);
-      const dataBtn = document.createElement("button");
-      dataBtn.type = "button";
-      dataBtn.className =
-        "mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:border-slate-400";
-      dataBtn.textContent = "Fonte de dados";
-      dataBtn.addEventListener("click", () => openLinkedTableDataSource(block));
-      blockPanel.append(dataBtn);
     }
     finishPropertiesSidebarIcons(refs);
     return;

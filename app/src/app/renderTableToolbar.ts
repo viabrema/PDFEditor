@@ -10,10 +10,11 @@ import {
 } from "../blocks/tableFormatting";
 import type { ExcelTableCellStyle } from "../services/excelTableStyle";
 import { createTableFormatToolbar } from "../ui/tableFormatToolbar";
+import { compactIconButton, labeledField } from "../ui/contextToolbarLayout";
 import type { DocumentHistory } from "./documentHistory";
 import { openLinkedTableDataSource } from "./linkedTableDataModal";
 
-function buildLinkedTableExtras(
+function buildLinkedTableToolbarParts(
   block: any,
   element: HTMLElement,
   documentHistory: DocumentHistory | undefined,
@@ -21,12 +22,14 @@ function buildLinkedTableExtras(
   linkedTableBridge?: { reconfigure?: (block: any) => Promise<void> },
   state?: any,
 ) {
-  const wrap = document.createElement("div");
-  wrap.className = "flex flex-wrap items-center gap-2";
-
-  const label = document.createElement("span");
-  label.className = "text-xs font-medium text-slate-600";
-  label.textContent = "Escala";
+  const actionButtons: HTMLElement[] = [
+    compactIconButton("database", "Fonte de dados", () => openLinkedTableDataSource(block)),
+  ];
+  if (linkedTableBridge?.reconfigure) {
+    actionButtons.push(
+      compactIconButton("file-spreadsheet", "Alterar Excel", () => linkedTableBridge.reconfigure!(block)),
+    );
+  }
 
   const range = document.createElement("input");
   range.type = "range";
@@ -34,8 +37,7 @@ function buildLinkedTableExtras(
   range.max = "2";
   range.step = "0.05";
   range.value = String(clampLinkedTableFontScale(block.metadata?.fontScale));
-  range.className = "h-2 w-24 accent-slate-700";
-
+  range.className = "h-2 w-full accent-slate-700";
   range.addEventListener("input", () => {
     documentHistory?.checkpointBeforeChange();
     block.metadata = { ...(block.metadata || {}), fontScale: Number(range.value) };
@@ -45,32 +47,21 @@ function buildLinkedTableExtras(
         mode: resolveTableDomMode(block.id, state.editingBlockId, state.tableEdit),
         edit: state.tableEdit?.blockId === block.id ? state.tableEdit : null,
       });
+    } else {
+      requestRender();
     }
   });
 
-  wrap.append(label, range);
+  const scaleField = labeledField("Escala da fonte", range);
+  const valueEl = document.createElement("span");
+  valueEl.className = "text-xs tabular-nums text-slate-500";
+  valueEl.textContent = Number(range.value).toFixed(2);
+  range.addEventListener("input", () => {
+    valueEl.textContent = Number(range.value).toFixed(2);
+  });
+  scaleField.append(valueEl);
 
-  const dataBtn = document.createElement("button");
-  dataBtn.type = "button";
-  dataBtn.className =
-    "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm";
-  dataBtn.title = "Fonte de dados";
-  dataBtn.innerHTML = `<i data-lucide="database"></i>`;
-  dataBtn.addEventListener("click", () => openLinkedTableDataSource(block));
-  wrap.append(dataBtn);
-
-  if (linkedTableBridge?.reconfigure) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className =
-      "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm";
-    btn.title = "Alterar Excel";
-    btn.innerHTML = `<i data-lucide="file-spreadsheet"></i>`;
-    btn.addEventListener("click", () => linkedTableBridge.reconfigure!(block));
-    wrap.append(btn);
-  }
-
-  return [wrap];
+  return { actionButtons, fields: [scaleField] };
 }
 
 export function mountTableFormatToolbar({
@@ -95,9 +86,9 @@ export function mountTableFormatToolbar({
     state.tableEdit = { blockId: block.id, scope: "cell", row: 0, col: 0, typing: false };
   }
 
-  const linkedExtras =
+  const linkedParts =
     block.type === "linkedTable"
-      ? buildLinkedTableExtras(
+      ? buildLinkedTableToolbarParts(
           block,
           element,
           documentHistory,
@@ -105,7 +96,7 @@ export function mountTableFormatToolbar({
           linkedTableBridge,
           state,
         )
-      : undefined;
+      : null;
 
   return createTableFormatToolbar({
     block,
@@ -139,7 +130,8 @@ export function mountTableFormatToolbar({
       block.metadata = { ...(block.metadata || {}), hidden };
       requestRender();
     },
-    linkedExtras,
+    linkedActionButtons: linkedParts?.actionButtons,
+    linkedFields: linkedParts?.fields,
     layout,
   });
 }

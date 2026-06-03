@@ -119,6 +119,50 @@ describe("toolbar", () => {
     expect(toolbar.querySelectorAll("button").length).toBe(0);
   });
 
+  it("renders linked table sidebar toolbar with labels and compact actions", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+    const toolbar = createToolbar(null, {
+      variant: "linkedTable",
+      layout: "sidebar",
+      fontScaleValue: 1,
+      onFontScaleChange: () => {},
+      onLinkedTableDataSource: () => {},
+    });
+    expect(toolbar.className).toContain("context-toolbar");
+    expect(toolbar.textContent).toContain("Escala da fonte");
+    expect(toolbar.querySelector(".context-toolbar__actions")).toBeTruthy();
+  });
+
+  it("renders hidden toggle on linked chart without action separator", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+    const toolbar = createToolbar(null, {
+      variant: "linkedChart",
+      onToggleHidden: vi.fn(),
+      hiddenValue: true,
+    });
+    expect(toolbar.querySelector('[data-action="toggle-hidden"]')).toBeTruthy();
+    expect(toolbar.querySelector(".context-toolbar__actions span[aria-hidden]")).toBeFalsy();
+  });
+
+  it("renders hidden toggle on linked table toolbar with separator", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+    const onToggleHidden = vi.fn();
+    const toolbar = createToolbar(null, {
+      variant: "linkedTable",
+      onLinkedTableDataSource: () => {},
+      onToggleHidden,
+      hiddenValue: false,
+    });
+    const hidden = toolbar.querySelector('[data-action="toggle-hidden"]') as HTMLButtonElement;
+    expect(hidden).toBeTruthy();
+    hidden.click();
+    expect(onToggleHidden).toHaveBeenCalledWith(true);
+    expect(toolbar.querySelector(".context-toolbar__actions span[aria-hidden]")).toBeTruthy();
+  });
+
   it("renders linked table toolbar with data source and excel buttons", () => {
     let scale = 0;
     let excel = 0;

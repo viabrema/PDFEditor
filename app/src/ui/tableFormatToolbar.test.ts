@@ -65,7 +65,7 @@ describe("tableFormatToolbar", () => {
       onApply,
       hiddenValue: true,
       onToggleHidden,
-      linkedExtras: [extra],
+      linkedActionButtons: [extra],
     });
 
     (toolbar.querySelector('[title="Italico"]') as HTMLButtonElement).click();
@@ -164,6 +164,22 @@ describe("tableFormatToolbar", () => {
     );
   });
 
+  it("appends linked fields before format controls", () => {
+    const window = new Window();
+    globalThis.document = window.document;
+    const scale = window.document.createElement("div");
+    scale.textContent = "linked-scale";
+    const toolbar = createTableFormatToolbar({
+      block: { content: { rows: [["1"]] } },
+      getFocus: () => ({ row: 0, col: 0 }),
+      getScope: () => "cell",
+      onApply: vi.fn(),
+      linkedFields: [scale],
+    });
+    const fields = toolbar.querySelector(".context-toolbar__fields");
+    expect(fields?.firstElementChild?.textContent).toContain("linked-scale");
+  });
+
   it("renders sidebar layout classes", () => {
     const window = new Window();
     globalThis.document = window.document;
@@ -174,7 +190,7 @@ describe("tableFormatToolbar", () => {
       onApply: vi.fn(),
       layout: "sidebar",
     });
-    expect(toolbar.className).toContain("flex-col");
+    expect(toolbar.className).toContain("context-toolbar");
   });
 
   it("renders hidden toggle when not marked hidden", () => {

@@ -1,3 +1,12 @@
+import {
+  compactIconButton,
+  createContextToolbarActionsRow,
+  createContextToolbarFieldsPanel,
+  createContextToolbarRoot,
+  labeledField,
+  toolbarSeparator,
+} from "./contextToolbarLayout";
+
 export function createToolbar(commands: any, options: any = {}) {
   const {
     disabled = false,
@@ -26,7 +35,7 @@ export function createToolbar(commands: any, options: any = {}) {
       ? "flex w-full flex-col items-stretch gap-3"
       : "flex flex-wrap items-center gap-2";
 
-  function appendHiddenToggleButton() {
+  function appendHiddenToggleButton(parent: HTMLElement = container) {
     if (!onToggleHidden) {
       return;
     }
@@ -34,8 +43,8 @@ export function createToolbar(commands: any, options: any = {}) {
     btn.type = "button";
     btn.dataset.action = "toggle-hidden";
     btn.className = hiddenValue
-      ? "toolbar-icon-button rounded-md bg-slate-900 text-white shadow-sm"
-      : "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
+      ? "toolbar-icon-button shrink-0 rounded-md bg-slate-900 text-white shadow-sm"
+      : "toolbar-icon-button shrink-0 rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
     btn.title = hiddenValue ? "Desmarcar dado oculto" : "Marcar como dado oculto";
     btn.setAttribute("aria-label", btn.title);
     btn.innerHTML = `<i data-lucide="database"></i>`;
@@ -44,7 +53,7 @@ export function createToolbar(commands: any, options: any = {}) {
       btn.classList.add("opacity-40", "cursor-not-allowed");
     }
     btn.addEventListener("click", () => onToggleHidden?.(!hiddenValue));
-    container.append(btn);
+    parent.append(btn);
   }
 
   if (variant === "table") {
@@ -53,9 +62,38 @@ export function createToolbar(commands: any, options: any = {}) {
   }
 
   if (variant === "linkedTable" || variant === "linkedChart") {
-    const label = document.createElement("span");
-    label.className = "text-xs font-medium text-slate-600";
-    label.textContent = "Escala";
+    const root = layout === "sidebar" ? createContextToolbarRoot() : container;
+    const actions = createContextToolbarActionsRow();
+    const fields = createContextToolbarFieldsPanel();
+
+    if (variant === "linkedTable" && onLinkedTableDataSource) {
+      actions.append(compactIconButton("database", "Fonte de dados", () => onLinkedTableDataSource()));
+    }
+
+    const onExcel =
+      variant === "linkedTable" ? onLinkedTableExcelConfigure : onLinkedChartExcelConfigure;
+    if (onExcel) {
+      actions.append(
+        compactIconButton("file-spreadsheet", "Alterar ficheiro, folha ou intervalo Excel", () =>
+          onExcel(),
+        ),
+      );
+    }
+
+    if (variant === "linkedChart" && onLinkedChartDesignConfigure) {
+      actions.append(
+        compactIconButton("sliders-horizontal", "Configurar tipo de grafico e series", () =>
+          onLinkedChartDesignConfigure(),
+        ),
+      );
+    }
+
+    if (onToggleHidden) {
+      if (actions.childElementCount > 0) {
+        actions.append(toolbarSeparator());
+      }
+      appendHiddenToggleButton(actions);
+    }
 
     const range = document.createElement("input");
     range.type = "range";
@@ -63,12 +101,10 @@ export function createToolbar(commands: any, options: any = {}) {
     range.max = "2";
     range.step = "0.05";
     range.value = String(fontScaleValue);
-    range.title = "Escala da fonte (0,5 a 2)";
-    range.setAttribute("aria-label", "Escala da fonte");
-    range.className = "h-2 w-32 accent-slate-700";
+    range.className = "h-2 w-full accent-slate-700";
 
     const valueEl = document.createElement("span");
-    valueEl.className = "w-9 text-xs tabular-nums text-slate-700";
+    valueEl.className = "text-xs tabular-nums text-slate-500";
     valueEl.textContent = Number(fontScaleValue).toFixed(2);
 
     range.addEventListener("input", () => {
@@ -77,49 +113,12 @@ export function createToolbar(commands: any, options: any = {}) {
       onFontScaleChange?.(v);
     });
 
-    container.append(label, range, valueEl);
+    const scaleField = labeledField("Escala da fonte", range);
+    scaleField.append(valueEl);
+    fields.append(scaleField);
 
-    if (variant === "linkedTable" && onLinkedTableDataSource) {
-      const dataBtn = document.createElement("button");
-      dataBtn.type = "button";
-      dataBtn.className =
-        "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
-      dataBtn.title = "Fonte de dados";
-      dataBtn.setAttribute("aria-label", "Fonte de dados");
-      dataBtn.innerHTML = `<i data-lucide="database"></i>`;
-      dataBtn.addEventListener("click", () => onLinkedTableDataSource());
-      container.append(dataBtn);
-    }
-
-    const onExcel =
-      variant === "linkedTable" ? onLinkedTableExcelConfigure : onLinkedChartExcelConfigure;
-    if (onExcel) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className =
-        "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
-      btn.title = "Alterar ficheiro, folha ou intervalo Excel";
-      btn.setAttribute("aria-label", "Alterar ficheiro, folha ou intervalo Excel");
-      btn.innerHTML = `<i data-lucide="file-spreadsheet"></i>`;
-      btn.addEventListener("click", () => onExcel());
-      container.append(btn);
-    }
-
-    if (variant === "linkedChart" && onLinkedChartDesignConfigure) {
-      const designBtn = document.createElement("button");
-      designBtn.type = "button";
-      designBtn.className =
-        "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
-      designBtn.title = "Configurar tipo de grafico e series";
-      designBtn.setAttribute("aria-label", "Configurar tipo de grafico e series");
-      designBtn.innerHTML = `<i data-lucide="sliders-horizontal"></i>`;
-      designBtn.addEventListener("click", () => onLinkedChartDesignConfigure());
-      container.append(designBtn);
-    }
-
-    appendHiddenToggleButton();
-
-    return container;
+    root.append(actions, fields);
+    return root;
   }
 
   const fontFamilies = [

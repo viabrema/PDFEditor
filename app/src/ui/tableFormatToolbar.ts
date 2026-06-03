@@ -1,6 +1,14 @@
 import type { ExcelTableCellStyle, TableNumberFormatKind } from "../services/excelTableStyle";
 import type { TableFormatScope } from "../blocks/tableFormatting";
 import { resolveTableCellStyle } from "../blocks/tableFormatting";
+import {
+  compactIconButton,
+  createContextToolbarActionsRow,
+  createContextToolbarFieldsPanel,
+  createContextToolbarRoot,
+  labeledField,
+  toolbarSeparator,
+} from "./contextToolbarLayout";
 
 export function createTableFormatToolbar(options: {
   block: { content?: any };
@@ -9,15 +17,13 @@ export function createTableFormatToolbar(options: {
   onApply: (patch: Partial<ExcelTableCellStyle>, scope: TableFormatScope) => void;
   hiddenValue?: boolean;
   onToggleHidden?: (hidden: boolean) => void;
-  linkedExtras?: HTMLElement[];
+  linkedActionButtons?: HTMLElement[];
+  linkedFields?: HTMLElement[];
   layout?: "inline" | "sidebar";
 }) {
-  const layout = options.layout || "inline";
-  const container = document.createElement("div");
-  container.className =
-    layout === "sidebar"
-      ? "flex w-full flex-col items-stretch gap-3"
-      : "flex max-w-[min(92vw,720px)] flex-wrap items-center gap-2";
+  const root = createContextToolbarRoot();
+  const actions = createContextToolbarActionsRow();
+  const fields = createContextToolbarFieldsPanel();
 
   function scope(): TableFormatScope {
     return options.getScope();
@@ -28,72 +34,57 @@ export function createTableFormatToolbar(options: {
     return resolveTableCellStyle(options.block.content || {}, row, col);
   }
 
-  function btn(icon: string, title: string, onClick: () => void) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className =
-      "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
-    b.title = title;
-    b.setAttribute("aria-label", title);
-    b.innerHTML = `<i data-lucide="${icon}"></i>`;
-    b.addEventListener("click", onClick);
-    return b;
-  }
-
-  const sep = () => {
-    const s = document.createElement("span");
-    s.className = "mx-1 h-6 w-px bg-slate-200";
-    s.setAttribute("aria-hidden", "true");
-    return s;
-  };
-
-  container.append(
-    btn("bold", "Negrito", () => {
+  actions.append(
+    compactIconButton("bold", "Negrito", () => {
       const st = currentStyle();
       const next = st?.fontWeight === "bold" ? "normal" : "bold";
       options.onApply({ fontWeight: next }, scope());
     }),
-  );
-  container.append(
-    btn("italic", "Italico", () => {
+    compactIconButton("italic", "Italico", () => {
       const st = currentStyle();
       const next = st?.fontStyle === "italic" ? "normal" : "italic";
       options.onApply({ fontStyle: next }, scope());
     }),
-  );
-  container.append(
-    btn("align-left", "Alinhar esquerda", () => options.onApply({ textAlign: "left" }, scope())),
-  );
-  container.append(
-    btn("align-center", "Alinhar centro", () => options.onApply({ textAlign: "center" }, scope())),
-  );
-  container.append(
-    btn("align-right", "Alinhar direita", () => options.onApply({ textAlign: "right" }, scope())),
+    compactIconButton("align-left", "Alinhar esquerda", () => options.onApply({ textAlign: "left" }, scope())),
+    compactIconButton("align-center", "Alinhar centro", () =>
+      options.onApply({ textAlign: "center" }, scope()),
+    ),
+    compactIconButton("align-right", "Alinhar direita", () => options.onApply({ textAlign: "right" }, scope())),
   );
 
-  container.append(sep());
+  if (options.linkedActionButtons?.length) {
+    actions.append(toolbarSeparator());
+    options.linkedActionButtons.forEach((btn) => actions.append(btn));
+  }
+
+  if (options.onToggleHidden) {
+    actions.append(toolbarSeparator());
+    const hiddenBtn = document.createElement("button");
+    hiddenBtn.type = "button";
+    hiddenBtn.dataset.action = "toggle-hidden";
+    hiddenBtn.className = options.hiddenValue
+      ? "toolbar-icon-button shrink-0 rounded-md bg-slate-900 text-white shadow-sm"
+      : "toolbar-icon-button shrink-0 rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm";
+    hiddenBtn.title = options.hiddenValue ? "Desmarcar dado oculto" : "Marcar como dado oculto";
+    hiddenBtn.setAttribute("aria-label", hiddenBtn.title);
+    hiddenBtn.innerHTML = `<i data-lucide="database"></i>`;
+    hiddenBtn.addEventListener("click", () => options.onToggleHidden?.(!options.hiddenValue));
+    actions.append(hiddenBtn);
+  }
 
   const textColor = document.createElement("input");
   textColor.type = "color";
-  textColor.className = "h-8 w-10 cursor-pointer rounded border border-slate-300 bg-white p-0.5";
-  textColor.title = "Cor do texto";
+  textColor.className = "h-9 w-full cursor-pointer rounded border border-slate-300 bg-white p-0.5";
   textColor.value = currentStyle()?.color || "#0f172a";
   textColor.addEventListener("input", () => options.onApply({ color: textColor.value }, scope()));
 
   const bgColor = document.createElement("input");
   bgColor.type = "color";
-  bgColor.className = "h-8 w-10 cursor-pointer rounded border border-slate-300 bg-white p-0.5";
-  bgColor.title = "Cor de fundo";
+  bgColor.className = "h-9 w-full cursor-pointer rounded border border-slate-300 bg-white p-0.5";
   bgColor.value = currentStyle()?.backgroundColor || "#ffffff";
   bgColor.addEventListener("input", () => options.onApply({ backgroundColor: bgColor.value }, scope()));
 
-  container.append(textColor, bgColor);
-  container.append(sep());
-
   const numKind = document.createElement("select");
-  numKind.className =
-    "rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700";
-  numKind.title = "Formato numerico";
   numKind.innerHTML = `
     <option value="general">Geral</option>
     <option value="number">Numero</option>
@@ -107,15 +98,9 @@ export function createTableFormatToolbar(options: {
   decimals.type = "number";
   decimals.min = "0";
   decimals.max = "10";
-  decimals.className =
-    "w-12 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700";
-  decimals.title = "Casas decimais";
   decimals.value = String(nf?.decimals ?? 2);
 
   const locale = document.createElement("select");
-  locale.className =
-    "rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700";
-  locale.title = "Locale";
   locale.innerHTML = `
     <option value="pt-BR">pt-BR</option>
     <option value="en-US">en-US</option>
@@ -125,40 +110,34 @@ export function createTableFormatToolbar(options: {
 
   function applyNumberFormat() {
     const kind = numKind.value as TableNumberFormatKind;
-    const patch: Partial<ExcelTableCellStyle> = {
-      numberFormat: {
-        kind,
-        decimals: Number(decimals.value) || 0,
-        locale: locale.value,
+    options.onApply(
+      {
+        numberFormat: {
+          kind,
+          decimals: Number(decimals.value) || 0,
+          locale: locale.value,
+        },
       },
-    };
-    options.onApply(patch, scope());
+      scope(),
+    );
   }
 
   numKind.addEventListener("change", applyNumberFormat);
   decimals.addEventListener("change", applyNumberFormat);
   locale.addEventListener("change", applyNumberFormat);
 
-  container.append(numKind, decimals, locale);
-
-  if (options.linkedExtras?.length) {
-    container.append(sep());
-    options.linkedExtras.forEach((el) => container.append(el));
+  if (options.linkedFields?.length) {
+    options.linkedFields.forEach((el) => fields.append(el));
   }
 
-  if (options.onToggleHidden) {
-    container.append(sep());
-    const hiddenBtn = document.createElement("button");
-    hiddenBtn.type = "button";
-    hiddenBtn.dataset.action = "toggle-hidden";
-    hiddenBtn.className = options.hiddenValue
-      ? "toolbar-icon-button rounded-md bg-slate-900 text-white shadow-sm"
-      : "toolbar-icon-button rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm";
-    hiddenBtn.title = options.hiddenValue ? "Desmarcar dado oculto" : "Marcar como dado oculto";
-    hiddenBtn.innerHTML = `<i data-lucide="database"></i>`;
-    hiddenBtn.addEventListener("click", () => options.onToggleHidden?.(!options.hiddenValue));
-    container.append(hiddenBtn);
-  }
+  fields.append(
+    labeledField("Cor do texto", textColor),
+    labeledField("Cor de fundo", bgColor),
+    labeledField("Formato numerico", numKind),
+    labeledField("Casas decimais", decimals),
+    labeledField("Locale", locale),
+  );
 
-  return container;
+  root.append(actions, fields);
+  return root;
 }
