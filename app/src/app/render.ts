@@ -6,11 +6,8 @@ import { renderAiPanel as renderAiPanelView } from "./renderAiPanel";
 import { syncStatusBar } from "./canvasZoom";
 import { setLastAction } from "./activityLog";
 import { destroyAllBlockCharts } from "../blocks/chartRuntime";
-import {
-  applyTableDomMode,
-  normalizeTypingCellContent,
-  resolveTableDomMode,
-} from "../blocks/tableBlock";
+import { normalizeTypingCellContent } from "../blocks/tableBlock";
+import { refreshTableChromeForDocument } from "./refreshTableChrome";
 import type { DocumentHistory } from "./documentHistory";
 
 export function createRenderer({
@@ -95,49 +92,16 @@ export function createRenderer({
   }
 
   function refreshTableChrome() {
-    const edit =
-      state.editingBlockId && state.tableEdit?.blockId === state.editingBlockId
-        ? state.tableEdit
-        : null;
-    const blockId = edit?.blockId ?? state.tableEdit?.blockId;
-    if (!blockId) {
-      return;
-    }
-    const shell = document.querySelector(
-      `.block-shell[data-block-id="${blockId}"]`,
-    );
-    const table = shell?.querySelector("table.table-block") as HTMLTableElement | undefined;
-    if (table) {
-      const mode = resolveTableDomMode(blockId, state.editingBlockId, edit);
-      applyTableDomMode(table, mode, edit);
-    }
-    if (!edit) {
-      renderPropertiesSidebar({
-        refs,
-        state,
-        blocks,
-        documentData,
-        documentHistory,
-        requestRender: render,
-        linkedTableBridge,
-        linkedChartBridge,
-      });
-      return;
-    }
-    renderPropertiesSidebar({
-      refs,
+    refreshTableChromeForDocument({
       state,
       blocks,
+      refs,
       documentData,
       documentHistory,
       requestRender: render,
       linkedTableBridge,
       linkedChartBridge,
     });
-    if (edit.typing) {
-      const cell = shell?.querySelector("td.is-typing-cell");
-      (cell as HTMLElement | undefined)?.focus();
-    }
   }
 
   function renderCanvas() {

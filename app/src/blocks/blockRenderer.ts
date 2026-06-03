@@ -14,12 +14,16 @@ export function createBlockElement(
     tableEdit = null as TableEditState | null,
     getTableEdit,
     onTableEditChange,
+    onColResizeSessionStart,
+    onColResizeSessionEnd,
   }: {
     selected?: boolean;
     editing?: boolean;
     tableEdit?: TableEditState | null;
     getTableEdit?: () => TableEditState | null;
     onTableEditChange?: (edit: Omit<TableEditState, "blockId">) => void;
+    onColResizeSessionStart?: () => void;
+    onColResizeSessionEnd?: () => void;
   } = {},
 ) {
   const element = document.createElement("div");
@@ -68,6 +72,8 @@ export function createBlockElement(
       domConfig: { mode, edit },
       getTableEdit,
       onTableEditChange,
+      onColResizeSessionStart,
+      onColResizeSessionEnd,
     });
     host.append(table);
     element.append(host);

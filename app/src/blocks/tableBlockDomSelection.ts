@@ -154,6 +154,10 @@ export function attachTableStructureSelection(
       return;
     }
 
+    if (target.closest(".table-col-resize-handle")) {
+      return;
+    }
+
     const col = colIndexFromTarget(table, target);
     if (col !== null && target.closest(".table-col-select")) {
       if (event.shiftKey || event.ctrlKey || event.metaKey) {

@@ -68,6 +68,28 @@ describe("tableBlockInteraction", () => {
     expect(table.querySelectorAll(".is-selected").length).toBe(0);
   });
 
+  it("applyTableDomMode syncs colgroup when block has colWidths without rows", () => {
+    const table = tableWithRows();
+    applyTableDomMode(table, "view", null, {
+      block: { type: BLOCK_TYPES.TABLE, content: { colWidths: [100, 200] } },
+    });
+    expect(table.querySelectorAll("colgroup col[data-table-col]").length).toBe(2);
+  });
+
+  it("applyTableDomMode switches colgroup to percent widths in view mode", () => {
+    const table = tableWithRows();
+    const block = {
+      type: BLOCK_TYPES.TABLE,
+      content: { rows: [["a", "b"]], colWidths: [80, 160] },
+    };
+    applyTableDomMode(table, "structure", null, { block });
+    expect(table.querySelectorAll("colgroup .table-corner-col").length).toBe(1);
+    applyTableDomMode(table, "view", null, { block });
+    expect(table.querySelectorAll("colgroup .table-corner-col").length).toBe(0);
+    const cols = table.querySelectorAll("colgroup col[data-table-col]");
+    expect((cols[0] as HTMLTableColElement).style.width).toBe("80px");
+  });
+
   it("applyTableDomMode enables only typing cell", () => {
     const table = tableWithRows();
     const edit: TableEditState = {

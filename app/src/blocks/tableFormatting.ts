@@ -6,6 +6,7 @@ export type TableFormatScope = "cell" | "row" | "column";
 export type TableBlockStyleContent = {
   rows?: string[][];
   dataSourceRows?: string[][];
+  colWidths?: (number | null)[];
   cellStyles?: Record<string, Partial<ExcelTableCellStyle>>;
   rowStyles?: Record<string, Partial<ExcelTableCellStyle>>;
   colStyles?: Record<string, Partial<ExcelTableCellStyle>>;

@@ -3,7 +3,12 @@ import {
   getTypingCellRawValue,
   isLinkedTableBlock,
 } from "./linkedTableModel";
-import { TABLE_CELL_EMPTY_PLACEHOLDER, cellValueForDisplay, cellValueFromDisplay } from "./tableBlockData";
+import {
+  TABLE_CELL_EMPTY_PLACEHOLDER,
+  cellValueForDisplay,
+  cellValueFromDisplay,
+} from "./tableBlockData";
+import { colWidthsForTableBlock, syncTableColgroup } from "./tableColumnWidths";
 import type { TableFormatScope } from "./tableFormatting";
 
 export type TableMultiSelection = {
@@ -94,6 +99,11 @@ export function applyTableDomMode(
   });
 
   refreshTableSelectionChrome(table, mode === "view" ? null : edit);
+
+  if (block?.content) {
+    const colLayout: "view" | "structure" = mode === "view" ? "view" : "structure";
+    syncTableColgroup(table, colWidthsForTableBlock(block), colLayout);
+  }
 }
 
 function highlightColumn(table: HTMLTableElement, col: number) {

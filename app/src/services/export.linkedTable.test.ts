@@ -90,6 +90,33 @@ describe("export service (linked table)", () => {
     expect(html).not.toMatch(/colspan="/);
   });
 
+  it("renders colgroup widths from colWidths", () => {
+    const html = renderDocumentToHtml({
+      title: "Linked",
+      page: { format: "A4", orientation: "portrait" },
+      pages: [
+        {
+          id: "page-1",
+          blocks: [
+            {
+              id: "b4",
+              type: "table",
+              position: { x: 0, y: 0 },
+              size: { width: 300, height: 80 },
+              content: {
+                rows: [["a", "b"]],
+                colWidths: [90, 140],
+              },
+            },
+          ],
+        },
+      ],
+    });
+    expect(html).toContain("<colgroup>");
+    expect(html).toContain("width:39.");
+    expect(html).toContain("width:60.");
+  });
+
   it("renders cell inline styles without fixed tr height (rowHeights ignorados no PDF)", () => {
     const html = renderDocumentToHtml({
       title: "Linked",

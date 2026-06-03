@@ -1,4 +1,5 @@
 import { TABLE_BLOCK_BASE_FONT_PX, clampLinkedTableFontScale } from "../blocks/tableBlock";
+import { normalizeColWidths, sumColWidths } from "../blocks/tableColumnWidths";
 import {
   getTableStructureMerges,
   getTableVisualRows,
@@ -31,6 +32,7 @@ export function renderTableBlockMarkup(
       cellStyles?: unknown;
       rowStyles?: unknown;
       colStyles?: unknown;
+      colWidths?: unknown;
     };
   },
   escapeHtml: (v: unknown) => string,
@@ -74,6 +76,23 @@ export function renderTableBlockMarkup(
     }
   }
   const mergeAt = new Map(merges.map((m) => [`${m.r},${m.c}`, m] as const));
+  const colCount = rows.reduce((max, row) => Math.max(max, row.length), 0);
+  const colWidths = normalizeColWidths(
+    colCount,
+    Array.isArray(block.content?.colWidths)
+      ? (block.content.colWidths as (number | null)[])
+      : null,
+  );
+  const widthSum = sumColWidths(colWidths);
+  const colgroup =
+    colCount > 0
+      ? `<colgroup>${colWidths
+          .map((w) => {
+            const pct = widthSum > 0 ? (w / widthSum) * 100 : 100 / colCount;
+            return `<col style="width:${pct}%" />`;
+          })
+          .join("")}</colgroup>`
+      : "";
   const body = rows
     .map((row, r) => {
       const cells: string[] = [];
@@ -104,5 +123,5 @@ export function renderTableBlockMarkup(
     tableAttrs.push(`style="font-size:${TABLE_BLOCK_BASE_FONT_PX * fontScale}px"`);
   }
   const tableOpen = tableAttrs.length ? ` ${tableAttrs.join(" ")}` : "";
-  return `<div class="block table-block" data-block-id="${block.id}"><div class="table-block-export-clip"><table${tableOpen}><tbody>${body}</tbody></table></div></div>`;
+  return `<div class="block table-block" data-block-id="${block.id}"><div class="table-block-export-clip"><table${tableOpen}>${colgroup}<tbody>${body}</tbody></table></div></div>`;
 }

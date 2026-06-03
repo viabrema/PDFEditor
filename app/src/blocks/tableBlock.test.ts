@@ -315,6 +315,38 @@ describe("table block", () => {
     expect(table.querySelectorAll("td").length).toBe(1);
   });
 
+  it("updateTableBody applies colWidths via colgroup in structure mode", () => {
+    const table = document.createElement("table");
+    updateTableBody(table, [["a", "b"]], [], null, null, {
+      colWidths: [80, 160],
+      colLayoutMode: "structure",
+    });
+    expect(table.querySelectorAll("colgroup .table-corner-col").length).toBe(1);
+    const cols = table.querySelectorAll("colgroup col[data-table-col]");
+    expect(cols.length).toBe(2);
+    expect((cols[0] as HTMLTableColElement).style.width).toBe("80px");
+    expect((cols[1] as HTMLTableColElement).style.width).toBe("160px");
+    expect(table.querySelectorAll(".table-col-resize-handle").length).toBe(2);
+  });
+
+  it("updateTableBody uses percent colgroup in view mode", () => {
+    const table = document.createElement("table");
+    table.classList.add("is-view-mode");
+    updateTableBody(table, [["a", "b"]], [], null, null, {
+      colWidths: [80, 160],
+      colLayoutMode: "view",
+    });
+    expect(table.querySelectorAll("colgroup .table-corner-col").length).toBe(0);
+    const cols = table.querySelectorAll("colgroup col[data-table-col]");
+    expect((cols[0] as HTMLTableColElement).style.width).toBe("80px");
+    expect((cols[1] as HTMLTableColElement).style.width).toBe("160px");
+  });
+
+  it("computeTableSize uses custom colWidths when provided", () => {
+    const size = computeTableSize([["a", "b", "c"]], undefined, [50, 60, 70]);
+    expect(size.width).toBe(20 + 50 + 60 + 70);
+  });
+
   it("syncTableElementWithBlock forwards rowHeights to updateTableBody", () => {
     const window = new Window();
     globalThis.document = window.document;

@@ -73,6 +73,12 @@ export function renderBlocksInContainer({
       tableEdit,
       getTableEdit: isTableBlock && isEditing ? getTableEdit : undefined,
       onTableEditChange,
+      onColResizeSessionStart:
+        isTableBlock && isEditing
+          ? () => documentHistory?.checkpointBeforeChange()
+          : undefined,
+      onColResizeSessionEnd:
+        isTableBlock && isEditing ? () => refreshTableChrome?.() : undefined,
     });
     container.append(element);
 

@@ -21,6 +21,7 @@ Funcionalidade para analistas que trabalham com **folhas Excel grandes** (vária
 - `content.dataSourceRows`: matriz de strings do Excel (valores brutos; não formatados para locale do editor). Documentos antigos com só `content.rows` são migrados automaticamente para `dataSourceRows`.
 - `content.dataSourceMerges` / `content.merges`: mesclagens do intervalo Excel (0-based no intervalo). Só entram mesclagens **totalmente contidas** no intervalo.
 - `content.cellStyles`, `content.rowStyles`, `content.colStyles`: formatação **visual** definida no editor (não vem do Excel na importação).
+- `content.colWidths`: larguras visuais das colunas (px), ajustáveis no modo estrutura; mantêm-se no refresh Excel.
 - `content.rows` (legado): ignorado em blocos linkados novos; preferir `dataSourceRows`.
 - `metadata.excelLink`:
   - `filePath`: caminho absoluto no Windows/macOS/Linux (no browser, `__browser__:nome.xlsx`).

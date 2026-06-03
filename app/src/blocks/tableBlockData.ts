@@ -1,6 +1,7 @@
 import { createBlock, BLOCK_TYPES } from "./blockModel";
 import { createLinkedTableContentFromExcel } from "./linkedTableModel";
 import type { ExcelTableMerge } from "../services/excelRange";
+import { normalizeColWidths, tableWidthFromColWidths } from "./tableColumnWidths";
 
 const DEFAULT_CELL_WIDTH = 120;
 const DEFAULT_CELL_HEIGHT = 36;
@@ -65,10 +66,16 @@ export function createEmptyTable(rows = 2, cols = 2) {
   );
 }
 
-export function computeTableSize(rows, pageSize) {
+export function computeTableSize(
+  rows: string[][],
+  pageSize?: { width: number; height: number },
+  colWidths?: (number | null)[] | null,
+) {
   const rowCount = rows.length || 1;
-  const colCount = rows[0]?.length || 1;
-  const targetWidth = colCount * DEFAULT_CELL_WIDTH;
+  const colCount = rows.reduce((max, row) => Math.max(max, row.length), 0) || 1;
+  const targetWidth = Array.isArray(colWidths)
+    ? tableWidthFromColWidths(normalizeColWidths(colCount, colWidths))
+    : colCount * DEFAULT_CELL_WIDTH;
   const targetHeight = rowCount * DEFAULT_CELL_HEIGHT;
 
   if (!pageSize) {

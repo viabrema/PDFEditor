@@ -12,9 +12,12 @@ import {
   cellValueForDisplay,
   clampLinkedTableFontScale,
 } from "./tableBlockData";
+import { normalizeColWidths, syncTableColgroup } from "./tableColumnWidths";
 
 export type UpdateTableBodyOptions = {
   fontScale?: number;
+  colWidths?: (number | null)[] | null;
+  colLayoutMode?: "view" | "structure";
 };
 
 function buildMergedCellSkipSet(merges: ExcelTableMerge[]): Set<string> {
@@ -59,7 +62,11 @@ export function updateTableBody(
     ? buildResolvedCellStylesMap({ ...styleContent, rows })
     : null;
 
-  const cols = colCount(rows);
+  const dataCols = colCount(rows);
+  const widthCols = Array.isArray(options.colWidths) ? options.colWidths.length : 0;
+  const cols = Math.max(dataCols, widthCols);
+  const colWidths = normalizeColWidths(cols, options.colWidths);
+  const colLayoutMode = options.colLayoutMode === "view" ? "view" : "structure";
   table.innerHTML = "";
 
   const thead = document.createElement("thead");
@@ -74,6 +81,14 @@ export function updateTableBody(
     th.dataset.tableCol = String(c);
     th.title = `Selecionar coluna ${c + 1}`;
     th.setAttribute("aria-label", `Selecionar coluna ${c + 1}`);
+    const resizeHandle = document.createElement("span");
+    resizeHandle.className = "table-col-resize-handle";
+    resizeHandle.dataset.tableCol = String(c);
+    resizeHandle.title = "Redimensionar coluna";
+    resizeHandle.setAttribute("role", "separator");
+    resizeHandle.setAttribute("aria-orientation", "vertical");
+    resizeHandle.setAttribute("aria-label", `Redimensionar coluna ${c + 1}`);
+    th.append(resizeHandle);
     headTr.append(th);
   }
   thead.append(headTr);
@@ -89,15 +104,15 @@ export function updateTableBody(
     rowHead.setAttribute("aria-label", `Selecionar linha ${r + 1}`);
     tr.append(rowHead);
 
-    row.forEach((value, c) => {
+    for (let c = 0; c < cols; c++) {
       if (skip.has(`${r},${c}`)) {
-        return;
+        continue;
       }
       const td = document.createElement("td");
       td.contentEditable = "false";
       td.dataset.tableRow = String(r);
       td.dataset.tableCol = String(c);
-      td.textContent = cellValueForDisplay(value ?? "");
+      td.textContent = cellValueForDisplay(row[c] ?? "");
       const st = styles?.[`${r},${c}`];
       if (st) {
         const scaled = fontScale !== 1 ? scaleExcelCellStyleFontSize(st, fontScale) : st;
@@ -116,10 +131,11 @@ export function updateTableBody(
         }
       }
       tr.append(td);
-    });
+    }
     tbody.append(tr);
   });
   table.append(tbody);
+  syncTableColgroup(table, colWidths, colLayoutMode);
 
   if (fontScale !== 1) {
     table.style.fontSize = `${TABLE_BLOCK_BASE_FONT_PX * fontScale}px`;

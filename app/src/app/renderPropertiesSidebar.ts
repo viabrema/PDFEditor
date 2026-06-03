@@ -130,7 +130,7 @@ export function renderPropertiesSidebar({
       } else {
         appendHint(
           blockPanel,
-          "Clique nos marcadores ou numa celula. Duplo clique na celula para digitar. Formato aplica na selecao.",
+          "Clique nos marcadores ou numa celula. Arraste a borda no topo da coluna para redimensionar. Duplo clique na celula para digitar.",
         );
       }
       const toolbar = mountTableFormatToolbar({
@@ -163,7 +163,7 @@ export function renderPropertiesSidebar({
       } else {
         appendHint(
           blockPanel,
-          "Clique nos marcadores ou numa celula. Duplo clique na celula para digitar. Formato aplica na selecao.",
+          "Clique nos marcadores ou numa celula. Arraste a borda no topo da coluna para redimensionar. Duplo clique na celula para digitar.",
         );
       }
       const toolbar = mountTableFormatToolbar({

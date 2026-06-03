@@ -23,7 +23,13 @@ import {
   type TableDomMode,
   type TableEditState,
 } from "./tableBlockInteraction";
+import { attachTableColumnResize } from "./tableColumnResize";
 import { attachTableStructureSelection } from "./tableBlockDomSelection";
+import {
+  normalizeColWidths,
+  syncTableColgroup,
+  tableDataColCount,
+} from "./tableColumnWidths";
 
 export { updateTableBody, type UpdateTableBodyOptions } from "./tableBlockDomBuild";
 export {
@@ -58,11 +64,15 @@ export function attachTableHandlers({
   block,
   getTableEdit,
   onTableEditChange,
+  onColResizeSessionStart,
+  onColResizeSessionEnd,
 }: {
   table: HTMLTableElement;
   block: { content?: TableBlockStyleContent; type?: string; metadata?: { fontScale?: unknown } };
   getTableEdit?: () => TableEditState | null;
   onTableEditChange?: (edit: Omit<TableEditState, "blockId">) => void;
+  onColResizeSessionStart?: () => void;
+  onColResizeSessionEnd?: () => void;
 }) {
   const handleInput = () => {
     if (isLinkedTableBlock(block)) {
@@ -97,6 +107,28 @@ export function attachTableHandlers({
   });
 
   attachTableStructureSelection(table, { getTableEdit, onTableEditChange });
+
+  attachTableColumnResize(table, {
+    getColCount: () => {
+      const rows = isLinkedTableBlock(block)
+        ? getTableVisualRows(block)
+        : normalizeRows(block.content?.rows || createEmptyTable());
+      return tableDataColCount(rows, block.content?.colWidths);
+    },
+    getColWidths: () => {
+      const rows = isLinkedTableBlock(block)
+        ? getTableVisualRows(block)
+        : normalizeRows(block.content?.rows || createEmptyTable());
+      const count = tableDataColCount(rows, block.content?.colWidths);
+      return normalizeColWidths(count, block.content?.colWidths);
+    },
+    setColWidths: (widths) => {
+      block.content = block.content || {};
+      block.content.colWidths = widths;
+    },
+    onResizeSessionStart: onColResizeSessionStart,
+    onResizeSessionEnd: onColResizeSessionEnd,
+  });
 
   table.addEventListener("paste", (event) => {
     const text = event.clipboardData?.getData("text/plain");
@@ -146,10 +178,21 @@ export function syncTableElementWithBlock(
     typeof config === "boolean"
       ? { mode: config ? "structure" : "view", edit: null }
       : config;
+  const colWidths = Array.isArray(block.content?.colWidths)
+    ? (block.content.colWidths as (number | null)[])
+    : null;
+  const colLayoutMode = domConfig.mode === "view" ? "view" : "structure";
+  const normalizedWidths = normalizeColWidths(
+    tableDataColCount(rows, colWidths),
+    colWidths,
+  );
   updateTableBody(table, rows, merges, block.content || null, rowHeights, {
     fontScale: tableFontScaleForBlock(block),
+    colWidths,
+    colLayoutMode,
   });
   applyTableDomMode(table, domConfig.mode, domConfig.edit, { block });
+  syncTableColgroup(table, normalizedWidths, colLayoutMode);
 }
 
 export function createTableElement(
@@ -159,6 +202,8 @@ export function createTableElement(
     domConfig?: TableDomConfig;
     getTableEdit?: () => TableEditState | null;
     onTableEditChange?: (edit: Omit<TableEditState, "blockId">) => void;
+    onColResizeSessionStart?: () => void;
+    onColResizeSessionEnd?: () => void;
   } = {},
 ) {
   const table = document.createElement("table");
@@ -177,6 +222,8 @@ export function createTableElement(
       block,
       getTableEdit: options.getTableEdit,
       onTableEditChange: options.onTableEditChange,
+      onColResizeSessionStart: options.onColResizeSessionStart,
+      onColResizeSessionEnd: options.onColResizeSessionEnd,
     });
   }
   return table;

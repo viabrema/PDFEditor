@@ -314,7 +314,40 @@ body {
 }
 
 .table-block .table-col-select {
+  position: relative;
   vertical-align: middle;
+}
+
+.table-block.is-structure-mode .table-col-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  z-index: 3;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.table-block.is-structure-mode .table-col-resize-handle:hover,
+.table-block.is-col-resizing .table-col-resize-handle {
+  background: rgba(2, 132, 199, 0.35);
+}
+
+.table-block.is-col-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.table-block.is-col-resizing td,
+.table-block.is-col-resizing .table-col-select,
+.table-block.is-col-resizing .table-row-select {
+  user-select: none;
+  pointer-events: none;
+}
+
+.table-block.is-col-resizing .table-col-resize-handle {
+  pointer-events: auto;
 }
 
 /* Marcadores de selecao (linha/coluna) so no modo estrutura — edicao visual da tabela. */
