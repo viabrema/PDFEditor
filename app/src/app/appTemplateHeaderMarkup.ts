@@ -68,8 +68,8 @@ export const APP_TEMPLATE_HEADER_MARKUP = `
               id="toggle-hidden-data"
               type="button"
               class="icon-button rounded-md border border-slate-300 bg-white text-slate-700"
-              title="Ver dados ocultos"
-              aria-label="Ver dados ocultos"
+              title="Ver apenas dados ocultos"
+              aria-label="Ver apenas dados ocultos"
             >
               <i data-lucide="eye"></i>
             </button>

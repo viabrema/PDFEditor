@@ -8,6 +8,7 @@ import { setLastAction } from "./activityLog";
 import { destroyAllBlockCharts } from "../blocks/chartRuntime";
 import { normalizeTypingCellContent } from "../blocks/tableBlock";
 import { refreshTableChromeForDocument } from "./refreshTableChrome";
+import { syncHiddenDataCanvasLayout } from "./hiddenDataCanvas";
 import type { DocumentHistory } from "./documentHistory";
 
 export function createRenderer({
@@ -121,6 +122,7 @@ export function createRenderer({
       linkedChartBridge,
       documentHistory,
     });
+    syncHiddenDataCanvasLayout(refs, state.ui?.showHiddenBlocks === true);
     syncStatusBar(refs, state);
   }
 
@@ -198,13 +200,20 @@ export function createRenderer({
         ? '<i data-lucide="eye-off"></i>'
         : '<i data-lucide="eye"></i>';
       refs.toggleHiddenDataButton.title = state.ui.showHiddenBlocks
-        ? "Ocultar dados ocultos"
-        : "Ver dados ocultos";
+        ? "Sair da visualizacao de dados ocultos"
+        : "Ver apenas dados ocultos";
       refs.toggleHiddenDataButton.setAttribute(
         "aria-label",
-        state.ui.showHiddenBlocks ? "Ocultar dados ocultos" : "Ver dados ocultos",
+        state.ui.showHiddenBlocks
+          ? "Sair da visualizacao de dados ocultos"
+          : "Ver apenas dados ocultos",
       );
     }
+
+    const hiddenOnlyView = state.ui.showHiddenBlocks === true;
+    refs.addPageButton?.classList.toggle("hidden", hiddenOnlyView);
+    refs.removePageButton?.classList.toggle("hidden", hiddenOnlyView);
+    refs.addPageButton?.previousElementSibling?.classList.toggle("hidden", hiddenOnlyView);
 
     renderTabs(
       refs.languageTabsHost,

@@ -291,7 +291,7 @@ describe("toolbar", () => {
 
     const toggle = toolbar.querySelector('button[data-action="toggle-hidden"]') as HTMLButtonElement;
     expect(toggle).toBeTruthy();
-    expect(toggle.getAttribute("aria-label")).toContain("Marcar como dado oculto");
+    expect(toggle.querySelector('[data-lucide="eye"]')).toBeTruthy();
     toggle.click();
     expect(nextHidden).toBe(true);
   });

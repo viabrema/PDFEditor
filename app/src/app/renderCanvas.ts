@@ -3,6 +3,7 @@ import { effectiveBlockLanguageId } from "./translationFlow";
 import { renderBlocksInContainer } from "./renderBlocks";
 import { setupRegionResize } from "./regionResize";
 import type { DocumentHistory } from "./documentHistory";
+import { renderHiddenDataOnlyCanvas } from "./renderHiddenDataCanvas";
 
 export function renderCanvasView({
   documentData,
@@ -28,10 +29,24 @@ export function renderCanvasView({
   const activeBlocks = blocks.filter(
     (block) => effectiveBlockLanguageId(block, documentData) === state.activeLanguageId,
   );
-  const showHiddenBlocks = state.ui?.showHiddenBlocks === true;
-  const visibleBlocks = showHiddenBlocks
-    ? activeBlocks
-    : activeBlocks.filter((block) => block.metadata?.hidden !== true);
+  const showHiddenOnlyView = state.ui?.showHiddenBlocks === true;
+
+  if (showHiddenOnlyView) {
+    renderHiddenDataOnlyCanvas({
+      activeBlocks,
+      state,
+      documentData,
+      refs,
+      requestRender,
+      refreshTableChrome,
+      linkedTableBridge,
+      linkedChartBridge,
+      documentHistory,
+    });
+    return;
+  }
+
+  const visibleBlocks = activeBlocks.filter((block) => block.metadata?.hidden !== true);
   const headerBlocks = visibleBlocks.filter(
     (block) => block.metadata?.region === "header"
   );

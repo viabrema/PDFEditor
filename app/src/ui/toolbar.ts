@@ -6,6 +6,7 @@ import {
   labeledField,
   toolbarSeparator,
 } from "./contextToolbarLayout";
+import { appendHiddenDataToggleButton } from "./hiddenDataToggle";
 
 export function createToolbar(commands: any, options: any = {}) {
   const {
@@ -36,24 +37,11 @@ export function createToolbar(commands: any, options: any = {}) {
       : "flex flex-wrap items-center gap-2";
 
   function appendHiddenToggleButton(parent: HTMLElement = container) {
-    if (!onToggleHidden) {
-      return;
-    }
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.dataset.action = "toggle-hidden";
-    btn.className = hiddenValue
-      ? "toolbar-icon-button shrink-0 rounded-md bg-slate-900 text-white shadow-sm"
-      : "toolbar-icon-button shrink-0 rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400";
-    btn.title = hiddenValue ? "Desmarcar dado oculto" : "Marcar como dado oculto";
-    btn.setAttribute("aria-label", btn.title);
-    btn.innerHTML = `<i data-lucide="database"></i>`;
-    if (disabled) {
-      btn.disabled = true;
-      btn.classList.add("opacity-40", "cursor-not-allowed");
-    }
-    btn.addEventListener("click", () => onToggleHidden?.(!hiddenValue));
-    parent.append(btn);
+    appendHiddenDataToggleButton(parent, {
+      hiddenValue,
+      disabled,
+      onToggleHidden,
+    });
   }
 
   if (variant === "table") {

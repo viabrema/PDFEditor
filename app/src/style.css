@@ -429,6 +429,28 @@ body {
   align-items: center;
 }
 
+#canvas-scroll.is-hidden-data-view {
+  overflow: auto;
+}
+
+#canvas-scroll.is-hidden-data-view .is-hidden-data-canvas-host {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  height: max-content;
+  min-height: 100%;
+  padding: 24px;
+}
+
+#canvas.is-hidden-data-canvas {
+  position: relative;
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  gap: 0;
+  background: transparent;
+}
+
 .page-surface {
   position: relative;
   background: #ffffff;

@@ -86,12 +86,19 @@ export function bindUiEvents({ documentData, state, blocks, refs, renderer, docu
     state.ui = state.ui || { zoomPercent: 100, lastAction: "", showHiddenBlocks: false };
     state.ui.showHiddenBlocks = !state.ui.showHiddenBlocks;
 
-    if (!state.ui.showHiddenBlocks) {
-      const hiddenIds = new Set(
-        blocks
-          .filter((block) => block.metadata?.hidden === true)
-          .map((block) => block.id),
-      );
+    const hiddenIds = new Set(
+      blocks
+        .filter((block) => block.metadata?.hidden === true)
+        .map((block) => block.id),
+    );
+
+    if (state.ui.showHiddenBlocks) {
+      state.selectedBlockIds = (state.selectedBlockIds || []).filter((id) => hiddenIds.has(id));
+      if (!hiddenIds.has(state.editingBlockId)) {
+        state.editingBlockId = null;
+        state.tableEdit = null;
+      }
+    } else {
       state.selectedBlockIds = (state.selectedBlockIds || []).filter((id) => !hiddenIds.has(id));
       if (hiddenIds.has(state.editingBlockId)) {
         state.editingBlockId = null;
@@ -99,7 +106,12 @@ export function bindUiEvents({ documentData, state, blocks, refs, renderer, docu
       }
     }
 
-    setLastAction(state, state.ui.showHiddenBlocks ? "Visualizacao de dados: ligada." : "Visualizacao de dados: desligada.");
+    setLastAction(
+      state,
+      state.ui.showHiddenBlocks
+        ? "Visualizacao: apenas dados ocultos."
+        : "Visualizacao: documento normal.",
+    );
     renderer.render();
   });
 

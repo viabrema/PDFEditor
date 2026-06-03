@@ -9,6 +9,7 @@ import {
   labeledField,
   toolbarSeparator,
 } from "./contextToolbarLayout";
+import { appendHiddenDataToggleButton } from "./hiddenDataToggle";
 
 export function createTableFormatToolbar(options: {
   block: { content?: any };
@@ -81,17 +82,10 @@ export function createTableFormatToolbar(options: {
 
   if (options.onToggleHidden) {
     actions.append(toolbarSeparator());
-    const hiddenBtn = document.createElement("button");
-    hiddenBtn.type = "button";
-    hiddenBtn.dataset.action = "toggle-hidden";
-    hiddenBtn.className = options.hiddenValue
-      ? "toolbar-icon-button shrink-0 rounded-md bg-slate-900 text-white shadow-sm"
-      : "toolbar-icon-button shrink-0 rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm";
-    hiddenBtn.title = options.hiddenValue ? "Desmarcar dado oculto" : "Marcar como dado oculto";
-    hiddenBtn.setAttribute("aria-label", hiddenBtn.title);
-    hiddenBtn.innerHTML = `<i data-lucide="database"></i>`;
-    hiddenBtn.addEventListener("click", () => options.onToggleHidden?.(!options.hiddenValue));
-    actions.append(hiddenBtn);
+    appendHiddenDataToggleButton(actions, {
+      hiddenValue: options.hiddenValue,
+      onToggleHidden: options.onToggleHidden,
+    });
   }
 
   const textColor = document.createElement("input");
